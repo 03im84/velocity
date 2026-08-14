@@ -1,0 +1,3 @@
+Se cambio ship de Node3D a RigidBody3D
+se encontro un error de tipeo que impedia la ejecución de gorunded a grounded
+se cambio de posición de los hoverPoints de Y: 0.0 (por defecto), a -0.35 (sugerida) a finalmente -0.20, tras verificar visualmente la geometría.

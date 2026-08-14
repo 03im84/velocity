@@ -1,0 +1,13 @@
+Baseline 0.1 - Estado actual
+✔ Arquitectura modular estable.
+✔ Sistemas desacoplados.
+✔ HoverPoint como componente.
+✔ HoverState como estado.
+✔ Sensor operativo.
+✔ Sustentación operativa.
+✔ Sin errores de compilación.
+✔ Sin referencias a la arquitectura antigua.
+
+Pendiente:
+
+Ajuste dinámico de la suspensión.

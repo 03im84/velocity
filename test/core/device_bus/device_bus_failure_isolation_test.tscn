@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cn363vc5bgna3"]
+
+[ext_resource type="Script" uid="uid://c2blcfu3figru" path="res://test/core/device_bus/device_bus_failure_isolation_test.gd" id="1_k5s32"]
+
+[node name="DeviceBusFailureIsolationTest" type="Node" unique_id=1446909165]
+script = ExtResource("1_k5s32")

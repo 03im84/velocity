@@ -1,0 +1,136 @@
+EN002 – DeviceBus Failure Isolation
+
+Fecha:
+2026-08-14
+
+Tema:
+
+Comprobar si Godot Engine 4.7.1 devuelve el control
+a DeviceBus después de un error de ejecución dentro
+de un Callable suscriptor.
+
+Contexto:
+
+ADR-001 establece el siguiente invariante:
+
+Un fallo en un suscriptor no debe impedir intentar
+la entrega del mensaje a los demás suscriptores.
+
+DeviceBus utiliza publicación síncrona mediante
+Callable.call(message).
+
+Era necesario comprobar el comportamiento real
+del engine antes de considerar satisfecho
+el invariante.
+
+Entorno:
+
+Godot Engine:
+4.7.1.stable.official.a13da4feb
+
+Renderer:
+Forward+
+
+Prueba:
+
+DB-E01 – DeviceBusFailureIsolationTest
+
+Archivo:
+
+test/core/device_bus/
+device_bus_failure_isolation_test.gd
+
+Configuración:
+
+Se registraron tres suscriptores en este orden:
+
+A
+B
+C
+
+Comportamiento:
+
+A procesa el mensaje correctamente.
+
+B registra su entrada y después provoca
+intencionalmente un acceso fuera de los límites
+de un Array.
+
+C debe recibir el mensaje después del error de B.
+
+Error intencional:
+
+Out of bounds get index '10'
+on base Array.
+
+Resultado observado:
+
+Event log:
+
+["A", "B:entered", "C"]
+
+Checks:
+2
+
+Failures:
+0
+
+Result:
+PASS
+
+Observación del debugger:
+
+Godot puede pausar la ejecución en el punto
+donde ocurre el error.
+
+Al utilizar Continue o Resume, el control regresa
+a DeviceBus.publish() y la iteración continúa
+con el siguiente Callable.
+
+Conclusión:
+
+En Godot Engine 4.7.1, un error normal de ejecución
+dentro de un Callable aborta la ejecución de ese
+callback, pero puede devolver el control al llamador.
+
+DeviceBus puede continuar intentando la entrega
+a los suscriptores restantes.
+
+DeviceBus no necesita:
+
+- interpretar el error;
+- registrar un log propio;
+- almacenar resultados de fallo;
+- añadir manejo de excepciones inexistente;
+- modificar el mensaje;
+- eliminar a los demás suscriptores.
+
+El error continúa siendo reportado por Godot.
+
+Límites:
+
+Esta verificación no demuestra protección frente a:
+
+- ciclos infinitos;
+- bloqueos permanentes;
+- fallos fatales del engine;
+- cierre de la aplicación;
+- agotamiento de memoria;
+- recursión ilimitada;
+- desbordamiento de la pila.
+
+Esos casos permanecen fuera de la responsabilidad
+de DeviceBus.
+
+Decisión:
+
+Se mantiene el diseño aprobado.
+
+DeviceBus recorrerá todos los Callables válidos
+de la instantánea y no interrumpirá voluntariamente
+la entrega cuando un suscriptor produzca un error
+normal de ejecución.
+
+Estado:
+
+VERIFICADO

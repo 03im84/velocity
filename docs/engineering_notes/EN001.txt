@@ -1,0 +1,9 @@
+Tema: Posición de los HoverPoints.
+
+Hipótesis inicial: Colocar los HoverPoints a Y = -0.35.
+
+Resultado: Los emisores sobresalen del casco.
+
+Conclusión: La posición correcta depende de la geometría de la nave, no de un valor arbitrario.
+
+Decisión: Para el prototipo actual se adopta Y = -0.20.

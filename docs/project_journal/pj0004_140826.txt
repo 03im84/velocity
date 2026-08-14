@@ -1,0 +1,113 @@
+PJ0004 – Diseño de DeviceBus 1.0
+
+Fecha:
+2026-08-14
+
+Objetivo:
+
+Traducir ADR-001 a un diseño concreto, verificable
+e implementable para la nueva versión de DeviceBus.
+
+Documentos relacionados:
+
+docs/architecture/core_architecture.md
+
+docs/architecture/adr/ADR-001-device_bus.md
+
+docs/architecture/device_bus_design.md
+
+Resultado:
+
+✔ Se definió DeviceBus como RefCounted.
+
+✔ Se descartó Node, autoload, singleton global
+  y clase estática.
+
+✔ Se definió un ciclo de vida explícito.
+
+✔ Se definió publicación síncrona.
+
+✔ Se estableció que DeviceBus 1.0 no será thread-safe.
+
+✔ Se definieron los tipos públicos:
+
+  - Topic: StringName
+  - Subscriber: Callable
+  - Message: Variant
+
+✔ Se definió la API concreta:
+
+  - subscribe()
+  - unsubscribe()
+  - publish()
+  - clear()
+  - has_subscribers()
+  - get_subscriber_count()
+  - get_topics()
+
+✔ Se definieron las reglas para:
+
+  - topics vacíos;
+  - Callables inválidos;
+  - suscripciones duplicadas;
+  - orden de suscriptores;
+  - eliminación de suscripciones;
+  - topics vacíos;
+  - orden de topics;
+  - limpieza del registro.
+
+✔ Se definió la creación de una instantánea
+  superficial durante publish().
+
+✔ Se definió el comportamiento de subscribe(),
+  unsubscribe() y clear() durante una publicación.
+
+✔ Se permitieron publicaciones reentrantes,
+  síncronas y depth-first.
+
+✔ Se estableció que DeviceBus no copia,
+  interpreta ni modifica mensajes.
+
+✔ Se definió el estado interno mínimo:
+
+  Topic
+	  ↓
+  Lista ordenada de Callables
+
+✔ Se definieron dos funciones privadas:
+
+  - _prune_invalid_subscribers()
+  - _erase_topic_if_empty()
+
+✔ Se definieron 17 pruebas unitarias.
+
+✔ Se separó DB-E01 como verificación específica
+  de compatibilidad con Godot Engine 4.7.1.
+
+✔ Se definió una prueba de integración nueva
+  e independiente.
+
+Estado:
+
+APROBADO
+
+Versión:
+
+1.0
+
+Decisión:
+
+DeviceBus cuenta con un diseño completo y puede pasar
+a la etapa de implementación.
+
+La implementación deberá ser una traducción directa
+del diseño aprobado.
+
+No se añadirán capacidades no documentadas.
+
+No se implementó código durante este hito.
+
+Siguiente paso:
+
+Implementar res://scripts/core/device_bus.gd
+en etapas pequeñas y verificables.

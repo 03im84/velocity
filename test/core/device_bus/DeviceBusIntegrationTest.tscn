@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dchdk1st277pa"]
+
+[ext_resource type="Script" uid="uid://dexpq21gs24e1" path="res://test/core/device_bus/device_bus_integration_test.gd" id="1_mtnbr"]
+
+[node name="DeviceBusIntegrationTest" type="Node" unique_id=1786681023]
+script = ExtResource("1_mtnbr")

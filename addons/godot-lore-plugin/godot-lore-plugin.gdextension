@@ -1,0 +1,10 @@
+[configuration]
+
+entry_symbol = "godot_lore_plugin_library_init"
+compatibility_minimum = "4.3"
+
+[libraries]
+
+windows.editor.x86_64 = "windows/godot-lore-plugin.windows.editor.x86_64.dll"
+linux.editor.x86_64 = "linux/godot-lore-plugin.linux.editor.x86_64.so"
+macos.editor = "macos/godot-lore-plugin.macos.editor.universal.dylib"

@@ -1,0 +1,67 @@
+PJ0003 – Arquitectura del Núcleo
+
+Fecha:
+2026-08-14
+
+Objetivo:
+
+Crear y aprobar el documento vivo que define cómo encajan
+los componentes principales del núcleo de Velocity.
+
+Documento:
+
+docs/architecture/core_architecture.md
+
+Resultado:
+
+✔ Se definió el propósito del Core.
+
+✔ Se establecieron sus límites.
+
+✔ Se separó el Core de física, vehículo, presentación,
+  telemetría y hardware.
+
+✔ Se definieron los roles conceptuales de:
+
+  - DeviceBus
+  - Device
+  - Provider
+  - Measurement
+  - SubscriptionRegistry
+  - DeviceGraph
+  - Ports
+  - Connections
+
+✔ Se documentó la dirección de dependencias.
+
+✔ Se definió el flujo conceptual de información.
+
+✔ Se documentó el límite entre Godot y el Core.
+
+✔ Se establecieron los invariantes generales del núcleo.
+
+✔ Se registró la evolución prevista del sistema
+  de comunicación.
+
+✔ Se incorporaron VP-001 y ADR-001 como decisiones vigentes.
+
+Estado:
+
+APROBADO
+
+Versión:
+
+1.0
+
+Decisión:
+
+La Arquitectura del Núcleo pasa a ser parte oficial
+del producto y se convierte en la referencia para
+el diseño de nuevos componentes importantes.
+
+No se implementó código durante este hito.
+
+Siguiente paso:
+
+Registrar formalmente ADR-001 — DeviceBus y diseñar
+la nueva versión del componente antes de implementarla.
