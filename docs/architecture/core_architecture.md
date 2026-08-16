@@ -3,8 +3,9 @@
 | Campo | Valor |
 |  ---  |  ---  |
 | Estado | ACTIVO |
-| Versión | 1.1 |
-| Fecha | 2026-08-14 |
+| Versión | 1.4 |
+| Fecha inicial   | 2026-08-14 |
+| Última revisión | 2026-08-15 |
 | Alcance | Núcleo lógico de Velocity |
 
 ## 1. Propósito
@@ -90,15 +91,23 @@ Velocity utiliza Godot Engine como host de ejecución, pero la arquitectura del 
 
 Los componentes específicos del juego permanecen separados:
 
+Los componentes actuales del núcleo se organizan mediante:
+
 ```text
-scripts/core/
-	Infraestructura y contratos compartidos.
+core/bus/
+	Infraestructura de intercambio de mensajes.
 
-scripts/physics/
-	Cálculos y modelos físicos reutilizables.
+core/device/
+	Modelo común de Devices y sus especializaciones.
 
-scripts/vehicle/
-	Componentes, estado y sistemas de la nave.
+core/debug/
+	Observación y herramientas de diagnóstico del Core.
+
+profiles/
+	Recursos de configuración y perfiles.
+
+test/core/
+	Pruebas nuevas e independientes de componentes del Core.
 ```
 
 Los sistemas físicos pueden usar infraestructura del Core cuando necesiten intercambiar información con otros subsistemas.
@@ -115,7 +124,9 @@ No todos los roles tienen todavía una implementación definitiva.
 
 | Componente o concepto | Responsabilidad | Estado arquitectónico |
 |---|---|---|
-| DeviceBus | Intercambiar mensajes entre productores y consumidores | ADR-001 aceptado; diseño 1.0 activo; implementación pendiente |
+| DeviceBus | Intercambiar mensajes entre productores y consumidores | ADR-001 y ADR-004 aceptados; diseño 1.1 activo; implementación aislada verificada; migración de consumidores pendiente |
+| BusTopics | Proporcionar identidades canónicas para los topics internos | ADR-005 aceptado; diseño 1.0 activo; implementación pendiente |
+| BusMessage | Representar un envelope de mensaje construido completamente y tratado como solo lectura | ADR-005 aceptado; diseño 1.0 activo; implementación pendiente |
 | Device | Representar una unidad funcional capaz de interactuar con DeviceBus | Concepto definido; contrato pendiente |
 | Provider | Producir datos desde una fuente concreta | Concepto definido; ADR pendiente |
 | Measurement | Representar un dato producido por un sensor | Concepto definido; contrato pendiente |
@@ -390,6 +401,35 @@ DeviceBus no será un EventBus global de Godot ni se añadirá como autoload por
 
 Su propietario, creación y ciclo de vida deberán definirse explícitamente durante el diseño de su implementación.
 
+### 10.1 Propiedad de DeviceBus
+
+Cada contexto de ejecución tendrá una Composition Root explícita.
+
+La Composition Root:
+
+- crea DeviceBus;
+- conserva la referencia principal;
+- entrega la misma instancia a los participantes;
+- coordina la inicialización;
+- coordina el cierre;
+- limpia el Bus al finalizar;
+- libera su referencia.
+
+DeviceBus no será:
+
+- un Node hijo;
+- un autoload;
+- un singleton global;
+- una dependencia descubierta mediante rutas.
+
+Los participantes recibirán el Bus explícitamente.
+
+Cada prueba, juego o herramienta puede utilizar una instancia independiente.
+
+La Composition Root es un rol arquitectónico.
+
+ADR-004 no obliga todavía a crear una clase concreta llamada `CompositionRoot` o `DeviceRuntime`.
+
 ## 11. Estado y representación
 
 El estado de la simulación y su representación deben permanecer separados.
@@ -551,24 +591,34 @@ Velocity utilizará un Message Bus interno para gestionar el intercambio desacop
 
 DeviceBus permanecerá agnóstico respecto a Devices concretos, Providers, física, presentación, telemetría y hardware.
 
-## 15. Decisiones pendientes
+### ADR-005 — Topic and Message Contract
 
-Los siguientes elementos todavía requieren diseño o un ADR:
+Todos los topics internos utilizarán StringName.
 
-- API concreta de DeviceBus;
-- representación de suscripciones;
-- propiedad y ciclo de vida de DeviceBus;
-- contrato de Device;
-- contrato de Provider;
-- contrato de Measurement;
-- identidad y estructura de los topics;
-- mecanismo para aislar fallos de suscriptores;
-- ADR-002 para DeviceGraph;
-- ADR-003 para Provider System.
+BusTopics será el catálogo canónico de identidades.
 
-Una decisión pendiente no debe resolverse accidentalmente dentro de una implementación.
+BusMessage será un RefCounted construido completamente, sin setters públicos y con un payload Variant.
 
-Si una implementación necesita una decisión que todavía no existe, el trabajo se detiene y la decisión se documenta primero.
+DeviceManifest utilizará Array[StringName] para los topics que publica y consume.
+
+DeviceBus permanecerá agnóstico respecto a BusMessage y conservará la firma:
+
+```gdscript
+publish(
+	topic: StringName,
+	message: Variant
+)```
+
+### 15. Decisiones pendientes
+
+La API, comportamiento, propiedad y ciclo de vida de DeviceBus 1.0 están definidos mediante:
+
+```text
+ADR-001 — DeviceBus
+
+ADR-004 — DeviceBus Ownership and Composition
+
+docs/architecture/device_bus_design.md```
 
 ## 16. Regla de evolución
 

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dkwtf6dqobunt"]
+
+[ext_resource type="Script" uid="uid://fqm48uexbb4o" path="res://test/core/message_contract/device_manifest_topic_test.gd" id="1_r0mda"]
+
+[node name="DeviceManifestTopicTest" type="Node" unique_id=1192539181]
+script = ExtResource("1_r0mda")

@@ -111,3 +111,19 @@ Siguiente paso:
 
 Implementar res://scripts/core/device_bus.gd
 en etapas pequeñas y verificables.
+
+```text
+Corrección de ubicación:
+
+La implementación autorizada de DeviceBus se encuentra en:
+
+res://core/bus/device_bus.gd
+
+La referencia anterior a:
+
+res://scripts/core/device_bus.gd
+
+fue registrada antes de revisar el repositorio completo
+y no corresponde a la estructura real del proyecto.
+
+Esta corrección no modifica las decisiones del diseño.```

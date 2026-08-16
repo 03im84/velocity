@@ -3,10 +3,10 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 2026-08-14 |
 | ADR relacionado | ADR-001 — DeviceBus |
-| Implementación prevista | `res://scripts/core/device_bus.gd` |
+| Implementación prevista | `res://core/bus/device_bus.gd` |
 
 ## 1. Propósito
 

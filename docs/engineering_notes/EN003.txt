@@ -1,0 +1,325 @@
+EN003 – DeviceBus Dependency and Migration Audit
+
+Fecha:
+2026-08-15
+
+Repositorio:
+
+https://github.com/03im84/velocity
+
+Commit de referencia:
+
+c65d33e2fde9e615a30627d13ef17c989216c878
+
+Tema:
+
+Auditoría de dependencias entre la implementación
+anterior de DeviceBus, la nueva implementación
+RefCounted, sus consumidores y las escenas de prueba.
+
+Objetivo:
+
+Determinar si la implementación anterior puede
+eliminarse sin romper componentes, escenas o
+baselines existentes.
+
+Estructura autorizada:
+
+La implementación activa se encuentra en:
+
+res://core/bus/device_bus.gd
+
+La copia temporal de la implementación anterior
+se encuentra en:
+
+res://core/bus/device_bus_bckup.gd
+
+DeviceBus nuevo:
+
+Clase base:
+RefCounted
+
+Class name:
+DeviceBus
+
+UID:
+
+uid://oa1mcd2k1ag1
+
+DeviceBus anterior:
+
+Clase base:
+Node
+
+Class name:
+
+Comentado temporalmente para evitar conflicto.
+
+UID:
+
+uid://s3omjxfe2std
+
+Resultado de búsqueda del UID anterior:
+
+Sin referencias externas.
+
+Observación importante:
+
+La nueva implementación fue escrita sobre el archivo
+principal:
+
+core/bus/device_bus.gd
+
+Por ello conserva el UID que utilizaban las escenas
+de la implementación anterior.
+
+Las escenas anteriores no apuntan al archivo de backup.
+
+Apuntan al archivo principal, que ahora contiene
+la implementación RefCounted.
+
+Pruebas aprobadas del DeviceBus nuevo:
+
+DeviceBusRegistryTest
+
+Checks:
+37
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusPublishTest
+
+Checks:
+21
+
+Failures:
+0
+
+Result:
+PASS
+
+DB-E01 – Failure Isolation
+
+Checks:
+2
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusIntegrationTest
+
+Checks:
+12
+
+Failures:
+0
+
+Result:
+PASS
+
+Total:
+
+72 verificaciones correctas.
+
+0 fallos.
+
+Consumidores reales encontrados:
+
+1. BusDebugListener
+
+Archivo:
+
+core/debug/bus_debug_listener.gd
+
+Estado:
+
+Recibe DeviceBus mediante inyección explícita:
+
+attach(bus: DeviceBus)
+
+Esto es compatible con la arquitectura nueva.
+
+Pendiente:
+
+detach() todavía no utiliza unsubscribe().
+
+El comentario existente indica que estaba esperando
+esa capacidad del Bus.
+
+2. DistanceSensorDevice
+
+Archivo:
+
+core/device/sensors/distance_sensor_device.gd
+
+Estado:
+
+Recibe DeviceBus mediante initialize_sensor().
+
+Esto es compatible con inyección explícita.
+
+Incompatibilidad encontrada:
+
+Utiliza la firma anterior:
+
+device_bus.publish(message)
+
+La API nueva requiere:
+
+device_bus.publish(topic, message)
+
+No debe modificarse hasta definir el contrato
+canónico entre Topic y BusMessage.
+
+Pruebas de la arquitectura anterior encontradas:
+
+core/tests/bus/bus_test.gd
+
+core/tests/DistanceSensorIntegrationTest/
+distance_sensor_integration_test.gd
+
+core/tests/distance_sensor_test/
+distance_sensor_test.gd
+
+core/tests/physics_provider_test/
+physics_distance_provider_test.gd
+
+Escenas dependientes encontradas:
+
+core/tests/bus/bus_test.tscn
+
+core/tests/DistanceSensorIntegrationTest/
+distance_sensor_integration_test.tscn
+
+core/tests/distance_sensor_test/
+distance_sensor_test.tscn
+
+core/tests/physics_provider_test/
+PhysicsProviderTest.tscn
+
+Patrón utilizado por las pruebas anteriores:
+
+@onready var device_bus: DeviceBus = $DeviceBus
+
+Las escenas contienen un Node hijo llamado:
+
+DeviceBus
+
+y adjuntan:
+
+res://core/bus/device_bus.gd
+
+Incompatibilidad:
+
+La implementación nueva hereda de RefCounted.
+
+Un RefCounted no puede funcionar como Node del árbol
+de escenas ni obtenerse mediante $DeviceBus.
+
+Las pruebas anteriores representan una arquitectura
+de propiedad diferente.
+
+Regla aplicada:
+
+Las pruebas anteriores son baselines y no serán
+modificadas para probar la arquitectura nueva.
+
+Deberán crearse reemplazos nuevos antes de declarar
+las anteriores como superadas.
+
+Contrato de topics:
+
+BusTopics utiliza actualmente String.
+
+BusMessage.topic utiliza actualmente String.
+
+DeviceManifest utiliza Array[String] para topics.
+
+DeviceBus 1.0 utiliza StringName.
+
+Esta diferencia necesita una decisión explícita.
+
+No se realizarán conversiones improvisadas dentro
+de los consumidores.
+
+Problema adicional descubierto:
+
+Existen dos scripts con:
+
+class_name DistanceProvider
+
+Archivos:
+
+core/device/sensors/providers/distance_provider.gd
+
+core/device/sensors/providers/
+distance_provider_protoype.gd
+
+ManualDistanceProvider utiliza las variables:
+
+distance
+valid
+
+pero esas variables no existen en la clase base
+activa distance_provider.gd.
+
+Este problema pertenece al diseño de Provider System
+y no será resuelto como parte de la migración
+de DeviceBus.
+
+Debe abordarse mediante ADR-003.
+
+Decisiones de esta auditoría:
+
+1. core/bus/device_bus.gd es la implementación
+   nueva y autorizada.
+
+2. core/bus/device_bus_bckup.gd se conserva
+   temporalmente como respaldo de migración.
+
+3. El archivo de backup no tiene referencias
+   externas activas.
+
+4. El backup y su UID se eliminarán juntos
+   después de completar la migración.
+
+5. Las pruebas anteriores no serán modificadas
+   silenciosamente.
+
+6. Se crearán nuevas pruebas equivalentes cuando
+   exista una decisión de composición.
+
+7. Los consumidores reales deberán migrarse
+   mediante cambios diseñados y verificados.
+
+8. La propiedad y el ciclo de vida de DeviceBus
+   requieren ADR-004.
+
+9. El contrato Topic/Message requiere una decisión
+   separada antes de migrar DistanceSensorDevice.
+
+10. Provider System permanece fuera del alcance
+	de esta migración.
+
+Riesgo principal:
+
+Eliminar o modificar componentes antes de definir
+la propiedad de DeviceBus podría romper baselines
+anteriores o introducir un nuevo global oculto.
+
+Siguiente paso:
+
+Redactar ADR-004:
+
+DeviceBus Ownership and Composition.
+
+Estado:
+
+AUDITORÍA COMPLETA

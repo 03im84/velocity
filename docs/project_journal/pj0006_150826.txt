@@ -1,0 +1,93 @@
+PJ0006 – Contrato canónico de Topic y Message
+
+Fecha:
+2026-08-15
+
+Objetivo:
+
+Definir un contrato único entre BusTopics,
+BusMessage, DeviceManifest y DeviceBus antes
+de migrar consumidores reales.
+
+Documentos:
+
+docs/architecture/adr/
+ADR-005 — Topic and Message Contract.md
+
+docs/architecture/
+topic_message_contract_design.md
+
+Resultado:
+
+✔ ADR-005 aprobado.
+
+✔ Diseño del contrato aprobado.
+
+✔ StringName será el tipo canónico de Topic.
+
+✔ Los nombres de topics utilizarán lower_snake_case.
+
+✔ BusTopics será el catálogo canónico.
+
+✔ BusMessage dejará de ser Resource.
+
+✔ BusMessage heredará de RefCounted.
+
+✔ BusMessage se construirá completamente
+  mediante _init().
+
+✔ BusMessage no expondrá setters.
+
+✔ BusMessage utilizará Variant como payload.
+
+✔ Source ID continuará utilizando String.
+
+✔ Timestamp continuará utilizando float.
+
+✔ DeviceManifest conservará @export.
+
+✔ DeviceManifest utilizará Array[StringName]
+  para publishes y subscribes.
+
+✔ DeviceBus permanecerá agnóstico.
+
+✔ DeviceBus no será modificado.
+
+✔ Se definieron pruebas unitarias nuevas.
+
+✔ Se definieron pruebas sucesoras nuevas.
+
+✔ Provider System permaneció fuera del alcance.
+
+Estado:
+
+APROBADO
+
+Versión:
+
+1.0
+
+Decisión:
+
+La migración de contratos puede comenzar.
+
+Orden autorizado:
+
+1. BusTopics.
+
+2. BusMessage.
+
+3. DeviceManifest.
+
+4. Routing mediante BusMessage.
+
+5. BusDebugListener.
+
+6. DistanceSensorDevice.
+
+No se modificó código durante este hito.
+
+Siguiente paso:
+
+Implementar BusTopics con StringName
+y ejecutar su prueba de contrato.

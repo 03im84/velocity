@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cv46t84hkh00p"]
+
+[ext_resource type="Script" uid="uid://bouagdtiqf4ip" path="res://test/core/message_contract/bus_message_routing_test.gd" id="1_mhak6"]
+
+[node name="BusMessageRoutingTest" type="Node" unique_id=1186120175]
+script = ExtResource("1_mhak6")

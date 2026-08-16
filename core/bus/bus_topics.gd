@@ -2,11 +2,33 @@ extends RefCounted
 class_name BusTopics
 
 
-const TEST_MESSAGE: String = "test_message"
+##
+## BusTopics
+##
+## Catálogo canónico de topics internos
+## conocidos por Velocity.
+##
+## Todos los topics utilizan StringName
+## y lower_snake_case.
+##
 
-const DISTANCE_MEASUREMENT: String = "distance_measurement"
-const TEMPERATURE_MEASUREMENT: String = "temperature_measurement"
 
-const HEALTH_REPORT: String = "health_report"
+const TEST_MESSAGE: StringName = (
+	&"test_message"
+)
 
-const PROPULSION_COMMAND: String = "propulsion_command"
+const DISTANCE_MEASUREMENT: StringName = (
+	&"distance_measurement"
+)
+
+const TEMPERATURE_MEASUREMENT: StringName = (
+	&"temperature_measurement"
+)
+
+const HEALTH_REPORT: StringName = (
+	&"health_report"
+)
+
+const PROPULSION_COMMAND: StringName = (
+	&"propulsion_command"
+)

@@ -489,38 +489,21 @@ Este ADR no decide:
 
 Estas decisiones pertenecen al diseño de implementación o a ADR futuros.
 
-## 15. Criterios de aceptación
+### ADR-004 — DeviceBus Ownership and Composition
 
-Una implementación satisface ADR-001 si:
+Cada contexto de ejecución tendrá una Composition Root explícita responsable de crear, conservar, entregar y cerrar su instancia de DeviceBus.
 
-1. conserva la responsabilidad única definida;
+Los participantes recibirán el Bus mediante inyección explícita.
 
-2. expone únicamente las capacidades aprobadas;
+DeviceBus no será Node, autoload, singleton o dependencia global.
 
-3. no conoce Devices concretos;
+## 15. Decisiones pendientes
 
-4. no interpreta mensajes;
+La API, comportamiento, propiedad y ciclo de vida de DeviceBus 1.0 están definidos mediante:
 
-5. no crea Devices;
+```text
+ADR-001 — DeviceBus
 
-6. mantiene un orden de entrega determinista;
+ADR-004 — DeviceBus Ownership and Composition
 
-7. continúa la entrega cuando un suscriptor no puede procesar un mensaje;
-
-8. puede probarse sin cargar el juego completo;
-
-9. no depende de HUD, física, telemetría, red o hardware;
-
-10. puede reemplazarse sin modificar productores y consumidores ajenos a su contrato.
-
-## 16. Regla de evolución
-
-Antes de añadir una capacidad a DeviceBus se preguntará:
-
-> ¿Esta capacidad pertenece al intercambio de mensajes entre productores y consumidores?
-
-Si la respuesta es no, la capacidad deberá implementarse en otro componente.
-
-Si una nueva necesidad cambia la responsabilidad fundamental del Bus, ADR-001 deberá revisarse antes de modificar el código.
-
-DeviceBus debe seguir siendo pequeño, comprensible, comprobable y reemplazable.
+docs/architecture/device_bus_design.md

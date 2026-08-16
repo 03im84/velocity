@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://ci2eii32sanmk"]
+
+[ext_resource type="Script" uid="uid://c2md8j2oyyjts" path="res://test/core/debug/bus_debug_listener_integration_test.gd" id="1_poxyg"]
+
+[node name="BusDebugListenerIntegrationTest" type="Node" unique_id=1228094921]
+script = ExtResource("1_poxyg")

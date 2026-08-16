@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dxgxarsojh4fi"]
+
+[ext_resource type="Script" uid="uid://7uhwqpy1ybjb" path="res://test/core/message_contract/bus_message_contract_test.gd" id="1_ccmlt"]
+
+[node name="BusMessageContractTest" type="Node" unique_id=1875713596]
+script = ExtResource("1_ccmlt")

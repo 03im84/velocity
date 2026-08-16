@@ -1,0 +1,174 @@
+PJ0005 – DeviceBus 1.0 y composición explícita
+
+Fecha:
+2026-08-15
+
+Objetivo:
+
+Implementar y verificar DeviceBus 1.0, auditar
+sus dependencias y definir su modelo de propiedad
+y composición.
+
+Documentos relacionados:
+
+docs/architecture/core_architecture.md
+
+docs/architecture/adr/ADR-001-device_bus.md
+
+docs/architecture/adr/
+ADR-004 — DeviceBus Ownership and Composition.md
+
+docs/architecture/device_bus_design.md
+
+docs/engineering_notes/EN002.txt
+
+docs/engineering_notes/EN003.txt
+
+Implementación:
+
+core/bus/device_bus.gd
+
+Resultado de implementación:
+
+✔ DeviceBus hereda de RefCounted.
+
+✔ El registro utiliza topics StringName
+  y listas ordenadas de Callables.
+
+✔ Se implementó subscribe().
+
+✔ Se implementó unsubscribe().
+
+✔ Se implementó publish().
+
+✔ Se implementó clear().
+
+✔ Se implementó has_subscribers().
+
+✔ Se implementó get_subscriber_count().
+
+✔ Se implementó get_topics().
+
+✔ Se implementó limpieza de Callables inválidos.
+
+✔ Se implementaron instantáneas de publicación.
+
+✔ Se verificó publicación reentrante.
+
+Resultados de pruebas:
+
+DeviceBusRegistryTest:
+
+Checks:
+37
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusPublishTest:
+
+Checks:
+21
+
+Failures:
+0
+
+Result:
+PASS
+
+DB-E01 – Failure Isolation:
+
+Checks:
+2
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusIntegrationTest:
+
+Checks:
+12
+
+Failures:
+0
+
+Result:
+PASS
+
+Total:
+
+72 verificaciones correctas.
+
+0 fallos.
+
+Auditoría:
+
+✔ Se identificaron consumidores reales.
+
+✔ Se identificaron pruebas de la arquitectura anterior.
+
+✔ Se confirmó que las pruebas anteriores utilizaban
+  DeviceBus como Node.
+
+✔ Se confirmó que el Bus nuevo conserva la ruta
+  y el UID del archivo principal anterior.
+
+✔ Se identificó el backup temporal.
+
+✔ Se identificó la diferencia entre String
+  y StringName en los contratos de topics.
+
+✔ Se identificó un problema separado en
+  Provider System.
+
+Decisión arquitectónica:
+
+ADR-004 aprobado.
+
+Cada contexto utilizará una Composition Root explícita.
+
+La Composition Root:
+
+- creará DeviceBus;
+- conservará la referencia principal;
+- entregará el Bus a los participantes;
+- coordinará inicio y cierre.
+
+DeviceBus no será:
+
+- Node;
+- autoload;
+- singleton;
+- dependencia global.
+
+Estado de DeviceBus:
+
+IMPLEMENTACIÓN AISLADA APROBADA
+
+Estado de migración:
+
+PENDIENTE
+
+El backup anterior se conserva temporalmente hasta
+completar la migración.
+
+Las pruebas anteriores no serán modificadas
+silenciosamente.
+
+Siguiente paso:
+
+Definir el contrato canónico entre:
+
+- BusTopics;
+- BusMessage;
+- DeviceBus;
+- DeviceManifest.
+
+Después se migrarán los consumidores reales
+y se crearán pruebas sucesoras.
