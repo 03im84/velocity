@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://doccili6o1wom"]
+
+[ext_resource type="Script" uid="uid://dtn3ua61xw35e" path="res://test/core/device/distance_sensor_message_test.gd" id="1_m7j3i"]
+
+[node name="DistanceSensorMessageTest" type="Node" unique_id=85628089]
+script = ExtResource("1_m7j3i")

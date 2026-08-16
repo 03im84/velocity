@@ -62,6 +62,7 @@ func shutdown() -> bool:
 	return device.shutdown()
 
 func publish_measurement() -> void:
+
 	if device == null:
 		return
 
@@ -73,18 +74,29 @@ func publish_measurement() -> void:
 
 	var measurement := DistanceMeasurement.new()
 
-	measurement.distance = distance_provider.get_distance()
-	measurement.valid = distance_provider.is_valid()
-	measurement.timestamp = Time.get_ticks_msec() / 1000.0
+	measurement.distance = (
+		distance_provider.get_distance()
+	)
 
-	var message := BusMessage.new()
+	measurement.valid = (
+		distance_provider.is_valid()
+	)
 
-	message.source_id = device.get_identity().get_device_id()
-	message.topic = BusTopics.DISTANCE_MEASUREMENT
-	message.timestamp = measurement.timestamp
+	measurement.timestamp = (
+		Time.get_ticks_msec() / 1000.0
+	)
 
-	message.set_data({
-		"measurement": measurement
-	})
+	var message := BusMessage.new(
+		device.get_identity().get_device_id(),
+		BusTopics.DISTANCE_MEASUREMENT,
+		measurement.timestamp,
+		measurement
+	)
 
-	device_bus.publish(message)
+	if not message.is_valid():
+		return
+
+	device_bus.publish(
+		message.get_topic(),
+		message
+	)
