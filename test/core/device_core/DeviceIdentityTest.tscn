@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bpi00ap8cb1cf"]
+
+[ext_resource type="Script" uid="uid://b3xslykil6e08" path="res://test/core/device_core/device_identity_test.gd" id="1_lllb1"]
+
+[node name="DeviceIdentityTest" type="Node" unique_id=254930405]
+script = ExtResource("1_lllb1")

@@ -1,0 +1,458 @@
+EN005 – Intermittent Test Output in Godot Editor
+
+Fecha:
+2026-08-15
+
+Tema:
+
+Salida vacía o parcial al ejecutar escenas
+de prueba desde el editor de Godot.
+
+Entorno:
+
+Godot Engine:
+4.7.1.stable.official.a13da4feb
+
+Renderer:
+D3D12 Forward+
+
+Síntoma:
+
+Al ejecutar escenas de prueba mediante
+Run Current Scene, algunas ejecuciones:
+
+- no mostraban salida;
+- mostraban salida parcial;
+- mostraban la salida completa después
+  de repetir la ejecución.
+
+El comportamiento era aleatorio.
+
+El proceso de depuración sí comenzaba.
+
+Hipótesis inicial:
+
+SceneTree terminaba antes de que el panel Output
+procesara todos los print().
+
+Experimento 1:
+
+Sustituir quit() inmediato por:
+
+call_deferred("quit")
+
+Resultado:
+
+La salida continuó siendo aleatoria.
+
+Conclusión:
+
+call_deferred() no resolvió el problema.
+
+Experimento 2:
+
+Esperar dos process_frame antes de quit().
+
+Resultado:
+
+La salida continuó siendo aleatoria mientras
+la limpieza automática del panel permanecía activa.
+
+Conclusión:
+
+La terminación rápida no era la única causa.
+
+Hallazgo:
+
+Godot Editor tenía activa la configuración:
+
+Run
+→ Output
+→ Always Clear Output on Play
+
+El editor limpiaba automáticamente el panel
+al comenzar una ejecución.
+
+Las escenas de prueba producen salida muy pronto.
+
+Se observó una condición de timing entre:
+
+- inicio del proceso;
+- impresión inicial;
+- limpieza automática del panel.
+
+Experimento 3:
+
+Desactivar:
+
+Always Clear Output on Play
+
+y limpiar el panel manualmente antes de cada prueba.
+
+Resultado:
+
+10 ejecuciones consecutivas completas.
+
+10 COMPLETE.
+
+0 PARTIAL.
+
+0 EMPTY.
+
+Conclusión:
+
+La limpieza automática del panel era la causa
+de la salida intermitente observada.
+
+Decisión:
+
+Durante el desarrollo y ejecución manual de pruebas:
+
+Always Clear Output on Play:
+OFF
+
+Antes de cada prueba:
+
+El desarrollador limpiará manualmente
+el panel Output.
+
+No se modificarán los baselines existentes.
+
+No se añadirán:
+
+- delays;
+- timers;
+- frames de espera;
+- call_deferred();
+- lógica de sincronización artificial;
+
+únicamente para mostrar resultados en el editor.
+
+La configuración pertenece al entorno de desarrollo,
+no al código del proyecto.
+
+Estado:
+
+VERIFICADO
+
+Seguimiento posterior:
+
+Después de desactivar:
+
+Always Clear Output on Play
+
+se observó nuevamente el comportamiento:
+
+STARTED_EMPTY
+
+Durante una secuencia se iniciaron tres procesos.
+
+Los dos primeros mostraron únicamente:
+
+Godot Engine v4.7.1
+
+y la información del renderer.
+
+El tercer proceso ejecutó completamente
+DeviceLifecycleTest.
+
+Resultado:
+
+DeviceLifecycleTest
+
+Checks:
+27
+
+Failures:
+0
+
+Result:
+PASS
+
+Conclusión corregida:
+
+La limpieza automática del panel Output contribuía
+a ocultar resultados, pero no era la única causa.
+
+Godot Editor puede iniciar un proceso de prueba
+sin que la escena actual llegue a producir su salida.
+
+La causa exacta dentro del mecanismo Run Current Scene
+permanece sin determinar.
+
+Estado de la investigación:
+
+REABIERTA
+
+Siguiente verificación:
+
+Ejecutar la misma escena directamente desde
+la línea de comandos en modo headless.
+
+El resultado de línea de comandos será considerado
+más confiable porque no depende del panel Output
+ni del mecanismo Run Current Scene del editor.
+
+Verificación final mediante línea de comandos:
+
+Se utilizó el ejecutable:
+
+Godot_v4.7.1-stable_win64_console.exe
+
+Modo:
+
+--headless
+
+Escena verificada:
+
+test/core/device_core/
+DeviceLifecycleTest.tscn
+
+Resultado:
+
+5 ejecuciones consecutivas completas.
+
+5 resultados PASS.
+
+5 códigos de salida iguales a 0.
+
+No se observaron ejecuciones STARTED_EMPTY.
+
+Verificación de código de fallo:
+
+Se creó temporalmente:
+
+test/infrastructure/
+ExitCodeFailureExperiment.tscn
+
+La escena ejecutó:
+
+get_tree().quit(7)
+
+Resultado:
+
+La salida se mostró completamente.
+
+El código recibido por PowerShell fue:
+
+7
+
+El resultado se repitió correctamente
+en todas las ejecuciones realizadas.
+
+Conclusión final:
+
+La ejecución headless mediante el ejecutable
+de consola es confiable en este entorno.
+
+El código de salida representa correctamente:
+
+0:
+prueba terminada correctamente.
+
+Distinto de 0:
+prueba o verificación fallida.
+
+Run Current Scene del editor permanece útil
+para desarrollo interactivo, pero no será
+la autoridad final para aprobar baselines.
+
+Always Clear Output on Play en OFF mejora
+la visibilidad del panel, pero no elimina
+la aleatoriedad de Run Current Scene.
+
+Decisión final:
+
+Las pruebas definitivas se ejecutarán mediante:
+
+Godot Console
+
+--headless
+
+--path
+
+ruta explícita de la escena
+
+Criterio de aprobación:
+
+RESULT: PASS
+
+y
+
+Exit code: 0
+
+Estado de la investigación:
+
+CERRADA
+
+Automatización de pruebas:
+
+Se creó:
+
+test/tools/run_godot_tests.ps1
+
+Responsabilidades del runner:
+
+- localizar la raíz del proyecto;
+- localizar Godot Console;
+- validar la existencia de escenas;
+- ejecutar Godot en modo headless;
+- repetir pruebas;
+- ejecutar una escena individual;
+- descubrir pruebas bajo test/;
+- capturar códigos de salida;
+- mostrar un resumen;
+- propagar un resultado agregado.
+
+Verificación positiva:
+
+Escena:
+
+test/core/device_core/
+DeviceLifecycleTest.tscn
+
+Repeticiones:
+
+5
+
+Resultado:
+
+5 PASS.
+
+0 FAIL.
+
+Exit code de cada escena:
+
+0
+
+Exit code del runner:
+
+0
+
+Verificación negativa:
+
+Escena temporal:
+
+test/infrastructure/
+RunnerFailureExperiment.tscn
+
+Exit code intencional de la escena:
+
+7
+
+Resultado detectado por el runner:
+
+FAIL
+
+Resumen:
+
+Total runs:
+1
+
+Passed:
+0
+
+Failed:
+1
+
+Exit code agregado del runner:
+
+1
+
+Conclusión:
+
+El runner distingue correctamente entre:
+
+- éxito de escena;
+- fallo de escena;
+- fallo agregado del conjunto;
+- escena inexistente.
+
+La ejecución headless automatizada queda aprobada
+como mecanismo autoritativo para pruebas.
+
+Estado final:
+
+INVESTIGACIÓN CERRADA
+
+TEST RUNNER PARCIALMENTE VERIFICADO
+
+Modo -All pendiente.
+
+Verificación final del modo All:
+
+Comando:
+
+test/tools/run_godot_tests.ps1 -All
+
+Escenas descubiertas:
+
+19
+
+Resultados:
+
+Passed:
+19
+
+Failed:
+0
+
+Timeout:
+0
+
+Engine Error:
+0
+
+Resultado:
+
+PASS
+
+Exit code del runner:
+
+0
+
+Incidentes detectados durante la verificación:
+
+1. El runner inicialmente capturaba stdout como
+   objetos de resultado.
+
+2. Windows PowerShell 5.1 interpretaba stderr
+   nativo como NativeCommandError.
+
+3. Start-Process necesitó Refresh() para obtener
+   ExitCode correctamente.
+
+4. Se añadió timeout por escena.
+
+5. Se añadió detección de errores del engine
+   cuando Godot devuelve ExitCode 0.
+
+6. El runner detectó un script baseline
+   eliminado accidentalmente:
+
+   bus_topics_contract_test.gd
+
+7. El baseline fue restaurado y volvió a PASS.
+
+Capacidades finales verificadas:
+
+- ejecución individual;
+- Repeat;
+- descubrimiento All;
+- múltiples escenas;
+- continuación después de fallo;
+- continuación después de timeout;
+- detección de stderr;
+- detección de errores con ExitCode 0;
+- ExitCode 124 para timeout;
+- ExitCode 125 para proceso no confirmado;
+- ExitCode 126 para engine error;
+- resumen agregado;
+- ExitCode 0 cuando todas pasan;
+- ExitCode 1 cuando alguna falla.
+
+Estado final:
+
+INVESTIGACIÓN CERRADA
+
+TEST RUNNER COMPLETAMENTE VERIFICADO

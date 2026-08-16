@@ -3,7 +3,7 @@
 | Campo | Valor |
 |  ---  |  ---  |
 | Estado | ACTIVO |
-| Versión | 1.7 |
+| Versión | 1.9 |
 | Fecha inicial   | 2026-08-14 |
 | Última revisión | 2026-08-15 |
 | Alcance | Núcleo lógico de Velocity |
@@ -127,7 +127,10 @@ No todos los roles tienen todavía una implementación definitiva.
 | DeviceBus | Intercambiar mensajes entre productores y consumidores | ADR-001 y ADR-004 aceptados; diseño 1.1 activo; implementación aislada verificada; migración de consumidores pendiente |
 | BusTopics | Proporcionar identidades canónicas para los topics internos | ADR-005 aceptado; implementación verificada |
 | BusMessage | Representar un envelope de mensaje construido completamente y tratado como solo lectura | ADR-005 aceptado; diseño 1.0 activo; implementación pendiente |
-| Device | Representar una unidad funcional capaz de interactuar con DeviceBus | Concepto definido; contrato pendiente |
+| Device | Reunir identidad, manifest, estado, health y lifecycle comunes | ADR-006 aceptado; diseño 1.1 activo; implementación verificada |
+| DeviceLifecycle | Representar la etapa operacional y sus transiciones | ADR-006 aceptado; implementación verificada |
+| DeviceHealth | Representar condición operacional, faults y warnings | ADR-006 aceptado; implementación verificada |
+| DeviceState | Representar validez y timestamp de los datos | ADR-006 aceptado; implementación verificada |
 | Provider | Producir datos desde una fuente concreta mediante un contrato de comportamiento | ADR-003 aceptado; diseño 1.1 activo; implementación verificada |
 | Measurement | Representar un dato producido por un sensor | Concepto definido; contrato pendiente |
 | SubscriptionRegistry | Gestionar suscripciones fuera de DeviceBus cuando la complejidad lo requiera | Evolución prevista |
@@ -622,24 +625,43 @@ publish(
 	message: Variant
 )```
 
-## 15. Decisiones pendientes
+### ADR-006 — Device Core Contract
 
-DeviceBus, su propiedad y el contrato Topic/Message están definidos mediante:
+Device Core será independiente del árbol de escenas.
+
+Device heredará de RefCounted y compondrá:
 
 ```text
-ADR-001 — DeviceBus
+DeviceIdentity
 
-ADR-003 — Provider System
+DeviceManifest
 
-docs/architecture/provider_system_design.md
+DeviceState
 
-ADR-004 — DeviceBus Ownership and Composition
+DeviceHealth
 
-ADR-005 — Topic and Message Contract
+DeviceLifecycle```
 
-docs/architecture/device_bus_design.md
+### Archivo a modificar
 
-docs/architecture/topic_message_contract_design.md```
+```text
+res://docs/architecture/core_architecture.md```
+
+## 15. Decisiones pendientes
+
+Los siguientes subsistemas están definidos e implementados:
+
+```text
+DeviceBus
+
+DeviceBus Ownership and Composition
+
+Topic and Message Contract
+
+Provider System
+
+Device Core```
+
 
 ## 16. Regla de evolución
 

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://n3njun8vo8el"]
+
+[ext_resource type="Script" uid="uid://km31xtwn5g1v" path="res://test/core/device_core/device_core_contract_test.gd" id="1_5jmlc"]
+
+[node name="DeviceCoreContractTest" type="Node" unique_id=152074770]
+script = ExtResource("1_5jmlc")

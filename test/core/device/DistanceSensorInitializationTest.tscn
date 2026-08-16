@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b7ff36lqx0fp0"]
+
+[ext_resource type="Script" uid="uid://druqnchf07f64" path="res://test/core/device/distance_sensor_initialization_test.gd" id="1_viuus"]
+
+[node name="DistanceSensorInitializationTest" type="Node" unique_id=415642260]
+script = ExtResource("1_viuus")

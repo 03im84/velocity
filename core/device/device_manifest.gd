@@ -3,8 +3,11 @@ class_name DeviceManifest
 
 
 @export var capabilities: Array[String] = []
+
 @export var publishes: Array[StringName] = []
+
 @export var subscribes: Array[StringName] = []
+
 @export var requirements: Array[String] = []
 
 
@@ -29,8 +32,8 @@ func subscribes_to(
 	return subscribes.has(topic)
 
 
-func has_requirements(
-	requiement: String
+func has_requirement(
+	requirement: String
 ) -> bool:
 
-	return requirements.has(requiement)
+	return requirements.has(requirement)

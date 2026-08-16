@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://x5sbnmevt82k"]
+
+[ext_resource type="Script" uid="uid://c2oold215vt0y" path="res://test/core/device/device_state_test.gd" id="1_posof"]
+
+[node name="DeviceStateTest" type="Node" unique_id=875688695]
+script = ExtResource("1_posof")

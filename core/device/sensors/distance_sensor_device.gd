@@ -2,10 +2,27 @@ extends Node
 class_name DistanceSensorDevice
 
 
-var device: Device
-var device_bus: DeviceBus
-var distance_provider : Object
+##
+## DistanceSensorDevice
+##
+## Device especializado que obtiene datos
+## desde un Distance Provider y publica
+## DistanceMeasurement mediante DeviceBus.
+##
+## Compone un Device lógico RefCounted.
+##
 
+
+var device: Device = null
+
+var device_bus: DeviceBus = null
+
+var distance_provider: Object = null
+
+
+# =============================================================================
+# INITIALIZATION
+# =============================================================================
 
 func initialize_sensor(
 	sensor_id: String,
@@ -14,6 +31,9 @@ func initialize_sensor(
 ) -> bool:
 
 	if device != null:
+		return false
+
+	if sensor_id.is_empty():
 		return false
 
 	if bus == null:
@@ -32,27 +52,40 @@ func initialize_sensor(
 	):
 		return false
 
-	device = Device.new()
-	device_bus = bus
-	distance_provider = provider
+	var new_device := Device.new()
 
-	device.get_identity().device_id = sensor_id
-	device.get_identity().device_type = "distance_sensor"
+	new_device.get_identity().device_id = (
+		sensor_id
+	)
 
-	device.get_manifest().capabilities.append(
+	new_device.get_identity().device_type = (
+		"distance_sensor"
+	)
+
+	new_device.get_manifest().capabilities.append(
 		"distance_measurement"
 	)
 
-	device.get_manifest().publishes.append(
+	new_device.get_manifest().publishes.append(
 		BusTopics.DISTANCE_MEASUREMENT
 	)
 
-	add_child(device)
+	if not new_device.initialize():
+		return false
 
-	return device.initialize()
+	device = new_device
+	device_bus = bus
+	distance_provider = provider
 
+	return true
+
+
+# =============================================================================
+# LIFECYCLE
+# =============================================================================
 
 func set_ready() -> bool:
+
 	if device == null:
 		return false
 
@@ -60,6 +93,7 @@ func set_ready() -> bool:
 
 
 func start() -> bool:
+
 	if device == null:
 		return false
 
@@ -67,10 +101,26 @@ func start() -> bool:
 
 
 func shutdown() -> bool:
+
 	if device == null:
 		return false
 
-	return device.shutdown()
+	var shutdown_result: bool = (
+		device.shutdown()
+	)
+
+	if not shutdown_result:
+		return false
+
+	device_bus = null
+	distance_provider = null
+
+	return true
+
+
+# =============================================================================
+# MEASUREMENT
+# =============================================================================
 
 func publish_measurement() -> void:
 

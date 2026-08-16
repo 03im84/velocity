@@ -81,15 +81,80 @@ no por cómo existen dentro del sistema.
 Estados estándar
 	todos los dispositivos deberían compartir exactamente los mismos estados.
 	
-	- OFFLINE
-	- BOOTING
-	- INITIALIZING
-	- READY
-	- RUNNING
-	- WARNING
-	- DEGRADED
-	- FAULT
-	- SHUTDOWN
+Estados estándar de Device
+
+Lifecycle y Health son conceptos separados.
+
+Lifecycle
+
+Lifecycle responde:
+
+¿En qué etapa operacional se encuentra el Device?
+
+Estados:
+
+CREATED
+
+INITIALIZED
+
+READY
+
+RUNNING
+
+SHUTDOWN
+
+Secuencia normal:
+
+CREATED
+	↓
+INITIALIZED
+	↓
+READY
+	↓
+RUNNING
+	↓
+SHUTDOWN
+
+Health
+
+Health responde:
+
+¿En qué condición operacional se encuentra
+el Device?
+
+Estados:
+
+HEALTHY
+
+DEGRADED
+
+CRITICAL
+
+FAILED
+
+Diagnósticos
+
+Warnings y Faults son diagnósticos.
+
+No son estados de Lifecycle.
+
+Añadir un Warning o Fault no cambia
+automáticamente Health.
+
+La política responsable debe utilizar:
+
+set_status()
+
+Ejemplo válido:
+
+Lifecycle:
+RUNNING
+
+Health:
+DEGRADED
+
+Warnings:
+["temperature_near_limit"]
 	
 Capacidades
 Salud del dispositivo (Health)
@@ -151,3 +216,191 @@ Sensor
 ├── Accelerometer
 ├── Pressure Sensor
 └── ...
+
+
+Configuración del panel Output para pruebas
+
+Godot Editor:
+
+Editor
+→ Editor Settings
+→ Run
+→ Output
+→ Always Clear Output on Play
+
+Valor requerido durante pruebas manuales:
+
+OFF
+
+Aclaración:
+
+Desactivar la limpieza automática mejora
+la visibilidad de Output, pero no garantiza
+que Run Current Scene inicie correctamente
+la escena en todos los intentos.
+
+Para verificaciones definitivas se preferirá
+ejecución directa desde línea de comandos
+en modo headless.
+
+Run Current Scene puede utilizarse durante
+desarrollo interactivo, pero una ejecución
+STARTED_EMPTY no se considera resultado
+de prueba.
+
+Antes de ejecutar cada escena de prueba:
+
+Limpiar manualmente el panel Output.
+
+Razón:
+
+La limpieza automática puede ocurrir después
+de que una escena rápida haya comenzado a imprimir,
+produciendo salida vacía o parcial.
+
+No se añadirán esperas artificiales al código
+de pruebas para compensar una configuración
+del editor.
+
+Ejecución autoritativa de pruebas
+
+Las escenas pueden ejecutarse desde el editor
+durante desarrollo interactivo.
+
+Sin embargo, la aprobación final de un baseline
+se realizará mediante Godot Console en modo headless.
+
+Formato:
+
+Godot_v4.7.1-stable_win64_console.exe
+--headless
+--path "."
+"res://ruta/de/la/prueba.tscn"
+
+Una prueba se considera aprobada únicamente cuando:
+
+1. La salida contiene:
+
+RESULT: PASS
+
+2. El código de salida es:
+
+0
+
+Un código diferente de cero representa fallo.
+
+PowerShell:
+
+Después de ejecutar la prueba:
+
+$LASTEXITCODE
+
+debe devolver:
+
+0
+
+Run Current Scene no será utilizado como única
+evidencia de aprobación porque se observaron
+ejecuciones STARTED_EMPTY de forma intermitente.
+
+Configuración recomendada del editor:
+
+Always Clear Output on Play:
+OFF
+
+Esta configuración mejora la observación manual,
+pero no sustituye la ejecución headless.
+
+Velocity PowerShell Test Runner
+
+Archivo:
+
+test/tools/run_godot_tests.ps1
+
+Variable de entorno recomendada:
+
+GODOT_CONSOLE
+
+Ejemplo:
+
+$env:GODOT_CONSOLE =
+"C:\Path\Godot_v4.7.1-stable_win64_console.exe"
+
+Ejecutar una prueba:
+
+.\test\tools\run_godot_tests.ps1
+-Scene "res://ruta/Test.tscn"
+
+Repetir una prueba:
+
+.\test\tools\run_godot_tests.ps1
+-Scene "res://ruta/Test.tscn"
+-Repeat 5
+
+Ejecutar todas las pruebas descubiertas:
+
+.\test\tools\run_godot_tests.ps1
+-All
+
+Criterio de aprobación:
+
+Salida de escena:
+
+RESULT: PASS
+
+Exit code de escena:
+
+0
+
+Resultado del runner:
+
+RESULT: PASS
+
+Exit code del runner:
+
+0
+
+Criterio de fallo:
+
+Una escena devuelve un código distinto de cero.
+
+El runner registra:
+
+Status:
+FAIL
+
+El runner termina con:
+
+Exit code:
+1
+
+Exclusiones automáticas:
+
+test/infrastructure/
+
+device_bus_failure_isolation_test.tscn
+
+Las verificaciones que producen errores
+intencionales no forman parte de la regresión
+regular.
+
+Estado del Velocity PowerShell Test Runner:
+
+COMPLETAMENTE VERIFICADO
+
+Última regresión:
+
+Escenas descubiertas:
+19
+
+Passed:
+19
+
+Failed:
+0
+
+Resultado:
+PASS
+
+Exit code:
+0

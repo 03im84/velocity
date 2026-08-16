@@ -2,9 +2,11 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | BORRADOR |
-| Versión | 0.1 |
+| Estado | ACTIVO |
+| Versión | 1.1 |
 | Fecha | 2026-08-15 |
+| Estado de implementación | COMPLETO |
+| Última verificación | 2026-08-15 |
 | ADR relacionado | ADR-006 — Device Core Contract |
 | Componentes | Device, Identity, Manifest, State, Health, Lifecycle |
 
@@ -2009,6 +2011,25 @@ La implementación no añadirá:
 - telemetría;
 - persistencia.
 
+## 28. Inicialización y cierre de DistanceSensorDevice
+
+### 28.1 Validación inicial
+
+Antes de crear Device se comprobará:
+
+```gdscript
+if device != null:
+	return false
+
+if sensor_id.is_empty():
+	return false
+
+if bus == null:
+	return false
+
+if provider == null:
+	return false```
+	
 ## 29. Resumen de migración
 
 ```text

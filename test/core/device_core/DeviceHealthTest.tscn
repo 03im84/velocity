@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://7hx7k1tv4y5x"]
+
+[ext_resource type="Script" uid="uid://2pjec3kg1oxn" path="res://test/core/device_core/device_health_test.gd" id="1_hdfit"]
+
+[node name="DeviceHealthTest" type="Node" unique_id=1109035179]
+script = ExtResource("1_hdfit")

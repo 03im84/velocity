@@ -1,44 +1,103 @@
-extends Node
+extends RefCounted
 class_name Device
 
-var identity: DeviceIdentity
-var manifest: DeviceManifest
-var state: DeviceState
-var health: DeviceHealth
-var lifecycle: DeviceLifeCycle
+
+##
+## Device
+##
+## Modelo lógico común de un dispositivo.
+##
+## Compone Identity, Manifest, State,
+## Health y Lifecycle.
+##
+## No depende de SceneTree ni DeviceBus.
+##
+
+
+# =============================================================================
+# INTERNAL COMPONENTS
+# =============================================================================
+
+var _identity: DeviceIdentity
+
+var _manifest: DeviceManifest
+
+var _state: DeviceState
+
+var _health: DeviceHealth
+
+var _lifecycle: DeviceLifecycle
+
+
+# =============================================================================
+# INITIALIZATION
+# =============================================================================
 
 func _init() -> void:
-	identity = DeviceIdentity.new()
-	manifest = DeviceManifest.new()
-	state = DeviceState.new()
-	health = DeviceHealth.new()
-	
-	lifecycle = DeviceLifeCycle.new()
-	add_child(lifecycle)
 
+	_identity = DeviceIdentity.new()
+
+	_manifest = DeviceManifest.new()
+
+	_state = DeviceState.new()
+
+	_health = DeviceHealth.new()
+
+	_lifecycle = DeviceLifecycle.new()
+
+
+# =============================================================================
+# LIFECYCLE API
+# =============================================================================
+
+## Valida Identity antes de inicializar.
 func initialize() -> bool:
-	return lifecycle.initialize()
-	
+
+	if not _identity.is_valid():
+		return false
+
+	return _lifecycle.initialize()
+
+
 func set_ready() -> bool:
-	return lifecycle.set_ready()
-	
+
+	return _lifecycle.set_ready()
+
+
 func start() -> bool:
-	return lifecycle.start()
-	
+
+	return _lifecycle.start()
+
+
 func shutdown() -> bool:
-	return lifecycle.shutdown()
+
+	return _lifecycle.shutdown()
+
+
+# =============================================================================
+# COMPONENT ACCESS
+# =============================================================================
 
 func get_identity() -> DeviceIdentity:
-	return identity
+
+	return _identity
+
 
 func get_manifest() -> DeviceManifest:
-	return manifest
-	
+
+	return _manifest
+
+
 func get_state() -> DeviceState:
-	return state
+
+	return _state
+
 
 func get_health() -> DeviceHealth:
-	return health
-	
-func get_lifecycle() -> DeviceLifeCycle:
-	return lifecycle
+
+	return _health
+
+
+func get_lifecycle() -> DeviceLifecycle:
+
+	return _lifecycle

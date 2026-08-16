@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bdem5js7xnvjc"]
+
+[ext_resource type="Script" uid="uid://cpihbxkfybax0" path="res://test/core/device_core/device_lifecycle_test.gd" id="1_xfmn4"]
+
+[node name="DeviceLifecycleTest" type="Node" unique_id=2006890014]
+script = ExtResource("1_xfmn4")

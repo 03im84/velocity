@@ -1,0 +1,93 @@
+PJ0010 – Device Core Architecture
+
+Fecha:
+2026-08-15
+
+Objetivo:
+
+Definir el contrato de Device Core antes de
+modificar Device, Lifecycle, State y Health.
+
+Documentos relacionados:
+
+docs/engineering_notes/EN004.txt
+
+docs/architecture/adr/
+ADR-006 — Device Core Contract.md
+
+docs/architecture/
+device_core_design.md
+
+Decisiones:
+
+✔ Device heredará de RefCounted.
+
+✔ Device no participará en SceneTree.
+
+✔ Device compondrá:
+
+  - DeviceIdentity
+  - DeviceManifest
+  - DeviceState
+  - DeviceHealth
+  - DeviceLifecycle
+
+✔ Los componentes internos serán privados
+  por convención.
+
+✔ DeviceIdentity se validará durante
+  initialize().
+
+✔ DeviceManifest utilizará has_requirement().
+
+✔ DeviceState encapsulará validez y timestamp.
+
+✔ DeviceHealth encapsulará status,
+  faults y warnings.
+
+✔ Faults y warnings no se duplicarán.
+
+✔ Status se administrará explícitamente.
+
+✔ DeviceLifecycle heredará de RefCounted.
+
+✔ DeviceLifeCycle será sustituido por
+  DeviceLifecycle.
+
+✔ Lifecycle y Health permanecerán separados.
+
+✔ DistanceSensorDevice compondrá Device.
+
+✔ DistanceSensorDevice no añadirá Device
+  como Node hijo.
+
+✔ La inicialización del Sensor será
+  transaccional.
+
+✔ Un shutdown correcto liberará DeviceBus
+  y Provider.
+
+✔ Las pruebas anteriores tendrán sucesoras.
+
+Estado:
+
+ARQUITECTURA APROBADA
+
+ADR:
+
+ADR-006 ACEPTADO 1.1
+
+Diseño:
+
+Device Core Design ACTIVO 1.0
+
+Implementación:
+
+PENDIENTE
+
+Siguiente paso:
+
+Crear y ejecutar DeviceIdentityTest.
+
+Después implementar los componentes
+en el orden aprobado.

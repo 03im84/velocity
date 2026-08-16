@@ -1,5 +1,17 @@
-extends Node
-class_name  DeviceLifeCycle
+extends RefCounted
+class_name DeviceLifecycle
+
+
+##
+## DeviceLifecycle
+##
+## Representa la etapa operacional
+## y las transiciones de un Device.
+##
+## No representa Health.
+## No depende de SceneTree.
+##
+
 
 enum State {
 	CREATED,
@@ -9,35 +21,67 @@ enum State {
 	SHUTDOWN
 }
 
-var current_state: State = State.CREATED
 
+# =============================================================================
+# INTERNAL STATE
+# =============================================================================
+
+var _current_state: State = State.CREATED
+
+
+# =============================================================================
+# PUBLIC API
+# =============================================================================
+
+## Transición:
+## CREATED → INITIALIZED
 func initialize() -> bool:
-	if current_state != State.CREATED:
+
+	if _current_state != State.CREATED:
 		return false
-	
-	current_state = State.INITIALIZED
+
+	_current_state = State.INITIALIZED
+
 	return true
-	
+
+
+## Transición:
+## INITIALIZED → READY
 func set_ready() -> bool:
-	if current_state != State.INITIALIZED:
+
+	if _current_state != State.INITIALIZED:
 		return false
-	
-	current_state = State.READY
+
+	_current_state = State.READY
+
 	return true
-	
+
+
+## Transición:
+## READY → RUNNING
 func start() -> bool:
-	if current_state != State.READY:
+
+	if _current_state != State.READY:
 		return false
-	
-	current_state = State.RUNNING
+
+	_current_state = State.RUNNING
+
 	return true
-	
+
+
+## Transición desde cualquier estado
+## distinto de SHUTDOWN.
 func shutdown() -> bool:
-	if current_state == State.SHUTDOWN:
+
+	if _current_state == State.SHUTDOWN:
 		return false
-		
-	current_state = State.SHUTDOWN
+
+	_current_state = State.SHUTDOWN
+
 	return true
-	
+
+
+## Devuelve el estado actual.
 func get_state() -> State:
-	return current_state
+
+	return _current_state
