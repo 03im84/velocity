@@ -3,8 +3,10 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.1 |
+| Versión | 1.2 |
 | Fecha | 2026-08-15 |
+| Estado de implementación | COMPLETO |
+| Última verificación | 2026-08-15 |
 | ADR relacionado | ADR-005 — Topic and Message Contract |
 | Componentes | BusTopics, BusMessage, DeviceManifest |
 

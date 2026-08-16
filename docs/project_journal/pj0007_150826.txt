@@ -1,0 +1,272 @@
+PJ0007 – Migración de Topic, Message y consumidores
+
+Fecha:
+2026-08-15
+
+Objetivo:
+
+Implementar ADR-005, migrar los primeros consumidores
+reales y sustituir pruebas pertenecientes a la
+arquitectura anterior.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-005 — Topic and Message Contract.md
+
+docs/architecture/
+topic_message_contract_design.md
+
+Implementaciones modificadas:
+
+core/bus/bus_topics.gd
+
+core/bus/bus_message.gd
+
+core/device/device_manifest.gd
+
+core/debug/bus_debug_listener.gd
+
+core/device/sensors/distance_sensor_device.gd
+
+Resultados:
+
+✔ BusTopics utiliza StringName.
+
+✔ Los topics oficiales utilizan lower_snake_case.
+
+✔ BusMessage hereda de RefCounted.
+
+✔ BusMessage se construye completamente.
+
+✔ BusMessage no expone setters públicos.
+
+✔ BusMessage utiliza Variant como payload.
+
+✔ DeviceManifest utiliza Array[StringName]
+  para publishes y subscribes.
+
+✔ BusDebugListener utiliza get_payload().
+
+✔ BusDebugListener utiliza unsubscribe().
+
+✔ DistanceSensorDevice valida BusMessage
+  antes de publicarlo.
+
+✔ DistanceSensorDevice utiliza:
+
+  publish(
+	  message.get_topic(),
+	  message
+  )
+
+✔ DistanceMeasurement se publica directamente
+  como payload.
+
+Pruebas del contrato:
+
+BusTopicsContractTest:
+
+Checks:
+15
+
+Failures:
+0
+
+Result:
+PASS
+
+BusMessageContractTest:
+
+Checks:
+23
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceManifestTopicTest:
+
+Checks:
+10
+
+Failures:
+0
+
+Result:
+PASS
+
+BusMessageRoutingTest:
+
+Checks:
+8
+
+Failures:
+0
+
+Result:
+PASS
+
+Pruebas sucesoras:
+
+BusDebugListenerIntegrationTest:
+
+Checks:
+7
+
+Failures:
+0
+
+Result:
+PASS
+
+DistanceSensorMessageTest:
+
+Checks:
+14
+
+Failures:
+0
+
+Result:
+PASS
+
+DistanceSensorLifecycleTest:
+
+Checks:
+9
+
+Failures:
+0
+
+Result:
+PASS
+
+Baselines anteriores:
+
+core/tests/bus/
+
+Estado:
+SUPERADO
+
+Garantías sustituidas por:
+
+- DeviceBusRegistryTest
+- DeviceBusPublishTest
+- DeviceBusIntegrationTest
+- BusMessageContractTest
+- BusMessageRoutingTest
+
+core/tests/distance_sensor_test/
+
+Estado:
+SUPERADO
+
+Garantías sustituidas por:
+
+- DistanceSensorMessageTest
+- DistanceSensorLifecycleTest
+- DeviceManifestTopicTest
+
+Decisión:
+
+Las pruebas superadas no serán modificadas.
+
+Serán retiradas del árbol activo.
+
+Su contenido continuará disponible mediante
+el historial de Git.
+
+Pruebas todavía activas de la arquitectura anterior:
+
+core/tests/DistanceSensorIntegrationTest/
+
+core/tests/physics_provider_test/
+
+Estas pruebas no serán retiradas hasta completar:
+
+ADR-003 — Provider System
+
+core/tests/device_core/
+
+Permanece activo porque no depende de DeviceBus.
+
+Provider System:
+
+SIN CAMBIOS
+
+DeviceBus:
+
+SIN CAMBIOS DURANTE ADR-005
+
+Total acumulado de la arquitectura nueva:
+
+158 verificaciones correctas.
+
+0 fallos.
+
+Siguiente paso:
+
+Retirar las pruebas declaradas SUPERADAS.
+
+Después ejecutar la regresión completa de
+los baselines nuevos.
+
+#############################################
+
+Regresión posterior al retiro:
+
+DeviceBusRegistryTest:
+PASS
+
+DeviceBusPublishTest:
+PASS
+
+DeviceBusIntegrationTest:
+PASS
+
+BusTopicsContractTest:
+PASS
+
+BusMessageContractTest:
+PASS
+
+DeviceManifestTopicTest:
+PASS
+
+BusMessageRoutingTest:
+PASS
+
+BusDebugListenerIntegrationTest:
+PASS
+
+DistanceSensorMessageTest:
+PASS
+
+DistanceSensorLifecycleTest:
+PASS
+
+Resumen:
+
+10 baselines ejecutados.
+
+10 PASS.
+
+0 FAIL.
+
+Las pruebas anteriores:
+
+core/tests/bus/
+
+core/tests/distance_sensor_test/
+
+fueron retiradas del árbol activo después de
+confirmar sus pruebas sucesoras.
+
+Estado final del hito:
+
+MIGRACIÓN ADR-005 COMPLETA
+
+No se detectaron regresiones en los baselines nuevos.

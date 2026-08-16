@@ -3,7 +3,7 @@
 | Campo | Valor |
 |  ---  |  ---  |
 | Estado | ACTIVO |
-| Versión | 1.4 |
+| Versión | 1.5 |
 | Fecha inicial   | 2026-08-14 |
 | Última revisión | 2026-08-15 |
 | Alcance | Núcleo lógico de Velocity |
@@ -125,7 +125,7 @@ No todos los roles tienen todavía una implementación definitiva.
 | Componente o concepto | Responsabilidad | Estado arquitectónico |
 |---|---|---|
 | DeviceBus | Intercambiar mensajes entre productores y consumidores | ADR-001 y ADR-004 aceptados; diseño 1.1 activo; implementación aislada verificada; migración de consumidores pendiente |
-| BusTopics | Proporcionar identidades canónicas para los topics internos | ADR-005 aceptado; diseño 1.0 activo; implementación pendiente |
+| BusTopics | Proporcionar identidades canónicas para los topics internos | ADR-005 aceptado; implementación verificada |
 | BusMessage | Representar un envelope de mensaje construido completamente y tratado como solo lectura | ADR-005 aceptado; diseño 1.0 activo; implementación pendiente |
 | Device | Representar una unidad funcional capaz de interactuar con DeviceBus | Concepto definido; contrato pendiente |
 | Provider | Producir datos desde una fuente concreta | Concepto definido; ADR pendiente |
@@ -611,14 +611,18 @@ publish(
 
 ### 15. Decisiones pendientes
 
-La API, comportamiento, propiedad y ciclo de vida de DeviceBus 1.0 están definidos mediante:
+DeviceBus, su propiedad y el contrato canónico Topic/Message están definidos mediante:
 
 ```text
 ADR-001 — DeviceBus
 
 ADR-004 — DeviceBus Ownership and Composition
 
-docs/architecture/device_bus_design.md```
+ADR-005 — Topic and Message Contract
+
+docs/architecture/device_bus_design.md
+
+docs/architecture/topic_message_contract_design.md```
 
 ## 16. Regla de evolución
 

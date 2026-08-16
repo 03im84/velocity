@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACEPTADO |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 2026-08-15 |
 | Componentes | BusTopics, BusMessage, DeviceManifest |
 | Alcance | Identidad de topics y envelope de mensajes |
