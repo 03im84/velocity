@@ -166,3 +166,90 @@ Siguiente paso:
 Retirar archivos superados.
 
 Ejecutar regresión completa.
+
+Retiro de archivos superados:
+
+core/device/sensors/providers/
+distance_provider_protoype.gd
+
+Estado:
+RETIRADO
+
+core/device/sensors/providers/
+distance_provider.gd
+
+Estado:
+RETIRADO
+
+core/tests/physics_provider_test/
+
+Estado:
+RETIRADO
+
+core/tests/DistanceSensorIntegrationTest/
+
+Estado:
+RETIRADO
+
+Regresión posterior al retiro:
+
+DeviceBusRegistryTest:
+PASS
+
+DeviceBusPublishTest:
+PASS
+
+DeviceBusIntegrationTest:
+PASS
+
+BusTopicsContractTest:
+PASS
+
+BusMessageContractTest:
+PASS
+
+DeviceManifestTopicTest:
+PASS
+
+BusMessageRoutingTest:
+PASS
+
+BusDebugListenerIntegrationTest:
+PASS
+
+DistanceSensorMessageTest:
+PASS
+
+DistanceSensorLifecycleTest:
+PASS
+
+ManualDistanceProviderTest:
+PASS
+
+InvalidDistanceProviderTest:
+PASS
+
+PhysicsDistanceProviderTest:
+PASS
+
+DistanceSensorPhysicsIntegrationTest:
+PASS
+
+Resumen:
+
+14 baselines ejecutados.
+
+14 PASS.
+
+0 FAIL.
+
+Estado final del hito:
+
+PROVIDER SYSTEM IMPLEMENTADO Y VERIFICADO
+
+ADR-003:
+
+IMPLEMENTADO
+
+No se detectaron regresiones después de retirar
+las clases y pruebas anteriores.

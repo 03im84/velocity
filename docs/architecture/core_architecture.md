@@ -3,7 +3,7 @@
 | Campo | Valor |
 |  ---  |  ---  |
 | Estado | ACTIVO |
-| Versión | 1.6 |
+| Versión | 1.7 |
 | Fecha inicial   | 2026-08-14 |
 | Última revisión | 2026-08-15 |
 | Alcance | Núcleo lógico de Velocity |
@@ -128,7 +128,7 @@ No todos los roles tienen todavía una implementación definitiva.
 | BusTopics | Proporcionar identidades canónicas para los topics internos | ADR-005 aceptado; implementación verificada |
 | BusMessage | Representar un envelope de mensaje construido completamente y tratado como solo lectura | ADR-005 aceptado; diseño 1.0 activo; implementación pendiente |
 | Device | Representar una unidad funcional capaz de interactuar con DeviceBus | Concepto definido; contrato pendiente |
-| Provider | Producir datos desde una fuente concreta mediante un contrato de comportamiento | ADR-003 aceptado; diseño 1.0 activo; implementación pendiente |
+| Provider | Producir datos desde una fuente concreta mediante un contrato de comportamiento | ADR-003 aceptado; diseño 1.1 activo; implementación verificada |
 | Measurement | Representar un dato producido por un sensor | Concepto definido; contrato pendiente |
 | SubscriptionRegistry | Gestionar suscripciones fuera de DeviceBus cuando la complejidad lo requiera | Evolución prevista |
 | DeviceGraph | Representar conexiones lógicas entre dispositivos | Evolución prevista; ADR pendiente |
@@ -628,6 +628,10 @@ DeviceBus, su propiedad y el contrato Topic/Message están definidos mediante:
 
 ```text
 ADR-001 — DeviceBus
+
+ADR-003 — Provider System
+
+docs/architecture/provider_system_design.md
 
 ADR-004 — DeviceBus Ownership and Composition
 

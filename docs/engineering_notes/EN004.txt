@@ -1,0 +1,562 @@
+EN004 – Device Core Audit
+
+Fecha:
+2026-08-15
+
+Tema:
+
+Auditoría del modelo Device actual antes
+de definir su contrato arquitectónico.
+
+Objetivo:
+
+Identificar responsabilidades, dependencias,
+errores y decisiones pendientes dentro de:
+
+core/device/device.gd
+
+core/device/device_identity.gd
+
+core/device/device_manifest.gd
+
+core/device/device_state.gd
+
+core/device/device_health.gd
+
+core/device/device_lifecycle.gd
+
+Archivos revisados:
+
+1. Device
+
+core/device/device.gd
+
+2. DeviceIdentity
+
+core/device/device_identity.gd
+
+3. DeviceManifest
+
+core/device/device_manifest.gd
+
+4. DeviceState
+
+core/device/device_state.gd
+
+5. DeviceHealth
+
+core/device/device_health.gd
+
+6. DeviceLifeCycle
+
+core/device/device_lifecycle.gd
+
+7. Prueba anterior
+
+core/tests/device_core/
+device_core_test.gd
+
+--------------------------------------------------
+DEVICE
+--------------------------------------------------
+
+Clase actual:
+
+extends Node
+class_name Device
+
+Estado interno actual:
+
+identity
+manifest
+state
+health
+lifecycle
+
+Device crea sus componentes durante _init().
+
+Device también ejecuta:
+
+add_child(lifecycle)
+
+Hallazgo:
+
+Device depende del árbol de escenas únicamente
+porque DeviceLifeCycle hereda de Node.
+
+Ninguno de los componentes internos necesita:
+
+- posición;
+- procesamiento por frame;
+- input;
+- renderizado;
+- SceneTree;
+- señales de árbol.
+
+Esta dependencia debe justificarse o eliminarse
+mediante ADR-006.
+
+Device expone sus componentes de dos formas:
+
+1. Variables públicas:
+
+identity
+manifest
+state
+health
+lifecycle
+
+2. Getters:
+
+get_identity()
+get_manifest()
+get_state()
+get_health()
+get_lifecycle()
+
+Esto permite acceso duplicado al mismo estado.
+
+Device.initialize() delega directamente en lifecycle.
+
+No valida:
+
+- DeviceIdentity;
+- DeviceManifest;
+- dependencias;
+- estado parcial.
+
+DistanceSensorDevice configura identity antes
+de ejecutar Device.initialize().
+
+--------------------------------------------------
+DEVICE IDENTITY
+--------------------------------------------------
+
+Clase actual:
+
+extends Resource
+class_name DeviceIdentity
+
+Datos:
+
+device_id: String
+
+device_type: String
+
+device_version: int
+
+Validación:
+
+device_id no vacío
+
+device_type no vacío
+
+device_version mayor que cero
+
+Hallazgo:
+
+DeviceIdentity ya tiene una validación explícita,
+pero Device.initialize() no la utiliza.
+
+Por tanto, actualmente es posible inicializar
+un Device con identidad inválida.
+
+--------------------------------------------------
+DEVICE MANIFEST
+--------------------------------------------------
+
+Clase actual:
+
+extends Resource
+class_name DeviceManifest
+
+Datos:
+
+capabilities: Array[String]
+
+publishes: Array[StringName]
+
+subscribes: Array[StringName]
+
+requirements: Array[String]
+
+Estado:
+
+Los topics fueron migrados correctamente mediante
+ADR-005.
+
+Hallazgo:
+
+El método:
+
+has_requirements()
+
+recibe un único requisito.
+
+Su nombre está en plural.
+
+El parámetro:
+
+requiement
+
+contiene un error ortográfico.
+
+Estos problemas no se corrigieron durante ADR-005
+porque estaban fuera de su alcance.
+
+--------------------------------------------------
+DEVICE STATE
+--------------------------------------------------
+
+Clase actual:
+
+extends Resource
+class_name DeviceState
+
+Datos:
+
+data_valid: bool
+
+last_update_time: float
+
+Capacidades:
+
+invalidate()
+
+validate()
+
+update_timestamp()
+
+is_valid()
+
+get_last_update_time()
+
+Hallazgo:
+
+DeviceState representa validez de datos y tiempo
+de actualización.
+
+No representa lifecycle.
+
+No representa health.
+
+Esta separación es correcta, pero todavía no existe
+un contrato formal que defina cuándo debe actualizarse.
+
+--------------------------------------------------
+DEVICE HEALTH
+--------------------------------------------------
+
+Clase actual:
+
+extends Resource
+class_name DeviceHealth
+
+Estados actuales:
+
+HEALTHY
+
+DEGRADED
+
+CRITICAL
+
+FAILED
+
+Datos:
+
+faults: Array[String]
+
+warnings: Array[String]
+
+Hallazgo crítico:
+
+El método:
+
+add_fault(fault)
+
+ejecuta:
+
+faults.erase(fault)
+
+en lugar de añadir el fault.
+
+Por tanto, add_fault() no puede registrar fallos.
+
+Hallazgo de nomenclatura:
+
+El método:
+
+add_waring()
+
+contiene un error ortográfico.
+
+La forma esperada sería:
+
+add_warning()
+
+No existe actualmente:
+
+remove_fault()
+
+La relación entre:
+
+status
+
+faults
+
+warnings
+
+no está formalmente definida.
+
+Por ejemplo, añadir un fault no cambia
+automáticamente status.
+
+Debe decidirse si status:
+
+- se administra manualmente;
+- se deriva de faults;
+- se deriva de warnings;
+- pertenece a otra política.
+
+No debe corregirse antes de ADR-006.
+
+--------------------------------------------------
+DEVICE LIFECYCLE
+--------------------------------------------------
+
+Archivo:
+
+core/device/device_lifecycle.gd
+
+Clase global actual:
+
+DeviceLifeCycle
+
+Estados actuales:
+
+CREATED
+
+INITIALIZED
+
+READY
+
+RUNNING
+
+SHUTDOWN
+
+Transiciones actuales:
+
+CREATED
+	↓ initialize()
+INITIALIZED
+	↓ set_ready()
+READY
+	↓ start()
+RUNNING
+	↓ shutdown()
+SHUTDOWN
+
+initialize() solo acepta CREATED.
+
+set_ready() solo acepta INITIALIZED.
+
+start() solo acepta READY.
+
+shutdown() acepta cualquier estado distinto
+de SHUTDOWN.
+
+Hallazgo de nomenclatura:
+
+La clase utiliza:
+
+DeviceLifeCycle
+
+mientras el archivo y el término arquitectónico
+utilizan:
+
+DeviceLifecycle
+
+Debe definirse un nombre canónico.
+
+Dependencia actual:
+
+DeviceLifeCycle hereda de Node.
+
+No utiliza ninguna capacidad de Node.
+
+Podría ser un componente RefCounted, pero esa
+decisión requiere ADR-006.
+
+--------------------------------------------------
+ENGINEERING STANDARDS
+--------------------------------------------------
+
+El documento:
+
+docs/engineering_standars.md
+
+propone estados:
+
+OFFLINE
+
+BOOTING
+
+INITIALIZING
+
+READY
+
+RUNNING
+
+WARNING
+
+DEGRADED
+
+FAULT
+
+SHUTDOWN
+
+Hallazgo:
+
+La lista mezcla conceptos de lifecycle:
+
+- OFFLINE
+- BOOTING
+- INITIALIZING
+- READY
+- RUNNING
+- SHUTDOWN
+
+con conceptos de health:
+
+- WARNING
+- DEGRADED
+- FAULT
+
+El código actual mantiene Lifecycle y Health
+como componentes separados.
+
+ADR-006 deberá decidir si esta separación
+se conserva.
+
+No deben añadirse estados solamente para hacer
+coincidir ambas listas sin definir primero
+su significado.
+
+--------------------------------------------------
+DEVICEBUS
+--------------------------------------------------
+
+Device no contiene una referencia a DeviceBus.
+
+DistanceSensorDevice conserva DeviceBus y compone
+un Device interno.
+
+Esto evita que Device Core dependa directamente
+de comunicación.
+
+Hallazgo:
+
+La frase del glosario:
+
+Device es una unidad funcional capaz de
+interactuar con DeviceBus.
+
+No obliga a que Device Core sea propietario
+de una referencia al Bus.
+
+La interacción puede pertenecer al Device
+especializado o a su adaptador.
+
+Esta responsabilidad necesita formalización.
+
+--------------------------------------------------
+PRUEBA ACTUAL
+--------------------------------------------------
+
+Archivo:
+
+core/tests/device_core/
+device_core_test.gd
+
+La prueba actual:
+
+- obtiene Device desde un Node hijo;
+- imprime estados;
+- ejecuta transiciones;
+- no contiene assertions;
+- no informa PASS o FAIL;
+- depende de Device como Node.
+
+No puede considerarse un baseline automatizado
+equivalente a las pruebas nuevas.
+
+Debe crearse una prueba sucesora antes de retirar
+la escena anterior.
+
+--------------------------------------------------
+DECISIONES PENDIENTES
+--------------------------------------------------
+
+ADR-006 deberá decidir:
+
+1. Si Device continúa siendo Node
+   o migra a RefCounted.
+
+2. Si DeviceLifeCycle continúa siendo Node
+   o migra a RefCounted.
+
+3. El nombre canónico de DeviceLifecycle.
+
+4. La propiedad de Identity, Manifest,
+   State, Health y Lifecycle.
+
+5. Si los campos internos continúan públicos.
+
+6. Si Device.initialize() valida Identity.
+
+7. Las transiciones canónicas de Lifecycle.
+
+8. La relación entre Lifecycle y Health.
+
+9. La semántica de faults y warnings.
+
+10. La política de status.
+
+11. La semántica de DeviceState.
+
+12. Cómo se relaciona Device Core con
+	Devices especializados.
+
+13. Cómo se prueba Device Core sin SceneTree.
+
+--------------------------------------------------
+RIESGOS
+--------------------------------------------------
+
+Modificar Device antes de definir su contrato
+podría afectar:
+
+- DistanceSensorDevice;
+- lifecycle;
+- identidad;
+- manifests;
+- pruebas de sensores;
+- futuros Devices;
+- DeviceGraph;
+- ProfileSystem;
+- telemetría.
+
+DeviceGraph no debe diseñarse antes de estabilizar
+la identidad y lifecycle de Device.
+
+--------------------------------------------------
+SIGUIENTE PASO
+--------------------------------------------------
+
+Redactar:
+
+ADR-006 — Device Core Contract
+
+Estado:
+
+AUDITORÍA COMPLETA
