@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://bgd7jjgfpm7xe"]
+
+[ext_resource type="Script" uid="uid://vpr2lyk8herr" path="res://test/core/provider/physics_distance_provider_test.gd" id="1_0maqw"]
+[ext_resource type="Script" uid="uid://dla2laa3x5ybp" path="res://core/device/sensors/providers/physics_distance_provider.gd" id="2_sd1oa"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_a5pw2"]
+size = Vector3(20, 0.2, 20)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wx3e2"]
+size = Vector3(20, 0.2, 20)
+
+[node name="PhysicsDistanceProviderTest" type="Node3D" unique_id=1952011514]
+script = ExtResource("1_0maqw")
+
+[node name="ConfiguredProvider" type="Node3D" parent="." unique_id=207318317 node_paths=PackedStringArray("ray_cast")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5, 0)
+script = ExtResource("2_sd1oa")
+ray_cast = NodePath("RayCast3D")
+
+[node name="RayCast3D" type="RayCast3D" parent="ConfiguredProvider" unique_id=1385557036]
+target_position = Vector3(0, -10, 0)
+
+[node name="Ground" type="StaticBody3D" parent="." unique_id=1903152405]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="Ground" unique_id=343329688]
+mesh = SubResource("BoxMesh_a5pw2")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground" unique_id=734505263]
+shape = SubResource("BoxShape3D_wx3e2")

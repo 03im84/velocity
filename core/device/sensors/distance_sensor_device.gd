@@ -12,13 +12,24 @@ func initialize_sensor(
 	bus: DeviceBus,
 	provider: Object
 ) -> bool:
+
 	if device != null:
 		return false
-		
-	if not provider.has_method("get_distance"):
+
+	if bus == null:
 		return false
 
-	if not provider.has_method("is_valid"):
+	if provider == null:
+		return false
+
+	if not provider.has_method(
+		&"get_distance"
+	):
+		return false
+
+	if not provider.has_method(
+		&"is_valid"
+	):
 		return false
 
 	device = Device.new()

@@ -1,0 +1,100 @@
+PJ0008 – Provider System Architecture
+
+Fecha:
+2026-08-15
+
+Objetivo:
+
+Definir Provider System antes de corregir
+las clases duplicadas y migrar las pruebas físicas.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-003 — Provider System.md
+
+docs/architecture/
+provider_system_design.md
+
+docs/architecture/
+glosario.md
+
+Problemas analizados:
+
+✔ Existían dos declaraciones globales
+  de DistanceProvider.
+
+✔ DistanceProvider utilizaba RefCounted
+  como clase base.
+
+✔ PhysicsDistanceProvider necesitaba Node3D.
+
+✔ ManualDistanceProvider dependía de
+  variables no declaradas.
+
+✔ Las pruebas físicas anteriores utilizaban
+  DeviceBus como Node.
+
+Decisiones:
+
+✔ Provider será un rol arquitectónico.
+
+✔ No existirá una clase base universal
+  obligatoria.
+
+✔ Distance Provider utilizará el contrato:
+
+  - get_distance()
+  - is_valid()
+
+✔ ManualDistanceProvider heredará
+  directamente de RefCounted.
+
+✔ PhysicsDistanceProvider conservará Node3D.
+
+✔ DistanceSensorDevice validará el contrato
+  durante initialize_sensor().
+
+✔ DeviceBus nulo será rechazado.
+
+✔ Provider nulo será rechazado.
+
+✔ Una inicialización fallida no creará
+  estado parcial.
+
+✔ Provider no conocerá DeviceBus.
+
+✔ Provider no construirá BusMessage.
+
+✔ Provider no construirá DistanceMeasurement.
+
+✔ DistanceReading fue pospuesto.
+
+✔ Las pruebas anteriores tendrán sucesoras.
+
+Estado:
+
+ARQUITECTURA APROBADA
+
+ADR:
+
+ADR-003 ACEPTADO
+
+Diseño:
+
+Provider System Design ACTIVO 1.0
+
+Implementación:
+
+PENDIENTE
+
+Siguiente paso:
+
+Auditar referencias hacia:
+
+- distance_provider_protoype.gd
+- distance_provider.gd
+- DistanceProvider
+
+Después retirar el prototype duplicado
+y migrar ManualDistanceProvider.

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c52q57yjdekns"]
+
+[ext_resource type="Script" uid="uid://cnjhn4a6y4i0l" path="res://test/core/provider/manual_distance_provider_test.gd" id="1_vabb5"]
+
+[node name="ManualDistanceProviderTest" type="Node" unique_id=1712228166]
+script = ExtResource("1_vabb5")

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://deyhajoh65mr1"]
+
+[ext_resource type="Script" uid="uid://budj53y45f2qt" path="res://test/core/provider/invalid_distance_provider_test.gd" id="1_n7hca"]
+
+[node name="InvalidDistanceProviderTest" type="Node" unique_id=1058617830]
+script = ExtResource("1_n7hca")

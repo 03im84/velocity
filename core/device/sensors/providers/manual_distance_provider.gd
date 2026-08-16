@@ -1,23 +1,55 @@
-extends DistanceProvider
+extends RefCounted
 class_name ManualDistanceProvider
 
 
-#var distance: float = 0.0
-#var valid: bool = false
+##
+## ManualDistanceProvider
+##
+## Produce una distancia controlada manualmente.
+##
+## No conoce DistanceSensorDevice.
+## No conoce DeviceBus.
+## No construye Measurements ni mensajes.
+##
 
 
-func set_distance(value: float) -> void:
-	distance = value
-	valid = true
+# =============================================================================
+# INTERNAL STATE
+# =============================================================================
+
+var _distance: float = 0.0
+var _valid: bool = false
 
 
+# =============================================================================
+# PUBLIC API
+# =============================================================================
+
+## Establece una distancia en metros
+## y marca la lectura como válida.
+func set_distance(
+	value: float
+) -> void:
+
+	_distance = value
+	_valid = true
+
+
+## Invalida la lectura actual.
+##
+## Conserva el último valor de distancia.
 func invalidate() -> void:
-	valid = false
+
+	_valid = false
 
 
+## Devuelve la distancia actual en metros.
 func get_distance() -> float:
-	return distance
+
+	return _distance
 
 
+## Indica si la lectura actual es utilizable.
 func is_valid() -> bool:
-	return valid
+
+	return _valid

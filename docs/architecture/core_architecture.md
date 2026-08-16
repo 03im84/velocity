@@ -3,7 +3,7 @@
 | Campo | Valor |
 |  ---  |  ---  |
 | Estado | ACTIVO |
-| Versión | 1.5 |
+| Versión | 1.6 |
 | Fecha inicial   | 2026-08-14 |
 | Última revisión | 2026-08-15 |
 | Alcance | Núcleo lógico de Velocity |
@@ -128,7 +128,7 @@ No todos los roles tienen todavía una implementación definitiva.
 | BusTopics | Proporcionar identidades canónicas para los topics internos | ADR-005 aceptado; implementación verificada |
 | BusMessage | Representar un envelope de mensaje construido completamente y tratado como solo lectura | ADR-005 aceptado; diseño 1.0 activo; implementación pendiente |
 | Device | Representar una unidad funcional capaz de interactuar con DeviceBus | Concepto definido; contrato pendiente |
-| Provider | Producir datos desde una fuente concreta | Concepto definido; ADR pendiente |
+| Provider | Producir datos desde una fuente concreta mediante un contrato de comportamiento | ADR-003 aceptado; diseño 1.0 activo; implementación pendiente |
 | Measurement | Representar un dato producido por un sensor | Concepto definido; contrato pendiente |
 | SubscriptionRegistry | Gestionar suscripciones fuera de DeviceBus cuando la complejidad lo requiera | Evolución prevista |
 | DeviceGraph | Representar conexiones lógicas entre dispositivos | Evolución prevista; ADR pendiente |
@@ -591,6 +591,19 @@ Velocity utilizará un Message Bus interno para gestionar el intercambio desacop
 
 DeviceBus permanecerá agnóstico respecto a Devices concretos, Providers, física, presentación, telemetría y hardware.
 
+### ADR-003 — Provider System
+
+Provider será un rol arquitectónico basado en comportamiento.
+
+No existirá una clase base universal obligatoria.
+
+Cada familia de Provider definirá su contrato.
+
+Distance Provider utilizará:
+
+```gdscript
+get_distance() -> float```
+
 ### ADR-005 — Topic and Message Contract
 
 Todos los topics internos utilizarán StringName.
@@ -609,9 +622,9 @@ publish(
 	message: Variant
 )```
 
-### 15. Decisiones pendientes
+## 15. Decisiones pendientes
 
-DeviceBus, su propiedad y el contrato canónico Topic/Message están definidos mediante:
+DeviceBus, su propiedad y el contrato Topic/Message están definidos mediante:
 
 ```text
 ADR-001 — DeviceBus

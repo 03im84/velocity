@@ -1,0 +1,168 @@
+PJ0009 – Provider System Implementation
+
+Fecha:
+2026-08-15
+
+Objetivo:
+
+Implementar ADR-003, eliminar la clase global
+duplicada y sustituir las pruebas físicas
+pertenecientes a la arquitectura anterior.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-003 — Provider System.md
+
+docs/architecture/
+provider_system_design.md
+
+Implementaciones:
+
+ManualDistanceProvider:
+
+✔ Hereda directamente de RefCounted.
+
+✔ Declara _distance.
+
+✔ Declara _valid.
+
+✔ Implementa set_distance().
+
+✔ Implementa invalidate().
+
+✔ Implementa get_distance().
+
+✔ Implementa is_valid().
+
+PhysicsDistanceProvider:
+
+✔ Conserva Node3D.
+
+✔ Conserva RayCast3D como dependencia física.
+
+✔ Cumple get_distance().
+
+✔ Cumple is_valid().
+
+✔ No conoce DeviceBus.
+
+DistanceSensorDevice:
+
+✔ Rechaza DeviceBus nulo.
+
+✔ Rechaza Provider nulo.
+
+✔ Rechaza Provider sin contrato.
+
+✔ Rechaza Provider con contrato incompleto.
+
+✔ No crea estado parcial después de un fallo.
+
+Pruebas:
+
+ManualDistanceProviderTest:
+
+Checks:
+6
+
+Failures:
+0
+
+Result:
+PASS
+
+InvalidDistanceProviderTest:
+
+Checks:
+20
+
+Failures:
+0
+
+Result:
+PASS
+
+PhysicsDistanceProviderTest:
+
+Checks:
+7
+
+Failures:
+0
+
+Result:
+PASS
+
+DistanceSensorPhysicsIntegrationTest:
+
+Checks:
+15
+
+Failures:
+0
+
+Result:
+PASS
+
+Total Provider System:
+
+48 verificaciones correctas.
+
+0 fallos.
+
+Archivos anteriores:
+
+core/device/sensors/providers/
+distance_provider_protoype.gd
+
+Estado:
+RETIRADO
+
+Motivo:
+Clase global duplicada y código experimental.
+
+core/device/sensors/providers/
+distance_provider.gd
+
+Estado:
+SUPERADO
+
+Motivo:
+La clase base RefCounted no representa
+Providers ligados a Node3D.
+
+Pruebas anteriores:
+
+core/tests/physics_provider_test/
+
+Estado:
+SUPERADA
+
+Sucesora:
+PhysicsDistanceProviderTest
+
+core/tests/DistanceSensorIntegrationTest/
+
+Estado:
+SUPERADA
+
+Sucesora:
+DistanceSensorPhysicsIntegrationTest
+
+Decisión:
+
+Los archivos y pruebas superados pueden retirarse
+del árbol activo.
+
+Continuarán disponibles mediante Git.
+
+Provider System:
+
+IMPLEMENTACIÓN APROBADA
+
+Siguiente paso:
+
+Retirar archivos superados.
+
+Ejecutar regresión completa.
