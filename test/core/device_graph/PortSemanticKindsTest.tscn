@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://gdp4jwe5qcjd"]
+
+[ext_resource type="Script" uid="uid://b8c8b1kn0sbm" path="res://test/core/device_graph/port_semantic_kinds_test.gd" id="1_c776p"]
+
+[node name="PortSemanticKindsTest" type="Node" unique_id=583867924]
+script = ExtResource("1_c776p")

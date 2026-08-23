@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cv7wj1h0hvo6n"]
+
+[ext_resource type="Script" uid="uid://dl1gm2fb73hvn" path="res://test/core/device_graph/device_graph_connection_test.gd" id="1_c6v62"]
+
+[node name="DeviceGraphConnectionTest" type="Node" unique_id=2057799744]
+script = ExtResource("1_c6v62")

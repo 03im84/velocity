@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://0yfb8dc4kn08"]
+
+[ext_resource type="Script" uid="uid://dot6qpreiysqa" path="res://test/core/device_graph/device_graph_primitives_test.gd" id="1_xshkw"]
+
+[node name="DeviceGraphPrimitivesTest" type="Node" unique_id=1208459014]
+script = ExtResource("1_xshkw")
