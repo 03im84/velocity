@@ -1,0 +1,324 @@
+PJ0020 – DeviceGraph Full Validation
+
+Fecha:
+
+22/08/2026
+
+Objetivo:
+
+Implementar validación global de DeviceGraph,
+proteger cardinalidad de InputPorts
+y detectar ciclos dirigidos sin recursión.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-002 — DeviceGraph.md
+
+docs/architecture/
+device_graph_design.md
+
+docs/decisions/
+VP-002 — The Simulation May Fail; The Simulator Must Not.md
+
+Arquitectura:
+
+ADR-002:
+
+VERSIÓN 1.1
+
+DeviceGraph Design:
+
+VERSIÓN 1.2
+
+Decisiones aplicadas:
+
+✔ DeviceGraphDraft mantiene topología editable.
+
+✔ DeviceGraphValidator mantiene validación global.
+
+✔ DeviceGraphDraft.validate() delega.
+
+✔ Validator no modifica sus entradas.
+
+✔ Fan-out permanece permitido.
+
+✔ Cada InputPort admite una Connection entrante.
+
+✔ Fan-in implícito es Structural Error.
+
+✔ Fan-in requiere Device explícito.
+
+✔ Ciclos de control permanecen representables.
+
+✔ Un ciclo sin evidencia temporal
+  es Simulation Hazard.
+
+✔ Simulation Mode permite ciclos
+  todavía no clasificados.
+
+✔ Hardware Mode bloquea ciclos
+  todavía no clasificados.
+
+✔ DeviceGraph no afirma zero-delay
+  sin evidencia temporal.
+
+✔ Cycle detection no utiliza recursión.
+
+Componente creado:
+
+res://core/graph/
+device_graph_validator.gd
+
+Responsabilidad:
+
+Examinar:
+
+- DeviceGraphNodes;
+
+- Connections;
+
+- TopicChannels;
+
+y producir ValidationReport
+sin modificar la topología.
+
+Validaciones implementadas:
+
+✔ DeviceGraphNode no null.
+
+✔ DeviceGraphNode válido.
+
+✔ Device ID no vacío.
+
+✔ Device ID único.
+
+✔ Stream ownership no duplicado
+  dentro del mismo Device.
+
+✔ TopicChannel no null.
+
+✔ TopicChannel válido.
+
+✔ TopicChannel único por Topic.
+
+✔ TopicChannel Registry coherente.
+
+✔ Connection no null.
+
+✔ Connection identity válida.
+
+✔ Connection ID único.
+
+✔ Connection ID coincide con endpoints.
+
+✔ Source Device existe.
+
+✔ Target Device existe.
+
+✔ Source OutputPort existe.
+
+✔ Target InputPort existe.
+
+✔ Topics coinciden.
+
+✔ Semantic Kinds son compatibles.
+
+✔ Self-connections permanecen rechazadas.
+
+✔ InputPort tiene máximo un Source.
+
+✔ InputPort desconectado produce WARNING.
+
+✔ OutputPort desconectado produce INFO.
+
+✔ Graph vacío es estructuralmente válido.
+
+Fan-in transaccional:
+
+DeviceGraphDraft.connect_ports()
+rechaza una segunda Connection hacia:
+
+Target Device ID
+
++
+
+Target InputPort ID
+
+Código:
+
+input_port_multiple_sources
+
+Severity:
+
+STRUCTURAL_ERROR
+
+Una operación rechazada no modifica:
+
+- Devices;
+
+- Connections;
+
+- TopicChannels;
+
+- Last Known Good.
+
+Cycle detection:
+
+Modelo dirigido:
+
+Source Device
+
+→
+
+Target Device
+
+Algoritmo:
+
+Strongly Connected Components
+mediante recorridos iterativos.
+
+Propiedades:
+
+✔ Sin recursión.
+
+✔ Complejidad O(V + E).
+
+✔ Memoria lineal.
+
+✔ Un Issue por componente cíclico.
+
+✔ No enumera todos los caminos.
+
+✔ Resultado determinista.
+
+Código:
+
+graph_cycle_requires_temporal_analysis
+
+Severity:
+
+SIMULATION_HAZARD
+
+Comportamiento:
+
+Simulation:
+
+PERMITIDA
+
+Hardware:
+
+BLOQUEADO
+
+La clasificación de fronteras temporales
+permanece responsabilidad futura de:
+
+CompositionCompiler
+
+Prueba sucesora creada:
+
+res://test/core/device_graph/
+DeviceGraphValidationTest.tscn
+
+res://test/core/device_graph/
+device_graph_validation_test.gd
+
+Cobertura:
+
+✔ Graph vacío.
+
+✔ Ports desconectados.
+
+✔ Graph conectado y acíclico.
+
+✔ Reports independientes.
+
+✔ Fan-in transaccional.
+
+✔ Fan-in defensivo.
+
+✔ Connection ID incoherente.
+
+✔ TopicChannel faltante.
+
+✔ TopicChannel adicional.
+
+✔ Ciclo único.
+
+✔ Dos componentes cíclicos.
+
+✔ Simulation Hazard.
+
+✔ Hardware bloqueado.
+
+✔ Validator no modifica Arrays.
+
+✔ Validator no modifica Draft.
+
+Resultado unitario:
+
+Checks: 55
+Failures: 0
+RESULT: PASS
+
+DeviceGraph baseline:
+
+Tests: 6
+Checks: 288
+Failures: 0
+
+Regresión completa:
+
+Planned: 39
+Completed: 39
+Passed: 39
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Plan ExitCode: 0
+RESULT: PASS
+
+Total de checks:
+
+980
+
+Commits relacionados:
+
+c83b9bc
+docs(device-graph): define full validation policy
+
+da62a37
+feat(device-graph): add full graph validation
+
+Estado:
+
+DEVICEGRAPH VALIDATOR VERIFICADO
+
+FAN-IN PROTECTION VERIFICADO
+
+ITERATIVE CYCLE DETECTION VERIFICADO
+
+SIMULATION HAZARD POLICY VERIFICADA
+
+HARDWARE BLOCKING VERIFICADO
+
+REGRESIÓN COMPLETA VERIFICADA
+
+Siguiente paso:
+
+Implementar DeviceGraphSnapshot.
+
+Después:
+
+- DeviceGraphSnapshotResult;
+
+- create_snapshot();
+
+- DeviceGraphSnapshotTest;
+
+- regresión completa;
+
+- actualizar Core Architecture;
+
+- cerrar DeviceGraph 1.0.

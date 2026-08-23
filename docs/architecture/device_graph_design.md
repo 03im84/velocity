@@ -63,16 +63,30 @@ core/graph/
 
 Estado actual:
 
+por:
+
+````markdown
+Estado actual:
+
 ```text
 Implementado hasta:
-DeviceGraphDraft Connections.
-
-Siguiente:
 DeviceGraphValidator.
 
-Posterior:
+Validación global:
+COMPLETADA.
+
+Fan-in protection:
+COMPLETADA.
+
+Iterative cycle detection:
+COMPLETADA.
+
+Siguiente:
 DeviceGraphSnapshot.
-```
+
+Posterior:
+DeviceGraphSnapshotResult
+y create_snapshot().```
 
 ### 2.2 Pruebas
 
@@ -2325,6 +2339,35 @@ Una operación inválida mediante API pública conserva el Graph válido anterio
 
 No se modifican Dictionaries privados desde el test.
 
+````markdown
+### 39.15 Baseline aceptada
+
+```text
+Checks: 55
+Failures: 0
+RESULT: PASS
+```
+
+DeviceGraph acumulado:
+
+```text
+Tests: 6
+Checks: 288
+Failures: 0
+```
+
+Regresión completa:
+
+```text
+Tests: 39
+Checks: 980
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
 ## 40. DeviceGraphSnapshotTest
 
 Debe verificar:
@@ -2443,20 +2486,20 @@ CompositionCompiler permanece como etapa futura.
 15. DeviceGraphConnectionTest.
 	PASS.
 
-16. DeviceGraphValidator.
-	SIGUIENTE.
+116. DeviceGraphValidator.
+	COMPLETADO.
 
 17. Fan-in validation.
-	SIGUIENTE.
+	COMPLETADO.
 
 18. Iterative cycle detection.
-	SIGUIENTE.
+	COMPLETADO.
 
 19. DeviceGraphValidationTest.
-	SIGUIENTE.
+	PASS — 55 checks.
 
 20. DeviceGraphSnapshot.
-	PENDIENTE.
+	SIGUIENTE.
 
 21. DeviceGraphSnapshotResult.
 	PENDIENTE.
@@ -2468,13 +2511,13 @@ CompositionCompiler permanece como etapa futura.
 	PENDIENTE.
 
 24. Runner Run All.
-	OBLIGATORIO.
+	PASS — 39 tests, 980 checks.
 
 25. Registrar resultados.
-	OBLIGATORIO.
+	COMPLETADO PARA VALIDATION.
 
 26. Actualizar Core Architecture.
-	OBLIGATORIO.
+	PENDIENTE HASTA COMPLETAR SNAPSHOT.
 ```
 
 ## 42. Criterios de aceptación
