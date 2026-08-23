@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://munena1td7ka"]
+
+[ext_resource type="Script" uid="uid://43ub4mstn8bd" path="res://test/core/composition/system_connection_spec_test.gd" id="1_jy7id"]
+
+[node name="SystemConnectionSpecTest" type="Node" unique_id=1630952616]
+script = ExtResource("1_jy7id")

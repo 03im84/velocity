@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://4gw26a1c8jun"]
+
+[ext_resource type="Script" uid="uid://cxra3yuum5yyu" path="res://test/core/composition/system_profile_draft_test.gd" id="1_8cl2s"]
+
+[node name="SystemProfileDraftTest" type="Node" unique_id=1677460836]
+script = ExtResource("1_8cl2s")
