@@ -1,0 +1,543 @@
+EN006 – DeviceBus Runtime Safety Audit
+
+Fecha:
+2026-08-16
+
+Tema:
+
+Auditoría de seguridad runtime de DeviceBus
+después de aprobar VP-002.
+
+Decisión relacionada:
+
+docs/decisions/
+VP-002 — The Simulation May Fail;
+The Simulator Must Not.md
+
+Componente auditado:
+
+core/bus/device_bus.gd
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-001-device_bus.md
+
+docs/architecture/
+device_bus_design.md
+
+--------------------------------------------------
+MODELO ACTUAL
+--------------------------------------------------
+
+DeviceBus utiliza publicación:
+
+- síncrona;
+- inmediata;
+- depth-first;
+- reentrante.
+
+Cada publish() crea una instantánea de
+suscriptores y ejecuta Callables en orden.
+
+Una publicación reentrante comienza antes
+de que termine la publicación exterior.
+
+Ejemplo aprobado:
+
+A:outer
+
+A:inner
+
+B:inner
+
+B:outer
+
+Este comportamiento está protegido por:
+
+DeviceBusPublishTest
+
+--------------------------------------------------
+RIESGO DE RECURSIÓN
+--------------------------------------------------
+
+Ejemplo:
+
+Device A recibe topic_x.
+
+Durante su callback publica topic_y.
+
+Device B recibe topic_y.
+
+Durante su callback publica topic_x.
+
+Resultado:
+
+A
+↓
+B
+↓
+A
+↓
+B
+↓
+...
+
+Toda la secuencia ocurre dentro del mismo
+call stack.
+
+DeviceBus actual no limita:
+
+- profundidad;
+- cantidad de publicaciones;
+- cantidad de mensajes;
+- cantidad de callbacks;
+- duración de dispatch.
+
+El resultado puede ser:
+
+- stack overflow;
+- congelamiento;
+- pérdida de control del editor;
+- cierre del proceso;
+- corrupción de la ejecución.
+
+Esto contradice VP-002:
+
+La simulación puede fallar.
+
+El simulador no.
+
+--------------------------------------------------
+CONTROL LOOP FÍSICO
+--------------------------------------------------
+
+Un control loop legítimo debe contener
+una frontera temporal.
+
+Ejemplo:
+
+Physics Tick N:
+
+Sensor publica Measurement.
+
+MCU calcula Command.
+
+Actuator aplica fuerza.
+
+Physics avanza.
+
+Physics Tick N+1:
+
+Sensor publica una nueva Measurement.
+
+Este loop no necesita recursión infinita
+dentro de un mismo publish().
+
+--------------------------------------------------
+ZERO-DELAY CYCLE
+--------------------------------------------------
+
+Un zero-delay cycle ocurre cuando un camino
+de mensajes regresa a su origen sin esperar:
+
+- process frame;
+- physics frame;
+- timer;
+- scheduler;
+- queue boundary;
+- evento externo.
+
+Ejemplo:
+
+topic_x
+↓
+Device B
+↓
+topic_y
+↓
+Device A
+↓
+topic_x
+
+VP-002 requiere que estos ciclos:
+
+- sean detectados;
+- sean limitados;
+- o contengan una frontera temporal.
+
+--------------------------------------------------
+RIESGO DE MESSAGE STORM
+--------------------------------------------------
+
+Un sistema puede no ser recursivo y aun así
+generar demasiados mensajes.
+
+Ejemplo:
+
+Un mensaje produce 100 mensajes.
+
+Cada uno produce otros 100.
+
+Resultado:
+
+10000 mensajes.
+
+DeviceBus actual no tiene:
+
+- message budget;
+- dispatch budget;
+- fan-out budget;
+- rate limit;
+- backpressure.
+
+Esto puede agotar tiempo de frame o memoria.
+
+--------------------------------------------------
+CALLBACK QUE NO TERMINA
+--------------------------------------------------
+
+Ejemplo:
+
+func on_message(message):
+
+	while true:
+		pass
+
+DeviceBus se ejecuta en el mismo hilo.
+
+No puede recuperar control si un Callable
+confiable entra en un loop infinito.
+
+Una garantía absoluta requeriría:
+
+- thread aislado;
+- proceso aislado;
+- ejecución cooperativa;
+- watchdog externo;
+- sandbox de scripts.
+
+VP-002 no protege frente a código fuente
+malicioso recompilado.
+
+Pero sí debe proteger frente a Graphs y
+Configurations creados mediante herramientas
+soportadas.
+
+Los Devices canónicos deberán cumplir
+contratos de ejecución limitada.
+
+--------------------------------------------------
+ESTADO DE ERROR
+--------------------------------------------------
+
+DeviceBus actualmente:
+
+- no registra logs;
+- no almacena errores;
+- no devuelve resultado desde publish();
+- no emite SafetyReport;
+- no conoce RuntimeSafety;
+- no conoce DeviceGraph.
+
+Cuando se alcanza un límite futuro,
+debe existir una forma externa de observarlo.
+
+Añadir logging directamente a DeviceBus
+rompería ADR-001.
+
+La observabilidad debe diseñarse alrededor
+del Bus o mediante un resultado mínimo
+de dispatch.
+
+--------------------------------------------------
+PROTECCIONES POSIBLES
+--------------------------------------------------
+
+1. Publication Depth Limit
+
+Limitar la profundidad reentrante.
+
+Ventaja:
+
+Protege stack.
+
+Desventaja:
+
+No limita message storms no recursivas.
+
+2. Dispatch Message Budget
+
+Limitar publicaciones dentro de un ciclo.
+
+Ventaja:
+
+Limita crecimiento explosivo.
+
+Desventaja:
+
+Necesita definir qué es un ciclo.
+
+3. Iterative Queue
+
+Convertir reentrada en mensajes pendientes.
+
+Ventaja:
+
+Evita crecimiento del call stack.
+
+Desventaja:
+
+Cambia orden depth-first.
+
+4. Temporal Boundaries
+
+Exigir que loops de control crucen
+physics frame o scheduler.
+
+Ventaja:
+
+Coincide con simulación física.
+
+Desventaja:
+
+Necesita validación de Graph y Runtime.
+
+5. Composition Validation
+
+Detectar zero-delay cycles antes de ejecutar.
+
+Ventaja:
+
+Previene configuraciones peligrosas.
+
+Desventaja:
+
+No protege frente a código interno defectuoso.
+
+6. Runtime Watchdog
+
+Supervisar duración y actividad.
+
+Ventaja:
+
+Detecta abuso.
+
+Desventaja:
+
+No puede interrumpir de forma segura
+un callback en el mismo hilo.
+
+7. Process Isolation
+
+Ejecutar componentes no confiables
+en otro proceso.
+
+Ventaja:
+
+Aislamiento fuerte.
+
+Desventaja:
+
+Complejidad alta.
+
+Fuera del alcance inmediato.
+
+--------------------------------------------------
+INVARIANTES QUE DEBEN CONSERVARSE
+--------------------------------------------------
+
+Cualquier solución debe conservar:
+
+- DeviceBus no conoce Devices concretos;
+- DeviceBus no interpreta mensajes;
+- DeviceBus no crea Devices;
+- DeviceBus no realiza networking;
+- DeviceBus no serializa;
+- orden determinista;
+- suscripciones desacopladas;
+- pruebas aisladas;
+- DeviceGraph independiente;
+- Composition Root explícita.
+
+--------------------------------------------------
+PRUEBAS ACTUALES AFECTADAS
+--------------------------------------------------
+
+DeviceBusPublishTest protege publicación
+reentrante depth-first.
+
+Cambiar a una queue alteraría este baseline.
+
+Una nueva decisión deberá indicar si:
+
+- se conserva depth-first con límites;
+- se sustituye por dispatch iterativo;
+- se crean modos diferentes;
+- la prueba anterior es superada.
+
+No se modificará el baseline sin una
+decisión arquitectónica.
+
+--------------------------------------------------
+CONCLUSIÓN
+--------------------------------------------------
+
+DeviceBus satisface su responsabilidad funcional,
+pero no satisface todavía los límites runtime
+introducidos por VP-002.
+
+Antes de DeviceGraph debe definirse:
+
+- protección de stack;
+- presupuesto de dispatch;
+- tratamiento de zero-delay cycles;
+- observabilidad de límites;
+- relación con Composition Runtime;
+- fronteras temporales de control loops.
+
+No debe añadirse un contador arbitrario
+como parche.
+
+Siguiente paso:
+
+ADR-007 — Bounded Dispatch and Runtime Safety
+
+Estado:
+
+AUDITORÍA COMPLETA
+
+IMPLEMENTACIÓN SIN MODIFICAR
+
+Implementación posterior:
+
+Se creó:
+
+core/bus/
+device_bus_dispatch_policy.gd
+
+Se creó:
+
+core/bus/
+device_bus_dispatch_report.gd
+
+Se migró:
+
+core/bus/device_bus.gd
+
+Modelo implementado:
+
+bounded iterative FIFO dispatch
+
+Budgets implementados:
+
+Publication Budget
+
+Callback Budget
+
+Queue Size Limit
+
+Dispatch Time Budget
+
+Valores por defecto:
+
+Publications:
+1024
+
+Callbacks:
+8192
+
+Pending:
+512
+
+Time:
+50000 usec
+
+Hard Maximums:
+
+Publications:
+16384
+
+Callbacks:
+131072
+
+Pending:
+8192
+
+Time:
+500000 usec
+
+Pruebas sucesoras:
+
+DeviceBusDispatchPolicyTest:
+32 PASS
+
+DeviceBusDispatchReportTest:
+42 PASS
+
+DeviceBusFifoDispatchTest:
+26 PASS
+
+DeviceBusDispatchBudgetTest:
+30 PASS
+
+DeviceBusDispatchMutationTest:
+21 PASS
+
+DeviceBusDispatchRecoveryTest:
+15 PASS
+
+DeviceBusFanOutTest:
+13 PASS
+
+Total Runtime Safety:
+
+179 verificaciones correctas.
+
+0 fallos.
+
+Baseline anterior:
+
+DeviceBusPublishTest
+
+Estado:
+
+SUPERADO Y RETIRADO
+
+Regresión completa:
+
+Tests:
+25
+
+Passed:
+25
+
+Failed:
+0
+
+Timeout:
+0
+
+Engine Error:
+0
+
+Runner ExitCode:
+0
+
+Conclusión final:
+
+El riesgo de recursión reentrante sin límites
+fue eliminado.
+
+DeviceBus utiliza stack bounded.
+
+Los Dispatch Cycles tienen presupuestos.
+
+Un aborto conserva suscripciones y permite
+un ciclo posterior.
+
+Estado:
+
+IMPLEMENTADO Y VERIFICADO
+
+AUDITORÍA CERRADA

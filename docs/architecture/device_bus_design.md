@@ -3,10 +3,30 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.1 |
+| Versión | 1.3 |
 | Fecha | 2026-08-14 |
 | ADR relacionado | ADR-001 — DeviceBus |
 | Implementación prevista | `res://core/bus/device_bus.gd` |
+
+> **Evolución de Runtime Safety**
+>
+> Las responsabilidades base de registro, topics, suscriptores, snapshots e invariantes de DeviceBus permanecen vigentes.
+>
+> La semántica de publicación reentrante depth-first, el modelo sin queue y los límites de ejecución descritos originalmente fueron superados por:
+>
+> ```text
+> ADR-007 — Bounded Dispatch and Runtime Safety
+>
+> docs/architecture/
+> device_bus_runtime_safety_design.md
+> ```
+>
+> DeviceBus evolucionará hacia dispatch FIFO iterativo y limitado.
+
+Estado de implementación:
+
+```text
+COMPLETO```
 
 ## 1. Propósito
 

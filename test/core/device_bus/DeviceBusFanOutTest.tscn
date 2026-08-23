@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://do846dehouh14"]
+
+[ext_resource type="Script" uid="uid://esjwmfgaor27" path="res://test/core/device_bus/device_bus_fan_out_test.gd" id="1_wkin1"]
+
+[node name="DeviceBusFanOutTest" type="Node" unique_id=612292659]
+script = ExtResource("1_wkin1")

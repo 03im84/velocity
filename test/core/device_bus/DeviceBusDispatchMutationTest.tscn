@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cvn0c8g2ffm85"]
+
+[ext_resource type="Script" uid="uid://dydvrt6kdx57j" path="res://test/core/device_bus/device_bus_dispatch_mutation_test.gd" id="1_q65xo"]
+
+[node name="DeviceBusDispatchMutationTest" type="Node" unique_id=1235558355]
+script = ExtResource("1_q65xo")

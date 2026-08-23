@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cwjipglym1jqb"]
+
+[ext_resource type="Script" uid="uid://dwaw2r4w5o1jt" path="res://test/core/device_bus/device_bus_dispatch_recovery_test.gd" id="1_oomu6"]
+
+[node name="DeviceBusDispatchRecoveryTest" type="Node" unique_id=427392939]
+script = ExtResource("1_oomu6")
