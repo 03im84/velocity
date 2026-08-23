@@ -404,3 +404,482 @@ PASS
 
 Exit code:
 0
+
+Safe Simulation and System Integrity
+
+Documento canónico:
+
+docs/decisions/
+VP-002 — The Simulation May Fail;
+The Simulator Must Not.md
+
+Regla:
+
+La simulación puede fallar.
+
+El simulador no.
+
+Clasificación:
+
+Structural Error
+
+No puede activarse.
+
+----------------------
+
+Platform Safety Error
+
+No puede ejecutarse.
+
+----------------------
+
+Simulation Hazard
+
+Puede ejecutarse únicamente en
+Simulation Mode.
+
+Puede producir daño o fallo simulado.
+
+----------------------
+
+Hardware Safety Error
+
+Puede simularse.
+
+No puede activarse en Hardware Mode.
+
+Estados de configuración:
+
+Draft
+
+Active Simulation
+
+Active Hardware
+
+Reglas:
+
+Las definiciones canónicas son inmutables.
+
+Las modificaciones utilizan Save As
+o nuevas versiones.
+
+Los cambios son transaccionales.
+
+Un fallo conserva Last Known Good.
+
+Los snapshots activos son inmutables.
+
+Los recursos runtime tienen límites.
+
+El usuario siempre puede detener
+y recuperar la simulación.
+
+Una prueba física peligrosa puede permitirse
+en simulación sin permitirse en hardware.
+
+No existe una operación genérica:
+
+Ignore all errors.
+
+DeviceBus Runtime Safety
+
+Modelo:
+
+Bounded FIFO Dispatch
+
+Reentrant publish:
+
+Enqueue.
+
+No recursive dispatch.
+
+Budgets obligatorios:
+
+Default Publications:
+1024
+
+Default Callbacks:
+8192
+
+Default Pending:
+512
+
+Default Time:
+50000 usec
+
+Hard Publications:
+16384
+
+Hard Callbacks:
+131072
+
+Hard Pending:
+8192
+
+Hard Time:
+500000 usec
+
+Reglas:
+
+No existe configuración unlimited.
+
+DeviceBus utiliza DELIVER_ALL.
+
+DeviceBus no implementa coalescing.
+
+Cada dato tiene un propietario semántico.
+
+DeviceBus realiza fan-out.
+
+Consumers no republican mensajes sin cambios.
+
+Derived Outputs utilizan contratos nuevos.
+
+Un budget excedido aborta el Dispatch Cycle.
+
+Las suscripciones permanentes sobreviven.
+
+Un nuevo ciclo puede comenzar.
+
+DeviceBus no es thread-safe.
+
+Los callbacks deben ejecutarse en el thread
+propietario.
+
+Time Budget es protección de plataforma,
+no resultado determinista de simulación.
+
+GDScript Member Access
+
+El operador de acceso a miembros no comenzará
+una línea nueva.
+
+Incorrecto:
+
+object
+	.property = value
+
+object
+	.method()
+
+Correcto:
+
+object.property = (
+	value
+)
+
+object.method(
+	argument
+)
+
+El identificador del objeto y el miembro
+permanecerán en la misma línea:
+
+object.property
+
+ClassName.CONSTANT
+
+instance.method()
+
+Los argumentos y valores pueden dividirse
+dentro de paréntesis.
+
+Regla estricta:
+
+El carácter "." nunca comenzará una línea
+y nunca quedará separado del objeto
+o clase al que pertenece.
+
+Las cadenas de acceso permanecen en una
+misma línea física.
+
+Si la expresión resulta demasiado larga,
+se crean variables intermedias.
+
+Incorrecto:
+
+object
+	.method()
+
+object
+	.property
+
+Correcto:
+
+object.method()
+
+object.property
+
+Correcto con variable intermedia:
+
+var result := object.method()
+
+result.execute()
+
+Velocity Test Dashboard
+
+Launcher:
+
+test/tools/
+start_velocity_test_dashboard.bat
+
+Aplicación:
+
+test/tools/
+velocity_test_dashboard.py
+
+Configuración compartida:
+
+test/tools/
+test_dashboard.json
+
+Configuración local:
+
+test/tools/
+test_dashboard.local.json
+
+Backend:
+
+test/tools/
+run_godot_tests.ps1
+
+La aplicación permanece abierta durante
+la sesión de desarrollo.
+
+Cada test utiliza un proceso Godot Console
+independiente.
+
+El PowerShell runner continúa siendo
+la autoridad del resultado.
+
+Operaciones verificadas:
+
+- Run Selected
+- Run Suite
+- Run All
+- Repeat
+- Timeout
+- Stop
+- Refresh
+- Search
+- Copy Command
+- Copy Output
+- Safe Close
+
+La aplicación no modifica tests ni Core.
+
+Velocity Test Dashboard Pause and Resume
+
+Versión:
+
+0.3.2
+
+La interfaz utiliza un único botón dinámico:
+
+Pause / Resume
+
+RUNNING:
+
+Pause solicita detener el plan después
+de finalizar el test actual.
+
+PAUSED:
+
+Resume continúa con el primer test NOT_RUN.
+
+STOPPED:
+
+Resume vuelve a ejecutar desde el principio
+el test interrumpido y continúa el plan.
+
+Los tests PASS anteriores no se repiten.
+
+El Dashboard no intenta restaurar un proceso
+Godot parcialmente ejecutado.
+
+Pause y Resume operan sobre Execution Plan,
+no sobre SceneTree.
+
+Device Profile and Configuration
+
+Modelo:
+
+Draft
+→ Compiler
+→ ValidationReport
+→ Snapshot
+
+Reglas:
+
+Draft es editable.
+
+Draft no se ejecuta.
+
+Snapshot no expone setters.
+
+Runtime utiliza snapshots.
+
+Canonical Profiles son inmutables.
+
+Namespace velocity está reservado.
+
+Save As produce Draft.
+
+Configuration referencia una versión exacta
+de DeviceProfile.
+
+DeviceManifest se construye desde snapshots.
+
+Profile requirements no pueden eliminarse.
+
+Additional requirements se unen
+sin duplicados.
+
+Simulation Hazard permite Simulation Mode.
+
+Simulation Hazard bloquea Hardware Mode.
+
+Generic Profile está prohibido.
+
+Utilizar nombres explícitos:
+
+DeviceProfile
+
+DeviceConfiguration
+
+SystemProfile
+
+DeviceGraph
+
+Responsabilidad:
+
+Representar y validar topología lógica.
+
+DeviceGraph no:
+
+- transporta mensajes;
+- crea Devices runtime;
+- controla Lifecycle;
+- modifica Health;
+- guarda archivos;
+- dibuja UI;
+- ejecuta Graph.
+
+Toda comunicación utiliza DeviceBus.
+
+Modelo:
+
+DeviceGraphNode
+
+OutputPort
+
+TopicChannel
+
+InputPort
+
+DeviceGraphNode
+
+Connections son lógicas.
+
+No crean referencias directas entre Devices.
+
+DeviceGraph Draft:
+
+editable mediante API.
+
+DeviceGraph Snapshot:
+
+inmutable y no ejecutable.
+
+Runtime requiere CompositionCompiler.
+
+Connection ID:
+
+source_device
+|
+source_port
+|
+target_device
+|
+target_port
+
+El carácter `|` está reservado.
+
+IDs de Device y Port no pueden contenerlo.
+
+Ports derivan de DeviceManifest efectivo.
+
+Semantic Kind puede ser UNSPECIFIED
+durante la primera versión.
+
+Feedback loops están permitidos.
+
+Cycles requieren validación runtime futura.
+
+Mutaciones son transaccionales.
+
+Una operación fallida no modifica Graph.
+
+GDScript Typed Collections
+
+El tipo contenido dentro de Array[] o
+Dictionary[] permanecerá en la misma línea
+que los corchetes.
+
+Incorrecto:
+
+Array[
+	DeviceGraphInputPort
+]
+
+Dictionary[
+	String,
+	DeviceGraphNode
+]
+
+Correcto:
+
+Array[DeviceGraphInputPort]
+
+Dictionary[String, DeviceGraphNode]
+
+Los valores de la colección pueden dividirse
+en varias líneas.
+
+Solo la declaración del tipo permanece
+en una misma línea.
+
+Godot Object Method Names
+
+Las clases que heredan de Object,
+RefCounted, Resource o Node no declararán
+métodos públicos que oculten métodos
+incorporados de Godot con firmas distintas.
+
+Antes de elegir nombres públicos se revisará
+la API de Object.
+
+Nombres reservados encontrados:
+
+connect()
+
+disconnect()
+
+emit_signal()
+
+call()
+
+free()
+
+get()
+
+set()
+
+Para DeviceGraph se utilizará:
+
+connect_ports()
+
+disconnect_ports()
+
+No se sobrescribirá Object.connect()
+ni Object.disconnect().

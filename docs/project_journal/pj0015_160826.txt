@@ -1,0 +1,94 @@
+PJ0015 – Device Profiles and Configuration Architecture
+
+Fecha:
+16/08/2026
+
+Objetivo:
+
+Definir contratos separados para Profiles,
+Configurations, Manifests y futura composición
+persistente antes de finalizar DeviceGraph.
+
+Documentos relacionados:
+
+docs/decisions/
+VP-002 — The Simulation May Fail;
+The Simulator Must Not.md
+
+docs/engineering_notes/
+EN007.txt
+
+docs/architecture/adr/
+ADR-008 — Device Definitions,
+Profiles and Configuration.md
+
+docs/architecture/
+device_profile_configuration_design.md
+
+Decisiones:
+
+✔ Profile genérico será retirado.
+
+✔ DeviceProfileDraft será editable.
+
+✔ DeviceProfile será snapshot inmutable.
+
+✔ DeviceProfileCompiler transformará
+  Draft en Snapshot.
+
+✔ DeviceConfigurationDraft será editable.
+
+✔ DeviceConfiguration será snapshot inmutable.
+
+✔ DeviceConfigurationCompiler producirá
+  Simulation snapshots.
+
+✔ Draft nunca se ejecuta.
+
+✔ Runtime utiliza snapshots.
+
+✔ DeviceManifest representa interfaz efectiva.
+
+✔ DeviceManifestBuilder utiliza snapshots.
+
+✔ DeviceProfile y Configuration permanecen
+  separados.
+
+✔ SystemProfile describe composición persistente.
+
+✔ DeviceGraph utiliza Manifest efectivo.
+
+✔ Namespace velocity está reservado.
+
+✔ BuiltinDeviceProfiles crea Profiles canónicos.
+
+✔ Save As produce Draft.
+
+✔ Simulation Hazard bloquea Hardware Mode.
+
+✔ Configuraciones especializadas no contaminan
+  la clase base.
+
+✔ Hardware detallado fue pospuesto.
+
+✔ Calibration fue pospuesta.
+
+✔ AdaptationPolicy fue pospuesta.
+
+✔ RuntimeAllocation fue pospuesto.
+
+Estado:
+
+ADR-008 ACEPTADO
+
+Device Profile and Configuration Design:
+
+ACTIVO 1.0
+
+Implementación:
+
+PENDIENTE
+
+Siguiente paso:
+
+Implementar DeviceRoles y su prueba.

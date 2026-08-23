@@ -3,9 +3,9 @@
 | Campo | Valor |
 |  ---  |  ---  |
 | Estado | ACTIVO |
-| Versión | 1.9 |
+| Versión | 2.5 |
 | Fecha inicial   | 2026-08-14 |
-| Última revisión | 2026-08-15 |
+| Última revisión | 18/08/2026 |
 | Alcance | Núcleo lógico de Velocity |
 
 ## 1. Propósito
@@ -124,19 +124,33 @@ No todos los roles tienen todavía una implementación definitiva.
 
 | Componente o concepto | Responsabilidad | Estado arquitectónico |
 |---|---|---|
-| DeviceBus | Intercambiar mensajes entre productores y consumidores | ADR-001 y ADR-004 aceptados; diseño 1.1 activo; implementación aislada verificada; migración de consumidores pendiente |
+| DeviceBus | Intercambiar mensajes mediante bounded FIFO dispatch desacoplado y limitado | ADR-001, ADR-004 y ADR-007 implementados; Runtime Safety Design 1.1 verificado |
 | BusTopics | Proporcionar identidades canónicas para los topics internos | ADR-005 aceptado; implementación verificada |
 | BusMessage | Representar un envelope de mensaje construido completamente y tratado como solo lectura | ADR-005 aceptado; diseño 1.0 activo; implementación pendiente |
 | Device | Reunir identidad, manifest, estado, health y lifecycle comunes | ADR-006 aceptado; diseño 1.1 activo; implementación verificada |
 | DeviceLifecycle | Representar la etapa operacional y sus transiciones | ADR-006 aceptado; implementación verificada |
 | DeviceHealth | Representar condición operacional, faults y warnings | ADR-006 aceptado; implementación verificada |
 | DeviceState | Representar validez y timestamp de los datos | ADR-006 aceptado; implementación verificada |
+| DeviceGraphNode | Representar una instancia lógica dentro de DeviceGraph | ADR-002 aceptado; diseño 1.0 activo; implementación pendiente |
+| DeviceGraphInputPort | Representar un Topic consumido por un Device | ADR-002 aceptado; implementación pendiente |
+| DeviceGraphOutputPort | Representar un Topic publicado por un Device | ADR-002 aceptado; implementación pendiente |
+| DeviceGraphTopicChannel | Representar un canal lógico de DeviceBus | ADR-002 aceptado; implementación pendiente |
+| DeviceGraphConnection | Representar una relación lógica mediada por TopicChannel | ADR-002 aceptado; implementación pendiente |
+| DeviceGraphDraft | Mantener topología editable mediante API transaccional | ADR-002 aceptado; implementación pendiente |
+| DeviceGraphSnapshot | Representar topología validada e inmutable | ADR-002 aceptado; implementación pendiente |
 | Provider | Producir datos desde una fuente concreta mediante un contrato de comportamiento | ADR-003 aceptado; diseño 1.1 activo; implementación verificada |
+| Connections | Representar enlaces válidos entre Ports | Evolución prevista |
+| DeviceProfileDraft | Representar una definición editable que todavía no puede utilizarse por runtime | ADR-008 aceptado; diseño 1.0 activo; implementación pendiente |
+| DeviceProfile | Representar un snapshot validado e inmutable de un modelo de Device | ADR-008 aceptado; diseño 1.0 activo; implementación pendiente |
+| DeviceConfigurationDraft | Representar configuración editable de una instancia | ADR-008 aceptado; diseño 1.0 activo; implementación pendiente |
+| DeviceConfiguration | Representar un snapshot validado e inmutable de configuración | ADR-008 aceptado; diseño 1.0 activo; implementación pendiente |
+| DeviceRoles | Proporcionar identidades canónicas para roles principales | ADR-008 implementado; cuatro roles iniciales verificados |
+| DeviceManifestBuilder | Construir Manifest efectivo desde snapshots validados | ADR-008 implementado; requirements y copias verificados |
+| ValidationReport | Reunir resultados estructurados de validación | ADR-008 aceptado; implementación pendiente |
 | Measurement | Representar un dato producido por un sensor | Concepto definido; contrato pendiente |
 | SubscriptionRegistry | Gestionar suscripciones fuera de DeviceBus cuando la complejidad lo requiera | Evolución prevista |
 | DeviceGraph | Representar conexiones lógicas entre dispositivos | Evolución prevista; ADR pendiente |
 | Ports | Definir puntos de conexión de un Device | Evolución prevista |
-| Connections | Representar enlaces válidos entre Ports | Evolución prevista |
 
 El estado “evolución prevista” no autoriza su implementación.
 
@@ -588,11 +602,53 @@ Pruebas de integración
 Refactorización
 ```
 
+### VP-002 — The Simulation May Fail; The Simulator Must Not
+
+Velocity permitirá configuraciones experimentales capaces de producir degradación, inestabilidad, daño o fallo dentro de la simulación.
+
+Ninguna ejecución podrá comprometer:
+
+- Core;
+- editor;
+- proceso principal;
+- memoria;
+- stack;
+- datos persistentes;
+- definiciones canónicas;
+- hardware real;
+- capacidad del usuario para detener y recuperar el sistema.
+
+Se distinguirán:
+
+```text
+Draft
+
+Active Simulation
+
+Active Hardware```
+
 ### ADR-001 — DeviceBus
 
 Velocity utilizará un Message Bus interno para gestionar el intercambio desacoplado de mensajes entre productores y consumidores.
 
 DeviceBus permanecerá agnóstico respecto a Devices concretos, Providers, física, presentación, telemetría y hardware.
+
+### ADR-002 — DeviceGraph
+
+Velocity utilizará DeviceGraph como modelo lógico de topología.
+
+DeviceGraph representará:
+
+```text
+DeviceGraphNode
+
+InputPort
+
+OutputPort
+
+TopicChannel
+
+Connection
 
 ### ADR-003 — Provider System
 
@@ -647,6 +703,43 @@ DeviceLifecycle```
 ```text
 res://docs/architecture/core_architecture.md```
 
+### ADR-007 — Bounded Dispatch and Runtime Safety
+
+DeviceBus evolucionará de publicación reentrante recursiva depth-first a dispatch FIFO iterativo.
+
+Cada Dispatch Cycle tendrá:
+
+- Publication Budget;
+- Callback Budget;
+- Queue Size Limit;
+- Time Budget;
+- hard maximums;
+- aborto controlado;
+- Dispatch Report;
+- recuperación en un ciclo posterior.
+
+DeviceBus utilizará:
+
+```text
+DELIVER_ALL```
+
+### ADR-008 — Device Definitions, Profiles and Configuration
+
+Velocity separará:
+
+```text
+DeviceProfileDraft
+
+DeviceProfile
+
+DeviceConfigurationDraft
+
+DeviceConfiguration
+
+DeviceManifest
+
+SystemProfile```
+
 ## 15. Decisiones pendientes
 
 Los siguientes subsistemas están definidos e implementados:
@@ -660,7 +753,58 @@ Topic and Message Contract
 
 Provider System
 
-Device Core```
+Device Core
+
+- contrato de contextos Draft, Active Simulation y Active Hardware;
+- presupuestos runtime;
+- política de timeouts de callbacks;
+- compilación transaccional de Composition Plans;
+- snapshots y Last Known Good;
+- DeviceCatalog persistente;
+- Save As Service;
+- SystemProfile concreto;
+- contrato de Measurement Identity;
+- contrato de snapshots y provenance;
+- Composition Runtime;
+- Composition Runtime que observe Dispatch Reports;
+- validación de temporal boundaries en DeviceGraph;
+- contrato de Measurement Identity;
+- contrato de snapshots y provenance;
+- Runtime Safety externo para pausar o detener contextos;
+- protección futura frente a callbacks no confiables;
+- DeviceCatalog persistente;
+- Save As Service;
+- SystemProfile concreto;
+- GraphSerializer o ProfileBuilder;
+- Composition Compiler;
+- DeviceGraph;
+- ConfigurationEditor;
+- GraphEditor;
+- contrato de Measurement Identity;
+- snapshots y provenance de datos;
+- Hardware Mode compiler;
+- DeviceCalibration futura;
+- AdaptationPolicy futura;
+- RuntimeAllocation futura.
+- implementación de PortSemanticKinds;
+- implementación de DeviceGraph Ports;
+- implementación de DeviceGraphNode;
+- implementación de DeviceGraphDraft;
+- implementación de DeviceGraphSnapshot;
+- DeviceCatalog persistente;
+- SystemProfile concreto;
+- GraphSerializer;
+- GraphLayout;
+- GraphEditor;
+- ConfigurationEditor;
+- CompositionCompiler;
+- temporal boundary metadata;
+- named input slots;
+- cardinality;
+- Measurement Identity;
+- snapshots y provenance.
+
+```
 
 
 ## 16. Regla de evolución
@@ -680,3 +824,12 @@ Si la responsabilidad dejó de ser correcta, el componente se rediseña.
 No se añadirá un parche para conservar una responsabilidad equivocada.
 
 La meta del Core es que cada componente pueda ser comprendido, probado y reemplazado de forma independiente.
+
+## 17. System Integrity y experimentación
+
+Velocity separa:
+
+```text
+fallo del sistema simulado
+
+fallo de la plataforma de simulación```

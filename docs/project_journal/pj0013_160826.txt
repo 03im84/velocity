@@ -1,0 +1,134 @@
+PJ0013 – Bounded Dispatch and Runtime Safety
+
+Fecha:
+16/08/2026
+
+Objetivo:
+
+Diseñar una evolución segura de DeviceBus
+después de aprobar VP-002.
+
+Documentos relacionados:
+
+docs/decisions/
+VP-002 — The Simulation May Fail;
+The Simulator Must Not.md
+
+docs/engineering_notes/
+EN006.txt
+
+docs/architecture/adr/
+ADR-007 — Bounded Dispatch and Runtime Safety.md
+
+docs/architecture/
+device_bus_runtime_safety_design.md
+
+Problema:
+
+DeviceBus utilizaba publicación reentrante
+síncrona depth-first sin límites.
+
+Una topología cíclica podía producir:
+
+- stack overflow;
+- message storm;
+- queue ilimitada;
+- pérdida de control del proceso principal.
+
+Decisiones:
+
+✔ Dispatch FIFO iterativo.
+
+✔ Reentrant publish se encola.
+
+✔ El call stack no crece por reentrada.
+
+✔ Dispatch Cycle explícito.
+
+✔ Publication Budget.
+
+✔ Callback Budget.
+
+✔ Queue Size Limit.
+
+✔ Dispatch Time Budget.
+
+✔ Hard maximums obligatorios.
+
+✔ Abort controlado.
+
+✔ Recovery en un ciclo posterior.
+
+✔ DeviceBusDispatchPolicy.
+
+✔ DeviceBusDispatchReport.
+
+✔ configure_dispatch_policy().
+
+✔ get_dispatch_policy().
+
+✔ get_last_dispatch_report().
+
+✔ Policy bloqueada después del primer ciclo.
+
+✔ DELIVER_ALL.
+
+✔ Coalescing descartado.
+
+✔ Single Semantic Owner.
+
+✔ DeviceBus realiza fan-out.
+
+✔ No republishing sin transformación.
+
+✔ Derived Outputs utilizan contratos nuevos.
+
+✔ Provenance permanece fuera de DeviceBus.
+
+✔ Thread confinement.
+
+✔ Time Budget separado de determinismo.
+
+✔ Payload Size documentado como limitación.
+
+Valores iniciales:
+
+Default publications:
+1024
+
+Default callbacks:
+8192
+
+Default pending:
+512
+
+Default time:
+50000 usec
+
+Hard publications:
+16384
+
+Hard callbacks:
+131072
+
+Hard pending:
+8192
+
+Hard time:
+500000 usec
+
+Estado:
+
+ADR-007 ACEPTADO
+
+Runtime Safety Design:
+ACTIVO 1.0
+
+Implementación:
+
+PENDIENTE
+
+Siguiente paso:
+
+Implementar DeviceBusDispatchPolicy
+y su prueba de contrato.

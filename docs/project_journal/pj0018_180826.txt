@@ -1,0 +1,111 @@
+PJ0018 – DeviceGraph Architecture
+
+Fecha:
+18/08/2026
+
+Objetivo:
+
+Definir DeviceGraph como modelo lógico
+de composición antes de crear herramientas
+visuales y SystemProfiles.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-002 — DeviceGraph.md
+
+docs/architecture/
+device_graph_design.md
+
+Contratos disponibles:
+
+✔ Device Core.
+
+✔ DeviceProfile.
+
+✔ DeviceConfiguration.
+
+✔ DeviceManifest.
+
+✔ DeviceBus bounded FIFO.
+
+✔ ValidationReport.
+
+✔ VP-002.
+
+Decisiones:
+
+✔ DeviceGraph representa topología.
+
+✔ DeviceGraph no transporta mensajes.
+
+✔ Toda comunicación utiliza DeviceBus.
+
+✔ DeviceGraphNode representa instancia lógica.
+
+✔ Primary Role único.
+
+✔ InputPorts derivados de Manifest.
+
+✔ OutputPorts derivados de Manifest.
+
+✔ TopicChannel representa Topic.
+
+✔ Connection está mediada por TopicChannel.
+
+✔ Single Semantic Owner.
+
+✔ Fan-out mediante DeviceBus.
+
+✔ No republishing sin transformación.
+
+✔ Feedback loops permitidos.
+
+✔ Zero-delay cycles requieren validación.
+
+✔ Graph Draft mutable mediante API.
+
+✔ Graph Snapshot inmutable.
+
+✔ Graph Snapshot no ejecutable.
+
+✔ CompositionCompiler obligatorio.
+
+✔ Mutaciones transaccionales.
+
+✔ Connection IDs deterministas.
+
+✔ Separador `|` reservado.
+
+✔ Devices ideales como alcance inicial.
+
+Fuera de alcance:
+
+- GraphEditor
+- GraphLayout
+- SystemProfile completo
+- GraphSerializer
+- CompositionCompiler
+- DeviceRuntime
+- hardware real
+- conexiones eléctricas
+- conexiones mecánicas
+- Calibration
+- AdaptationPolicy
+- RuntimeAllocation
+
+Estado:
+
+ADR-002 ACEPTADO
+
+DeviceGraph Design:
+
+ACTIVO 1.0
+
+Implementación:
+
+PENDIENTE
+
+Siguiente paso:
+
+Implementar PortSemanticKinds.

@@ -30,3 +30,28 @@ Composition over inheritance whenever possible.
 
 10.
 Simplicity is a feature.
+
+11.
+The simulation may fail; the simulator must not.
+
+12.
+Canonical definitions are immutable.
+
+13.
+Structural errors never become active.
+
+14.
+Experimental failure is a valid learning outcome.
+
+15.
+Platform integrity is non-negotiable.
+
+16.
+Changes are transactional and preserve
+the Last Known Good state.
+
+Project Safety Decision:
+
+docs/decisions/
+VP-002 — The Simulation May Fail;
+The Simulator Must Not.md

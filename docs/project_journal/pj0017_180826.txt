@@ -1,0 +1,223 @@
+PJ0017 – Device Profiles and Configuration Implementation
+
+Fecha:
+16/08/2026
+
+Objetivo:
+
+Implementar ADR-008 utilizando el modelo
+Draft–Snapshot y Devices ideales.
+
+Documentos relacionados:
+
+docs/decisions/
+VP-002 — The Simulation May Fail;
+The Simulator Must Not.md
+
+docs/engineering_notes/
+EN007.txt
+
+docs/architecture/adr/
+ADR-008 — Device Definitions,
+Profiles and Configuration.md
+
+docs/architecture/
+device_profile_configuration_design.md
+
+Implementaciones creadas:
+
+core/profile/device_roles.gd
+
+core/profile/validation_issue.gd
+
+core/profile/validation_report.gd
+
+core/profile/device_profile_draft.gd
+
+core/profile/device_profile.gd
+
+core/profile/device_profile_compile_result.gd
+
+core/profile/device_profile_compiler.gd
+
+core/profile/builtin_device_profiles.gd
+
+core/profile/device_configuration_draft.gd
+
+core/profile/device_configuration.gd
+
+core/profile/
+device_configuration_compile_result.gd
+
+core/profile/device_configuration_compiler.gd
+
+core/profile/device_manifest_build_result.gd
+
+core/profile/device_manifest_builder.gd
+
+Resultados:
+
+✔ DeviceRoles canónicos.
+
+✔ DeviceProfileDraft editable.
+
+✔ DeviceProfile snapshot sin setters.
+
+✔ DeviceProfileCompiler.
+
+✔ Namespace velocity reservado.
+
+✔ Builtin Ideal Distance Sensor.
+
+✔ DeviceConfigurationDraft editable.
+
+✔ DeviceConfiguration snapshot sin setters.
+
+✔ DeviceConfigurationCompiler.
+
+✔ Activation Context SIMULATION.
+
+✔ ValidationIssue.
+
+✔ ValidationReport.
+
+✔ Simulation Hazard permitido
+  en simulación.
+
+✔ Simulation Hazard bloqueado
+  en hardware.
+
+✔ DeviceManifestBuilder.
+
+✔ Profile requirements preservados.
+
+✔ Additional requirements añadidos
+  sin duplicados.
+
+✔ Arrays independientes.
+
+✔ Generic Profile declarado SUPERADO.
+
+Pruebas:
+
+DeviceRolesTest:
+16 PASS
+
+ValidationReportTest:
+38 PASS
+
+DeviceProfileDraftTest:
+12 PASS
+
+DeviceProfileCompilerTest:
+47 PASS
+
+BuiltinDeviceProfilesTest:
+16 PASS
+
+DeviceConfigurationDraftTest:
+12 PASS
+
+DeviceConfigurationCompilerTest:
+56 PASS
+
+DeviceManifestBuilderTest:
+24 PASS
+
+Total Profile Configuration:
+
+221 verificaciones correctas.
+
+0 fallos.
+
+Estado:
+
+IMPLEMENTACIÓN COMPLETA
+
+Limpieza y regresión final:
+
+PENDIENTES
+
+Auditoría de Profile genérico:
+
+Ruta:
+
+profiles/profile.gd
+
+Referencias activas:
+
+0
+
+Profile.new() activo:
+
+0
+
+UID references:
+
+0
+
+class_name Profile:
+
+solo aparecía en el archivo retirado.
+
+Limpieza:
+
+profiles/profile.gd
+
+Estado:
+RETIRADO
+
+profiles/profile.gd.uid
+
+Estado:
+RETIRADO
+
+La clase genérica Profile fue sustituida por:
+
+DeviceProfileDraft
+
+DeviceProfile
+
+DeviceConfigurationDraft
+
+DeviceConfiguration
+
+Regresión final:
+
+Tests discovered:
+33
+
+Completed:
+33
+
+Passed:
+33
+
+Failed:
+0
+
+Timeout:
+0
+
+Engine Error:
+0
+
+Not Run:
+0
+
+Total Runs:
+33
+
+Plan ExitCode:
+0
+
+Result:
+PASS
+
+Estado final de ADR-008:
+
+IMPLEMENTADO Y VERIFICADO
+
+Estado final del hito:
+
+PROFILE CONFIGURATION COMPLETO

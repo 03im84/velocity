@@ -1,0 +1,113 @@
+PJ0012 – Safe Simulation and System Integrity
+
+Fecha:
+2026-08-15
+
+Objetivo:
+
+Registrar una regla transversal que permita
+experimentación y fallo simulado sin comprometer
+la estabilidad de Velocity o hardware real.
+
+Documento canónico:
+
+docs/decisions/
+VP-002 — The Simulation May Fail;
+The Simulator Must Not.md
+
+Decisión:
+
+La simulación puede fallar.
+
+El simulador no.
+
+Velocity permitirá:
+
+- configuraciones físicamente malas;
+- control inestable;
+- daño simulado;
+- degradación;
+- pérdida de Sensors;
+- pérdida de Actuators;
+- fallo de misión;
+- fallo catastrófico simulado.
+
+Velocity no permitirá:
+
+- stack overflow;
+- recursión ilimitada;
+- memoria sin límites;
+- bloqueo permanente;
+- corrupción de datos;
+- pérdida de control del editor;
+- activación de hardware inseguro;
+- sobrescritura de definiciones canónicas.
+
+Contextos definidos:
+
+Draft
+
+Active Simulation
+
+Active Hardware
+
+Clasificaciones definidas:
+
+Structural Error
+
+Platform Safety Error
+
+Simulation Hazard
+
+Hardware Safety Error
+
+Principios:
+
+✔ Canonical definitions are immutable.
+
+✔ Structural errors never become active.
+
+✔ Platform integrity is non-negotiable.
+
+✔ Simulation hazards are allowed
+  in Simulation Mode.
+
+✔ Hardware hazards are blocked
+  in Hardware Mode.
+
+✔ Changes are transactional.
+
+✔ Last Known Good is preserved.
+
+✔ Runtime resources are bounded.
+
+✔ Experimental failure is a valid
+  learning outcome.
+
+Estado:
+
+VP-002 APROBADO
+
+Versión:
+
+1.0
+
+Implementación:
+
+PENDIENTE EN SUBSISTEMAS FUTUROS
+
+Impacto detectado:
+
+DeviceBus deberá revisarse para evitar
+recursión síncrona ilimitada.
+
+DeviceGraph deberá distinguir control loops
+temporales de zero-delay cycles.
+
+Profile y Configuration deberán utilizar
+Drafts, validación, snapshots y versionado.
+
+Siguiente paso:
+
+Definir la arquitectura mínima de seguridad
+y configuración antes de finalizar ADR-002.

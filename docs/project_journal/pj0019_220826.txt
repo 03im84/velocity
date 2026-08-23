@@ -1,0 +1,234 @@
+PJ0019 – DeviceGraph Connections and Verified Baseline
+
+Fecha:
+
+22/08/2026
+
+Objetivo:
+
+Completar y verificar las operaciones
+transaccionales de conexión de DeviceGraph,
+consolidar las baselines acumuladas
+y organizar los cambios pendientes en
+commits separados por responsabilidad.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-002 — DeviceGraph.md
+
+docs/architecture/
+device_graph_design.md
+
+docs/decisions/
+VP-002 — The Simulation May Fail; The Simulator Must Not.md
+
+Problema resuelto:
+
+DeviceGraphDraft hereda de RefCounted
+y, por tanto, de Object.
+
+Los nombres connect() y disconnect()
+entraban en conflicto con los métodos
+nativos de Object y producían un error
+de firma durante el parsing.
+
+Corrección:
+
+✔ connect() fue reemplazado por connect_ports().
+
+✔ disconnect() fue reemplazado por disconnect_ports().
+
+✔ La API pública ya no oculta métodos
+  nativos de Object.
+
+✔ Engineering Standards registra la
+  obligación de revisar métodos heredados
+  antes de nombrar APIs públicas.
+
+Implementación completada:
+
+✔ DeviceGraphDraft permite añadir Devices.
+
+✔ DeviceGraphDraft permite retirar Devices
+  sin Connections activas.
+
+✔ Connection IDs son deterministas.
+
+✔ El formato de Connection ID es:
+
+  source_device|source_port|target_device|target_port
+
+✔ El separador `|` está reservado.
+
+✔ Source Device y Target Device son validados.
+
+✔ Source OutputPort y Target InputPort
+  son validados.
+
+✔ Source Topic y Target Topic deben coincidir.
+
+✔ Semantic Kinds deben ser compatibles.
+
+✔ UNSPECIFIED funciona como wildcard semántico.
+
+✔ Self-connections son rechazadas.
+
+✔ Connections duplicadas son rechazadas.
+
+✔ Las operaciones fallidas preservan el Graph.
+
+✔ disconnect_ports() es transaccional.
+
+✔ Devices conectados no pueden eliminarse.
+
+✔ get_connections() retorna una colección
+  independiente.
+
+✔ TopicChannels son reconstruidos después
+  de operaciones válidas.
+
+Prueba sucesora creada:
+
+res://test/core/device_graph/
+DeviceGraphConnectionTest.tscn
+
+res://test/core/device_graph/
+device_graph_connection_test.gd
+
+Resultado:
+
+Checks: 70
+Failures: 0
+RESULT: PASS
+
+DeviceGraph baseline:
+
+PortSemanticKindsTest:
+
+Checks: 28
+Failures: 0
+RESULT: PASS
+
+DeviceGraphPrimitivesTest:
+
+Checks: 57
+Failures: 0
+RESULT: PASS
+
+DeviceGraphNodeBuilderTest:
+
+Checks: 50
+Failures: 0
+RESULT: PASS
+
+DeviceGraphDraftDeviceTest:
+
+Checks: 28
+Failures: 0
+RESULT: PASS
+
+DeviceGraphConnectionTest:
+
+Checks: 70
+Failures: 0
+RESULT: PASS
+
+Total DeviceGraph:
+
+Tests: 5
+Checks: 233
+Failures: 0
+
+Prueba de integración completa:
+
+Dashboard Execution Plan:
+
+Planned: 38
+Completed: 38
+Passed: 38
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Total Runs: 38
+Plan ExitCode: 0
+RESULT: PASS
+
+Total de checks verificados:
+
+925
+
+Refactorización:
+
+PortSemanticKindsTest fue reubicado desde:
+
+res://test/core/
+
+hacia:
+
+res://test/core/device_graph/
+
+La prueba conservó:
+
+Checks: 28
+Failures: 0
+RESULT: PASS
+
+No se modificó producción después
+de la regresión satisfactoria.
+
+No se realizó refactorización sin
+una necesidad demostrada.
+
+Consolidación Git:
+
+dd98bf3
+feat(device-bus): add bounded FIFO dispatch safety
+
+84ce002
+feat(profiles): add draft snapshot configuration pipeline
+
+f4cc9fe
+feat(device-graph): add validated graph composition and connections
+
+66732e6
+feat(tools): add Velocity test dashboard
+
+Estado:
+
+DEVICEBUS RUNTIME SAFETY VERIFICADO
+
+DEVICE PROFILE/CONFIGURATION VERIFICADO
+
+DEVICEGRAPH PRIMITIVES VERIFICADO
+
+DEVICEGRAPH NODE BUILDER VERIFICADO
+
+DEVICEGRAPH DRAFT DEVICES VERIFICADO
+
+DEVICEGRAPH CONNECTIONS VERIFICADO
+
+VELOCITY TEST DASHBOARD 0.3.2 VERIFICADO
+
+REGRESIÓN COMPLETA VERIFICADA
+
+Siguiente paso:
+
+Implementar validación completa de DeviceGraph.
+
+Después:
+
+- detección de ciclos;
+
+- clasificación de zero-delay cycles;
+
+- DeviceGraphSnapshot;
+
+- DeviceGraphSnapshotResult;
+
+- create_snapshot();
+
+- pruebas unitarias de validación;
+
+- pruebas de integración de Snapshot.

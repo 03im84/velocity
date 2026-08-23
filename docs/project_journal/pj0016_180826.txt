@@ -1,0 +1,146 @@
+PJ0016 – Velocity Test Dashboard
+
+Fecha:
+16/08/2026
+
+Objetivo:
+
+Crear una herramienta visual para descubrir
+y ejecutar pruebas sin escribir comandos
+PowerShell repetitivos.
+
+Diseño:
+
+docs/tools/
+velocity_test_dashboard_design.md
+
+Implementación:
+
+test/tools/
+velocity_test_dashboard.py
+
+Backend:
+
+test/tools/
+run_godot_tests.ps1
+
+Configuración:
+
+test/tools/
+test_dashboard.json
+
+test/tools/
+test_dashboard.local.json
+
+Launcher:
+
+test/tools/
+start_velocity_test_dashboard.bat
+
+Tecnología:
+
+Python 3.13
+
+Tkinter 8.6
+
+Godot Console 4.7.1
+
+Funciones:
+
+✔ GODOT_CONSOLE.
+
+✔ Configuración compartida.
+
+✔ Configuración local.
+
+✔ Descubrimiento de tests.
+
+✔ Búsqueda.
+
+✔ Suites.
+
+✔ Run Selected.
+
+✔ Run Suite.
+
+✔ Run All.
+
+✔ Repeat.
+
+✔ Timeout.
+
+✔ Output en vivo.
+
+✔ Estado visual.
+
+✔ Tabla de resultados.
+
+✔ Resumen agregado.
+
+✔ Continuación después de fallos.
+
+✔ Stop.
+
+✔ NOT_RUN.
+
+✔ Copy Command.
+
+✔ Copy Output.
+
+✔ Persistencia.
+
+✔ Cierre seguro.
+
+✔ Launcher batch.
+
+Resultado:
+
+PHASE 1:
+PASS
+
+PHASE 2:
+PASS
+
+PHASE 3:
+PASS
+
+Estado final:
+
+IMPLEMENTADO Y VERIFICADO
+
+La herramienta permanece fuera de Core
+y funciona como adaptador visual del
+PowerShell Test Runner.
+
+Evoluciones posteriores:
+
+Dashboard 0.3.1
+
+✔ PowerShell y Godot Console ejecutados
+  sin ventanas externas.
+
+✔ Stop no deja prompt o consola huérfana.
+
+Dashboard 0.3.2
+
+✔ Botón dinámico Pause / Resume.
+
+✔ Pause finaliza el test actual.
+
+✔ Plan cambia a PAUSED.
+
+✔ Tests restantes cambian a NOT_RUN.
+
+✔ Resume continúa sin repetir PASS.
+
+✔ Stop marca test actual STOPPED.
+
+✔ Resume reejecuta test STOPPED.
+
+✔ UI permanece responsive.
+
+Estado final:
+
+VELOCITY TEST DASHBOARD 0.3.2
+
+IMPLEMENTADO Y VERIFICADO

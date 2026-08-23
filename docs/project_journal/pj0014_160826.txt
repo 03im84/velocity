@@ -1,0 +1,294 @@
+PJ0014 – Bounded FIFO Dispatch Implementation
+
+Fecha:
+16/08/2026
+
+Objetivo:
+
+Implementar ADR-007 y sustituir publicación
+reentrante depth-first por bounded FIFO dispatch.
+
+Documentos relacionados:
+
+docs/decisions/
+VP-002 — The Simulation May Fail;
+The Simulator Must Not.md
+
+docs/engineering_notes/
+EN006.txt
+
+docs/architecture/adr/
+ADR-007 — Bounded Dispatch and Runtime Safety.md
+
+docs/architecture/
+device_bus_runtime_safety_design.md
+
+Implementaciones creadas:
+
+core/bus/
+device_bus_dispatch_policy.gd
+
+core/bus/
+device_bus_dispatch_report.gd
+
+Implementación modificada:
+
+core/bus/device_bus.gd
+
+Cambios:
+
+✔ Queue FIFO iterativa.
+
+✔ Reentrant publish sin crecimiento
+  del call stack.
+
+✔ Dispatch Cycle explícito.
+
+✔ Publication Budget.
+
+✔ Callback Budget.
+
+✔ Queue Size Limit.
+
+✔ Dispatch Time Budget.
+
+✔ Hard maximums.
+
+✔ Policy segura por defecto.
+
+✔ configure_dispatch_policy().
+
+✔ Policy lock después del primer ciclo.
+
+✔ get_dispatch_policy().
+
+✔ DeviceBusDispatchReport.
+
+✔ get_last_dispatch_report().
+
+✔ Aborto controlado.
+
+✔ Recovery en ciclo posterior.
+
+✔ Suscripciones conservadas después de aborto.
+
+✔ DELIVER_ALL.
+
+✔ Coalescing no implementado.
+
+✔ Single Publication.
+
+✔ Fan-out.
+
+✔ Misma referencia compartida.
+
+✔ DeviceBus no interpreta payloads.
+
+Pruebas sucesoras:
+
+DeviceBusDispatchPolicyTest:
+
+Checks:
+32
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusDispatchReportTest:
+
+Checks:
+42
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusFifoDispatchTest:
+
+Checks:
+26
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusDispatchBudgetTest:
+
+Checks:
+30
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusDispatchMutationTest:
+
+Checks:
+21
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusDispatchRecoveryTest:
+
+Checks:
+15
+
+Failures:
+0
+
+Result:
+PASS
+
+DeviceBusFanOutTest:
+
+Checks:
+13
+
+Failures:
+0
+
+Result:
+PASS
+
+Total Runtime Safety:
+
+179 verificaciones correctas.
+
+0 fallos.
+
+Regresión de migración:
+
+Tests discovered:
+26
+
+Passed:
+25
+
+Failed:
+1
+
+Timeout:
+0
+
+Fallo único:
+
+DeviceBusPublishTest
+
+Motivo:
+
+La prueba anterior exigía reentrant
+publication depth-first.
+
+El nuevo contrato exige FIFO:
+
+Anterior:
+
+A:outer
+A:inner
+B:inner
+B:outer
+
+Nuevo:
+
+A:outer
+B:outer
+A:inner
+B:inner
+
+Prueba anterior:
+
+test/core/device_bus/
+device_bus_publish_test.gd
+
+Estado:
+
+SUPERADA
+
+Pruebas sucesoras:
+
+- DeviceBusFifoDispatchTest
+- DeviceBusDispatchBudgetTest
+- DeviceBusDispatchMutationTest
+- DeviceBusDispatchRecoveryTest
+- DeviceBusFanOutTest
+
+Decisión:
+
+DeviceBusPublishTest puede retirarse
+del árbol activo.
+
+Continuará disponible mediante Git.
+
+Estado del hito:
+
+IMPLEMENTACIÓN COMPLETA
+
+Limpieza y regresión final:
+
+PENDIENTES
+
+Limpieza:
+
+test/core/device_bus/
+device_bus_publish_test.gd
+
+test/core/device_bus/
+device_bus_publish_test.gd.uid
+
+test/core/device_bus/
+device_bus_publish_test.tscn
+
+Estado:
+
+RETIRADOS
+
+Baseline anterior:
+
+SUPERADO
+
+Regresión final:
+
+Tests discovered:
+25
+
+Passed:
+25
+
+Failed:
+0
+
+Timeout:
+0
+
+Engine Error:
+0
+
+Result:
+PASS
+
+Runner ExitCode:
+0
+
+Estado final de ADR-007:
+
+IMPLEMENTADO Y VERIFICADO
+
+Estado final de DeviceBus:
+
+BOUNDED FIFO DISPATCH ACTIVO
+
+No se detectaron regresiones después
+de retirar el baseline depth-first.
