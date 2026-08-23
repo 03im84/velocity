@@ -3,16 +3,16 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
-| Fecha | 18/08/2026 |
+| Versión | 1.1 |
+| Fecha | 22/08/2026 |
 | ADR relacionado | ADR-002 — DeviceGraph |
-| Alcance | Topología lógica para Devices ideales |
+| Alcance | Topología lógica y validación para Devices ideales |
 
 ## 1. Propósito
 
 Este documento traduce ADR-002 a un diseño concreto e implementable.
 
-La primera versión define:
+DeviceGraph 1.1 define:
 
 - PortSemanticKinds;
 - DeviceGraphInputPort;
@@ -20,14 +20,18 @@ La primera versión define:
 - DeviceGraphTopicChannel;
 - DeviceGraphConnection;
 - DeviceGraphNode;
-- generación inicial de Ports;
+- DeviceGraphNodeBuilder;
+- DeviceGraphOperationResult;
 - DeviceGraphDraft;
+- DeviceGraphValidator;
 - DeviceGraphSnapshot;
-- validación;
+- DeviceGraphSnapshotResult;
+- validación global;
+- detección conservadora de ciclos;
 - mutaciones transaccionales;
 - pruebas.
 
-DeviceGraph 1.0 trabaja con:
+DeviceGraph trabaja con:
 
 - DeviceProfile snapshots;
 - DeviceConfiguration snapshots;
@@ -36,7 +40,7 @@ DeviceGraph 1.0 trabaja con:
 - datos y comandos;
 - DeviceBus como transporte runtime futuro.
 
-## 2. Estructura propuesta
+## 2. Estructura
 
 ### 2.1 Código
 
@@ -50,15 +54,44 @@ core/graph/
 ├── device_graph_node.gd
 ├── device_graph_node_build_result.gd
 ├── device_graph_node_builder.gd
+├── device_graph_operation_result.gd
 ├── device_graph_draft.gd
+├── device_graph_validator.gd
 ├── device_graph_snapshot.gd
 └── device_graph_snapshot_result.gd
+```
+
+Estado actual:
+
+```text
+Implementado hasta:
+DeviceGraphDraft Connections.
+
+Siguiente:
+DeviceGraphValidator.
+
+Posterior:
+DeviceGraphSnapshot.
 ```
 
 ### 2.2 Pruebas
 
 ```text
 test/core/device_graph/
+├── PortSemanticKindsTest.tscn
+├── port_semantic_kinds_test.gd
+├── DeviceGraphPrimitivesTest.tscn
+├── device_graph_primitives_test.gd
+├── DeviceGraphNodeBuilderTest.tscn
+├── device_graph_node_builder_test.gd
+├── DeviceGraphDraftDeviceTest.tscn
+├── device_graph_draft_device_test.gd
+├── DeviceGraphConnectionTest.tscn
+├── device_graph_connection_test.gd
+├── DeviceGraphValidationTest.tscn
+├── device_graph_validation_test.gd
+├── DeviceGraphSnapshotTest.tscn
+└── device_graph_snapshot_test.gd
 ```
 
 ### 2.3 Dependencias permitidas
@@ -133,13 +166,17 @@ InputPort
 
 Topología editable mediante API controlada.
 
+### DeviceGraphValidator
+
+Componente sin estado que examina una topología completa y produce ValidationReport.
+
 ### DeviceGraphSnapshot
 
 Topología validada e inmutable.
 
 ## 4. PortSemanticKinds
 
-### 4.1 Archivo previsto
+### 4.1 Archivo
 
 ```text
 core/graph/port_semantic_kinds.gd
@@ -155,37 +192,21 @@ class_name PortSemanticKinds
 ### 4.3 Identidades
 
 ```gdscript
-const UNSPECIFIED: StringName = (
-	&"unspecified"
-)
+const UNSPECIFIED: StringName = &"unspecified"
 
-const MEASUREMENT: StringName = (
-	&"measurement"
-)
+const MEASUREMENT: StringName = &"measurement"
 
-const COMMAND: StringName = (
-	&"command"
-)
+const COMMAND: StringName = &"command"
 
-const SETPOINT: StringName = (
-	&"setpoint"
-)
+const SETPOINT: StringName = &"setpoint"
 
-const RESULT: StringName = (
-	&"result"
-)
+const RESULT: StringName = &"result"
 
-const STATE: StringName = (
-	&"state"
-)
+const STATE: StringName = &"state"
 
-const HEALTH: StringName = (
-	&"health"
-)
+const HEALTH: StringName = &"health"
 
-const EVENT: StringName = (
-	&"event"
-)
+const EVENT: StringName = &"event"
 ```
 
 ### 4.4 API
@@ -203,15 +224,13 @@ static func get_all(
 
 ### 4.5 UNSPECIFIED
 
-La primera implementación no tiene todavía un TopicContractRegistry.
+La primera implementación todavía no tiene TopicContractRegistry.
 
-Los Ports generados únicamente desde DeviceManifest podrán utilizar:
+Los Ports generados desde DeviceManifest utilizan inicialmente:
 
 ```text
 UNSPECIFIED
 ```
-
-hasta que exista un contrato canónico de semántica por Topic.
 
 UNSPECIFIED no significa inválido.
 
@@ -223,8 +242,6 @@ Semantic Kind todavía no especificado.
 
 ### 4.6 Compatibilidad inicial
 
-Regla inicial:
-
 ```text
 Si ambos Kinds son específicos:
 deben ser iguales.
@@ -233,11 +250,11 @@ Si uno o ambos son UNSPECIFIED:
 la compatibilidad se decide por Topic.
 ```
 
-Esto evita inferir semántica mediante nombres como `_measurement` o `_command`.
+No se infiere semántica mediante nombres como `_measurement` o `_command`.
 
 ## 5. DeviceGraphInputPort
 
-### 5.1 Archivo previsto
+### 5.1 Archivo
 
 ```text
 core/graph/device_graph_input_port.gd
@@ -266,7 +283,7 @@ var _semantic_kind: StringName
 
 Todos los valores se reciben durante `_init()`.
 
-DeviceGraphInputPort será inmutable por contrato.
+DeviceGraphInputPort es inmutable por contrato.
 
 ### 5.5 API
 
@@ -293,7 +310,9 @@ device_id no vacío;
 
 topic no vacío;
 
-semantic_kind válido.
+semantic_kind válido;
+
+IDs sin separador reservado.
 ```
 
 ### 5.7 Responsabilidad
@@ -311,9 +330,19 @@ No contiene:
 - configuración visual;
 - posición.
 
+### 5.8 Cardinalidad inicial
+
+Un InputPort admite como máximo:
+
+```text
+una Connection entrante.
+```
+
+Cardinalidad configurable pertenece a una evolución futura.
+
 ## 6. DeviceGraphOutputPort
 
-### 6.1 Archivo previsto
+### 6.1 Archivo
 
 ```text
 core/graph/device_graph_output_port.gd
@@ -342,7 +371,7 @@ var _semantic_kind: StringName
 
 Todos los valores se reciben durante `_init()`.
 
-DeviceGraphOutputPort será inmutable por contrato.
+DeviceGraphOutputPort es inmutable por contrato.
 
 ### 6.5 API
 
@@ -369,7 +398,9 @@ device_id no vacío;
 
 topic no vacío;
 
-semantic_kind válido.
+semantic_kind válido;
+
+IDs sin separador reservado.
 ```
 
 ### 6.7 Responsabilidad
@@ -382,9 +413,15 @@ No publica por sí mismo.
 
 No contiene referencia a DeviceBus.
 
+### 6.8 Fan-out
+
+Un OutputPort puede participar en múltiples Connections.
+
+No existe un límite semántico inicial de consumidores.
+
 ## 7. Port IDs
 
-La primera generación automática utilizará IDs deterministas.
+La generación automática utiliza IDs deterministas.
 
 ### Input
 
@@ -410,20 +447,18 @@ Ejemplo:
 out.distance_measurement
 ```
 
-El formato se utiliza únicamente como identidad del Port dentro del Device.
+El formato es identidad del Port dentro del Device.
 
-No es un Topic.
-
-No es una ruta de escena.
+No es un Topic ni una ruta de escena.
 
 ### Limitación inicial
 
 Un DeviceManifest contiene cada Topic una sola vez.
 
-Por tanto, la primera versión genera un Port por:
+La primera versión genera un Port por:
 
 ```text
-direction + topic
+direction + Topic
 ```
 
 Named slots como:
@@ -434,18 +469,21 @@ front_left_distance
 front_right_distance
 ```
 
-se añadirán cuando Configuration y Profile expongan metadata de Ports especializados.
+se añadirán cuando Profile y Configuration expongan metadata de Ports especializados.
 
 ### Separador reservado
 
-DeviceGraph utilizará:
+DeviceGraph utiliza:
 
 ```text
-|```
+|
+```
+
+Ningún Device ID o Port ID puede contenerlo.
 
 ## 8. DeviceGraphTopicChannel
 
-### 8.1 Archivo previsto
+### 8.1 Archivo
 
 ```text
 core/graph/device_graph_topic_channel.gd
@@ -492,7 +530,7 @@ No:
 
 ## 9. DeviceGraphConnection
 
-### 9.1 Archivo previsto
+### 9.1 Archivo
 
 ```text
 core/graph/device_graph_connection.gd
@@ -554,20 +592,22 @@ topic no vacío;
 
 target_device_id no vacío;
 
-target_port_id no vacío.
+target_port_id no vacío;
+
+componentes sin separador reservado.
 ```
 
-La compatibilidad con Graph pertenece a DeviceGraphValidator o DeviceGraphDraft.
+La compatibilidad con Graph pertenece a DeviceGraphDraft y DeviceGraphValidator.
 
 ### 9.6 Inmutabilidad
 
-Connection será inmutable por contrato.
+Connection es inmutable por contrato.
 
-No expondrá setters.
+No expone setters.
 
 ## 10. DeviceGraphNode
 
-### 10.1 Archivo previsto
+### 10.1 Archivo
 
 ```text
 core/graph/device_graph_node.gd
@@ -600,30 +640,28 @@ var _output_ports: Array[DeviceGraphOutputPort]
 
 ### 10.4 Inmutabilidad
 
-DeviceGraphNode será un snapshot lógico.
+DeviceGraphNode es un snapshot lógico.
 
-No expondrá setters.
+No expone setters.
 
-Los Arrays se copiarán durante construcción.
+Los Arrays se copian durante construcción.
 
-Los getters de Ports devolverán Arrays nuevos.
+Los getters de Ports devuelven Arrays nuevos.
 
 ### 10.5 Manifest interno
 
 DeviceManifest actual es mutable.
 
-DeviceGraphNode no conservará directamente el mismo objeto editable recibido.
+DeviceGraphNode no conserva directamente el objeto editable recibido.
 
-Durante construcción creará una copia interna de:
+Durante construcción crea una copia interna de:
 
 - capabilities;
 - publishes;
 - subscribes;
 - requirements.
 
-`get_manifest()` devolverá otra copia.
-
-Esto evita que una modificación externa cambie Ports o interfaz después de crear el Node.
+`get_manifest()` devuelve otra copia.
 
 ### 10.6 API
 
@@ -685,7 +723,7 @@ OutputPort topics están en Manifest.publishes.
 
 ## 11. Generación inicial de Ports
 
-Los Ports se generarán desde DeviceManifest.
+Los Ports se generan desde DeviceManifest.
 
 ### InputPorts
 
@@ -747,13 +785,13 @@ No se ordenan alfabéticamente.
 
 ### Duplicados
 
-DeviceManifest ya debe estar validado.
+DeviceManifest debe estar validado.
 
-Si contiene Topics duplicados, DeviceGraphNodeBuilder producirá error estructural.
+Si contiene Topics duplicados, DeviceGraphNodeBuilder produce error estructural.
 
 ## 12. DeviceGraphNodeBuilder
 
-### 12.1 Archivo previsto
+### 12.1 Archivo
 
 ```text
 core/graph/device_graph_node_builder.gd
@@ -763,7 +801,7 @@ core/graph/device_graph_node_builder.gd
 
 > Construir DeviceGraphNode desde snapshots y Manifest efectivo.
 
-### 12.3 API conceptual
+### 12.3 API
 
 ```gdscript
 build(
@@ -785,8 +823,7 @@ Debe comprobar:
 - Device ID coincide;
 - Profile ID coincide;
 - Profile version coincide;
-- Device ID no contiene el separador reservado `|`;
-- Port IDs generados no contienen el separador reservado.
+- Device ID no contiene `|`;
 - Primary Role válido;
 - Manifest no contiene duplicados;
 - Ports generados son válidos.
@@ -797,7 +834,8 @@ Si Device ID contiene el separador:
 STRUCTURAL_ERROR
 
 code:
-graph_id_contains_reserved_separator```
+graph_id_contains_reserved_separator
+```
 
 ### 12.5 Resultado
 
@@ -813,7 +851,7 @@ No modifica los argumentos.
 
 ## 13. DeviceGraphNodeBuildResult
 
-### 13.1 Archivo previsto
+### 13.1 Archivo
 
 ```text
 core/graph/device_graph_node_build_result.gd
@@ -844,7 +882,7 @@ get_report() -> ValidationReport
 is_success() -> bool
 ```
 
-## 14. Invariantes del bloque
+## 14. Invariantes de primitivas
 
 1. Graph components son RefCounted.
 
@@ -864,7 +902,7 @@ is_success() -> bool
 
 9. Ports derivan del Manifest efectivo.
 
-10. Port ID combina direction y topic.
+10. Port ID combina direction y Topic.
 
 11. Un Topic genera un Port por dirección.
 
@@ -880,7 +918,7 @@ is_success() -> bool
 
 ## 15. DeviceGraphOperationResult
 
-### 15.1 Archivo previsto
+### 15.1 Archivo
 
 ```text
 core/graph/device_graph_operation_result.gd
@@ -911,7 +949,6 @@ var _report: ValidationReport
 
 - Device ID convertido a StringName;
 - Connection ID;
-- TopicChannel;
 - ID vacío en fallo.
 
 ### 15.5 API
@@ -926,13 +963,13 @@ get_report() -> ValidationReport
 
 ### 15.6 Inmutabilidad
 
-DeviceGraphOperationResult será inmutable por contrato.
+DeviceGraphOperationResult es inmutable por contrato.
 
-No expondrá setters.
+No expone setters.
 
 ## 16. DeviceGraphDraft
 
-### 16.1 Archivo previsto
+### 16.1 Archivo
 
 ```text
 core/graph/device_graph_draft.gd
@@ -948,6 +985,8 @@ class_name DeviceGraphDraft
 ### 16.3 Responsabilidad
 
 > Mantener una topología lógica editable mediante operaciones transaccionales.
+
+La validación global no se implementa como un método gigante dentro del Draft.
 
 ### 16.4 Estado interno
 
@@ -988,14 +1027,13 @@ has_device(
 ```
 
 ```gdscript
-get_devices(
-) -> Array[DeviceGraphNode]
+get_devices() -> Array[DeviceGraphNode]
 ```
 
 ### 16.6 API de Connections
 
 ```gdscript
-connect(
+connect_ports(
 	source_device_id: String,
 	source_port_id: StringName,
 	target_device_id: String,
@@ -1022,8 +1060,7 @@ has_connection(
 ```
 
 ```gdscript
-get_connections(
-) -> Array[DeviceGraphConnection]
+get_connections() -> Array[DeviceGraphConnection]
 ```
 
 ### 16.7 API de TopicChannels
@@ -1035,8 +1072,7 @@ get_topic_channel(
 ```
 
 ```gdscript
-get_topic_channels(
-) -> Array[DeviceGraphTopicChannel]
+get_topic_channels() -> Array[DeviceGraphTopicChannel]
 ```
 
 ### 16.8 API de validación
@@ -1049,9 +1085,11 @@ validate() -> ValidationReport
 create_snapshot() -> DeviceGraphSnapshotResult
 ```
 
-### 16.9 Collections
+`validate()` delega en DeviceGraphValidator.
 
-Todos los getters de colecciones devolverán Arrays nuevos.
+### 16.9 Colecciones
+
+Todos los getters de colecciones devuelven Arrays nuevos.
 
 Los Dictionaries internos no se exponen.
 
@@ -1059,7 +1097,7 @@ Los Dictionaries internos no se exponen.
 
 ### 17.1 Validaciones
 
-`add_device()` debe comprobar:
+`add_device()` comprueba:
 
 - Node no null;
 - Node válido;
@@ -1072,10 +1110,8 @@ Los Dictionaries internos no se exponen.
 
 ### 17.2 Éxito
 
-En éxito:
-
 ```text
-DeviceNode se registra.
+DeviceGraphNode se registra.
 
 TopicChannels requeridos por sus Ports
 se crean si no existen.
@@ -1087,8 +1123,6 @@ affected_id contiene Device ID.
 
 ### 17.3 Fallo
 
-En fallo:
-
 ```text
 Graph no cambia.
 
@@ -1098,8 +1132,6 @@ ValidationReport contiene error.
 ```
 
 ### 17.4 Device ID duplicado
-
-Produce:
 
 ```text
 STRUCTURAL_ERROR
@@ -1112,9 +1144,7 @@ duplicate_device_id
 
 ### 18.1 Política inicial
 
-DeviceGraph 1.0 rechazará eliminar un Device que tenga Connections.
-
-Resultado:
+DeviceGraph rechaza eliminar un Device que tenga Connections.
 
 ```text
 STRUCTURAL_ERROR
@@ -1123,11 +1153,9 @@ code:
 device_has_connections
 ```
 
-La herramienta deberá desconectar primero.
+La herramienta debe desconectar primero.
 
 ### 18.2 Device inexistente
-
-Produce:
 
 ```text
 STRUCTURAL_ERROR
@@ -1140,7 +1168,7 @@ device_not_found
 
 Al eliminar un Device sin Connections:
 
-- se retira DeviceNode;
+- se retira DeviceGraphNode;
 - se reconstruyen TopicChannels;
 - no quedan referencias huérfanas.
 
@@ -1149,15 +1177,14 @@ Al eliminar un Device sin Connections:
 Una operación futura podrá permitir:
 
 ```text
-remove_device_with_connections()```
+remove_device_with_connections()
+```
 
-de forma transaccional.
-
-No se implementará en 1.0.
+como una transacción explícita.
 
 ## 19. Connection ID
 
-DeviceGraph generará Connection IDs deterministas.
+DeviceGraph genera Connection IDs deterministas.
 
 Separador reservado:
 
@@ -1180,26 +1207,14 @@ target_port_id
 Ejemplo:
 
 ```text
-front_left_sensor
-|
-out.distance_measurement
-|
-hover_mcu
-|
-in.distance_measurement
-```
-
-ID final:
-
-```text
 front_left_sensor|out.distance_measurement|hover_mcu|in.distance_measurement
 ```
 
-El ID será convertido a StringName.
+El ID se convierte a StringName.
 
 ### Validación
 
-Ningún componente individual del ID puede contener:
+Ningún componente individual puede contener:
 
 ```text
 |
@@ -1220,18 +1235,18 @@ El ID:
 
 - es reproducible;
 - no depende del orden de inserción;
-- identifica una Connection source–target concreta;
+- identifica endpoints concretos;
 - permite detectar duplicados;
 - no utiliza contador global;
 - no utiliza UUID aleatorio.
 
 El caller no proporciona Connection ID.
 
-## 20. Connect
+## 20. Connect Ports
 
 ### 20.1 Validaciones
 
-`connect_ports()` debe comprobar:
+`connect_ports()` comprueba:
 
 - Source Device existe;
 - Target Device existe;
@@ -1239,19 +1254,20 @@ El caller no proporciona Connection ID.
 - OutputPort existe;
 - InputPort existe;
 - Ports pertenecen a sus Devices;
-- topics coinciden;
+- Topics coinciden;
 - Semantic Kinds son compatibles;
-- Connection no existe.
+- Connection no existe;
+- Target InputPort no tiene otra Connection entrante.
 
 ### 20.2 Self Connection
 
-DeviceGraph 1.0 rechazará conexiones donde:
+Si:
 
 ```text
 source_device_id == target_device_id
 ```
 
-Produce:
+produce:
 
 ```text
 STRUCTURAL_ERROR
@@ -1260,11 +1276,7 @@ code:
 self_connection_not_supported
 ```
 
-La lógica interna de un Device no se modela como Connection hacia sí mismo.
-
 ### 20.3 Topic mismatch
-
-Produce:
 
 ```text
 STRUCTURAL_ERROR
@@ -1284,15 +1296,13 @@ code:
 connection_semantic_mismatch
 ```
 
-Si uno o ambos son UNSPECIFIED:
+Si uno o ambos son UNSPECIFIED y Topic coincide:
 
 ```text
-Topic igual permite conexión.
+Connection permitida.
 ```
 
 ### 20.5 Duplicate Connection
-
-Produce:
 
 ```text
 STRUCTURAL_ERROR
@@ -1301,22 +1311,40 @@ code:
 duplicate_connection
 ```
 
-### 20.6 Éxito
+### 20.6 Multiple Sources
+
+Si otra Connection ya utiliza el mismo:
+
+```text
+Target Device ID
++
+Target InputPort ID
+```
+
+produce:
+
+```text
+STRUCTURAL_ERROR
+
+code:
+input_port_multiple_sources
+```
+
+La operación fallida no modifica el Graph.
+
+### 20.7 Éxito
 
 En éxito:
 
 - se construye DeviceGraphConnection;
 - se registra;
 - se garantiza TopicChannel;
-- se devuelve OperationResult.
+- se devuelve OperationResult;
+- no se modifica DeviceBus.
 
-No se modifica DeviceBus.
-
-## 21. Disconnect
+## 21. Disconnect Ports
 
 ### 21.1 Connection inexistente
-
-Produce:
 
 ```text
 STRUCTURAL_ERROR
@@ -1335,20 +1363,13 @@ Al desconectar:
 
 ### 21.3 TopicChannels no utilizados
 
-Un TopicChannel que ya no sea utilizado por:
-
-- Ports registrados;
-- Connections;
-
-puede retirarse durante reconstrucción.
-
-Como los Ports provienen de DeviceNodes, normalmente el canal permanece mientras exista un Port con ese Topic.
+Un TopicChannel no utilizado por Ports o Connections puede retirarse durante reconstrucción.
 
 ## 22. TopicChannel Registry
 
-DeviceGraphDraft mantendrá un TopicChannel por Topic.
+DeviceGraphDraft mantiene un TopicChannel por Topic.
 
-Se reconstruirá a partir de:
+Se reconstruye a partir de:
 
 - todos los InputPorts;
 - todos los OutputPorts;
@@ -1358,56 +1379,196 @@ No se modifica manualmente mediante API pública.
 
 Esto evita canales sin relación con la topología.
 
-## 23. Full Graph Validation
+## 23. DeviceGraphValidator
 
-`validate()` comprobará el Graph completo.
+### 23.1 Archivo
 
-### 23.1 Devices
+```text
+core/graph/device_graph_validator.gd
+```
 
+### 23.2 Forma
+
+```gdscript
+extends RefCounted
+class_name DeviceGraphValidator
+```
+
+### 23.3 Responsabilidad
+
+> Examinar una topología completa sin modificarla y producir un ValidationReport determinista.
+
+No:
+
+- añade Devices;
+- elimina Devices;
+- crea Connections;
+- corrige el Graph;
+- crea Snapshot;
+- consulta DeviceBus;
+- ejecuta runtime.
+
+### 23.4 API
+
+```gdscript
+validate(
+	devices: Array[DeviceGraphNode],
+	connections: Array[DeviceGraphConnection],
+	topic_channels: Array[DeviceGraphTopicChannel]
+) -> ValidationReport
+```
+
+Los Arrays son copias obtenidas desde DeviceGraphDraft.
+
+DeviceGraphValidator los trata como read-only.
+
+### 23.5 Delegación desde Draft
+
+```gdscript
+func validate() -> ValidationReport:
+
+	return DeviceGraphValidator.new().validate(
+		get_devices(),
+		get_connections(),
+		get_topic_channels()
+	)
+```
+
+La implementación deberá respetar las convenciones de formato GDScript del proyecto.
+
+### 23.6 Graph vacío
+
+Un Graph vacío es estructuralmente válido.
+
+Razón:
+
+- Draft puede estar incompleto;
+- el conjunto vacío no contiene referencias corruptas;
+- DeviceGraph valida topología, no utilidad;
+- CompositionCompiler podrá exigir Devices para un plan ejecutable.
+
+No produce Issues.
+
+## 24. Full Graph Validation
+
+### 24.1 Devices
+
+Debe comprobar:
+
+- Node no null;
 - Node válido;
-- Device ID único;
+- Device ID no vacío;
+- Device IDs únicos;
 - Profile válido;
 - Configuration válida;
 - Manifest válido.
 
-### 23.2 Ports
+### 24.2 Ports
 
+Debe comprobar:
+
+- Port no null;
 - Port válido;
-- Port ID único dentro de Device;
-- ownership correcto;
-- topic declarado en Manifest.
+- Port ID único dentro del Device;
+- Port pertenece al Device;
+- Input Topic está declarado en Manifest.subscribes;
+- Output Topic está declarado en Manifest.publishes;
+- un Device no declara dos OutputPorts para el mismo Topic.
 
-### 23.3 Connections
+### 24.3 Connections
 
+Debe comprobar:
+
+- Connection no null;
 - identidad válida;
-- Source existente;
-- Target existente;
-- Ports existentes;
-- topic compatible;
-- Semantic Kind compatible;
-- no duplicados;
-- no self-connection.
+- Connection IDs únicos;
+- Source existe;
+- Target existe;
+- Source y Target son diferentes;
+- Source OutputPort existe;
+- Target InputPort existe;
+- Ports pertenecen a sus Devices;
+- Topics coinciden;
+- Topic almacenado por Connection coincide;
+- Semantic Kinds son compatibles;
+- Connection ID coincide con sus endpoints.
 
-### 23.4 Ownership
+Connection ID incoherente produce:
 
-La primera versión comprobará que un DeviceNode no declare dos OutputPorts para el mismo Topic.
+```text
+STRUCTURAL_ERROR
 
-DeviceManifest ya debe impedir duplicados.
+code:
+connection_id_mismatch
+```
 
-La validación global de:
+### 24.4 InputPort Cardinality
+
+Cada combinación:
+
+```text
+Target Device ID
++
+Target InputPort ID
+```
+
+admite como máximo una Connection.
+
+Si existen varias:
+
+```text
+STRUCTURAL_ERROR
+
+code:
+input_port_multiple_sources
+```
+
+La comprobación existe:
+
+- durante `connect_ports()`;
+- defensivamente dentro de DeviceGraphValidator.
+
+### 24.5 Ownership
+
+La primera versión define stream identity como:
 
 ```text
 Topic + Source ID
 ```
 
-queda satisfecha inicialmente por:
+Se permite:
 
-- Device ID único;
-- un OutputPort por Topic dentro del Device.
+```text
+múltiples Source IDs
++
+mismo Topic.
+```
 
-### 23.5 Inputs sin Connection
+Se rechaza que un mismo Device declare dos OutputPorts para el mismo Topic.
 
-Un InputPort sin Connection producirá:
+### 24.6 TopicChannels
+
+Debe comprobar:
+
+- Channel no null;
+- Channel válido;
+- Topic único;
+- todo Topic utilizado por Ports tiene Channel;
+- todo Topic utilizado por Connections tiene Channel;
+- no existen Channels ajenos a la topología.
+
+Una inconsistencia produce:
+
+```text
+STRUCTURAL_ERROR
+
+code:
+topic_channel_registry_mismatch
+```
+
+### 24.7 Inputs sin Connection
+
+Un InputPort sin Connection produce:
 
 ```text
 WARNING
@@ -1416,11 +1577,11 @@ code:
 input_port_unconnected
 ```
 
-No será Structural Error porque todavía no existe metadata Required/Optional.
+No es Structural Error porque todavía no existe metadata Required/Optional.
 
-### 23.6 Outputs sin consumidores
+### 24.8 Outputs sin consumidores
 
-Un OutputPort sin Connections producirá:
+Un OutputPort sin Connections produce:
 
 ```text
 INFO
@@ -1429,61 +1590,137 @@ code:
 output_port_unconnected
 ```
 
-No bloquea snapshot.
+No bloquea Snapshot.
 
-## 24. Cycle Detection
+### 24.9 Orden
 
-DeviceGraphDraft detectará ciclos dirigidos entre Devices.
+Los Issues se generan en orden determinista:
 
-### 24.1 Resultado inicial
+1. Devices;
 
-Como todavía no existe metadata de temporal boundary:
+2. Ports;
+
+3. Connections;
+
+4. TopicChannels;
+
+5. cardinalidad;
+
+6. Ports desconectados;
+
+7. ciclos.
+
+Dentro de cada categoría se conserva el orden de entrada cuando sea posible.
+
+### 24.10 No mutación
+
+La validación no:
+
+- modifica Arrays recibidos;
+- modifica Nodes;
+- modifica Connections;
+- modifica Channels;
+- modifica Draft.
+
+## 25. Cycle Detection
+
+### 25.1 Modelo dirigido
+
+Cada Connection produce una arista:
 
 ```text
-WARNING
-
-code:
-cycle_requires_runtime_validation
+Source Device
+→
+Target Device
 ```
 
-El ciclo se incluye en el ValidationReport.
+### 25.2 Algoritmo
 
-No bloquea la creación del Graph Snapshot por sí solo.
+La detección utiliza componentes fuertemente conectados mediante algoritmo iterativo.
 
-### 24.2 Responsabilidad futura
+Requisitos:
 
-CompositionCompiler deberá decidir si el ciclo contiene:
+- sin recursión;
+- complejidad `O(V + E)`;
+- memoria lineal;
+- sin enumerar todos los ciclos posibles;
+- resultado determinista.
+
+Puede utilizar una variante iterativa de Kosaraju o un algoritmo equivalente que cumpla estas propiedades.
+
+### 25.3 Componente cíclico
+
+Un componente es cíclico cuando:
+
+- contiene más de un Device; o
+- contiene un self-loop defensivo.
+
+Self-connections no entran mediante API pública, pero Validator conserva la comprobación defensiva.
+
+### 25.4 Resultado
+
+Cada componente cíclico produce un único Issue:
+
+```text
+SIMULATION_HAZARD
+
+code:
+graph_cycle_requires_temporal_analysis
+```
+
+No se produce un Issue por cada camino posible.
+
+### 25.5 Efecto por contexto
+
+```text
+report.is_valid_for_simulation():
+true, si no existen otros errores bloqueantes.
+
+report.is_valid_for_hardware():
+false.
+```
+
+### 25.6 Razón
+
+DeviceGraph permite feedback loops legítimos.
+
+Sin metadata temporal no puede demostrar:
+
+- que el ciclo es seguro;
+- que contiene una frontera temporal;
+- que es zero-delay.
+
+La ausencia de evidencia no debe bloquear Simulation Mode ni permitir Hardware Mode.
+
+### 25.7 Responsabilidad futura
+
+CompositionCompiler podrá comprobar:
 
 - Physics Frame;
 - Scheduler Tick;
 - Timer;
 - Hardware Sample;
+- External Input;
 - otra frontera temporal.
 
-Un zero-delay cycle será Platform Safety Error en la fase de compilación runtime.
+Un zero-delay cycle confirmado podrá producir Platform Safety Error.
 
-### 24.3 Razón
+## 26. DeviceGraphSnapshot
 
-DeviceGraph debe representar feedback loops legítimos.
-
-No debe rechazarlos todos sin información temporal suficiente.
-
-## 25. DeviceGraphSnapshot
-
-### 25.1 Archivo previsto
+### 26.1 Archivo
 
 ```text
 core/graph/device_graph_snapshot.gd
 ```
 
-### 25.2 Forma
+### 26.2 Forma
 
 ```gdscript
 extends RefCounted
 class_name DeviceGraphSnapshot
 ```
 
-### 25.3 Estado
+### 26.3 Estado
 
 ```gdscript
 var _devices: Array[DeviceGraphNode]
@@ -1493,13 +1730,13 @@ var _connections: Array[DeviceGraphConnection]
 var _topic_channels: Array[DeviceGraphTopicChannel]
 ```
 
-### 25.4 Construcción
+### 26.4 Construcción
 
 Los Arrays se copian durante `_init()`.
 
 Los elementos ya son inmutables por contrato.
 
-### 25.5 API
+### 26.5 API
 
 ```gdscript
 get_devices() -> Array[DeviceGraphNode]
@@ -1521,7 +1758,7 @@ is_valid() -> bool
 
 Los getters devuelven Arrays nuevos.
 
-### 25.6 Inmutabilidad
+### 26.6 Inmutabilidad
 
 Snapshot no expone:
 
@@ -1531,33 +1768,34 @@ Snapshot no expone:
 - disconnect;
 - setters.
 
-### 25.7 Snapshot estructural
+### 26.7 Snapshot estructural
 
-DeviceGraphSnapshot representa una topología estructuralmente validada.
+DeviceGraphSnapshot representa una topología validada.
 
-No es todavía un plan ejecutable.
+No es un plan ejecutable.
 
-Antes de utilizarse por runtime deberá pasar por:
+Antes de runtime deberá pasar por:
 
 ```text
 CompositionCompiler
+```
 
-## 26. DeviceGraphSnapshotResult
+## 27. DeviceGraphSnapshotResult
 
-### 26.1 Archivo previsto
+### 27.1 Archivo
 
 ```text
 core/graph/device_graph_snapshot_result.gd
 ```
 
-### 26.2 Forma
+### 27.2 Forma
 
 ```gdscript
 extends RefCounted
 class_name DeviceGraphSnapshotResult
 ```
 
-### 26.3 Estado
+### 27.3 Estado
 
 ```gdscript
 var _snapshot: DeviceGraphSnapshot
@@ -1565,7 +1803,7 @@ var _snapshot: DeviceGraphSnapshot
 var _report: ValidationReport
 ```
 
-### 26.4 API
+### 27.4 API
 
 ```gdscript
 get_snapshot() -> DeviceGraphSnapshot
@@ -1575,7 +1813,7 @@ get_report() -> ValidationReport
 is_success() -> bool
 ```
 
-### 26.5 Success
+### 27.5 Success
 
 `is_success()` devuelve true cuando:
 
@@ -1585,9 +1823,9 @@ snapshot no es null;
 report es válido para Simulation Mode.
 ```
 
-Warnings e INFO no impiden snapshot.
+INFO, WARNING y SIMULATION_HAZARD no impiden un Snapshot de simulación.
 
-## 27. Create Snapshot
+## 28. Create Snapshot
 
 Flujo:
 
@@ -1624,13 +1862,15 @@ null
 
 Graph Draft permanece intacto.
 
-## 28. Mutaciones transaccionales
+Un Snapshot con Simulation Hazard no es autorización para Hardware Mode.
+
+## 29. Mutaciones transaccionales
 
 Cada mutación:
 
 1. valida argumentos;
 
-2. calcula los cambios;
+2. calcula el cambio;
 
 3. aplica únicamente si todo es válido;
 
@@ -1641,21 +1881,24 @@ Cada mutación:
 Una operación fallida no debe:
 
 - añadir parcialmente un Device;
-- añadir Connection parcial;
+- añadir una Connection parcial;
 - borrar Channels válidos;
-- alterar Collections anteriores.
+- alterar colecciones anteriores;
+- sustituir Last Known Good.
 
-## 29. Orden determinista
+## 30. Orden determinista
 
-DeviceGraphDraft conservará orden de inserción para:
+DeviceGraphDraft conserva orden de inserción para:
 
 - Devices;
 - Connections;
 - TopicChannels.
 
-Los Arrays devueltos respetarán ese orden.
+Los Arrays devueltos respetan ese orden.
 
-DeviceGraphSnapshot conservará el mismo orden.
+DeviceGraphSnapshot conserva el mismo orden.
+
+DeviceGraphValidator produce Issues en orden determinista.
 
 Esto facilita:
 
@@ -1665,7 +1908,7 @@ Esto facilita:
 - comparación;
 - documentación.
 
-## 30. Invariantes del bloque
+## 31. Invariantes del bloque
 
 1. Graph Draft es mutable solo mediante API.
 
@@ -1675,7 +1918,7 @@ Esto facilita:
 
 4. Connection ID es determinista.
 
-5. Self-connections se rechazan en 1.0.
+5. Self-connections se rechazan.
 
 6. Topic mismatch se rechaza.
 
@@ -1685,44 +1928,55 @@ Esto facilita:
 
 9. Duplicate Connection se rechaza.
 
-10. Device con Connections no se elimina.
+10. Device conectado no se elimina.
 
-11. TopicChannels se derivan de topología.
+11. Un InputPort tiene como máximo una Connection.
 
-12. Inputs desconectados producen WARNING.
+12. Fan-out está permitido.
 
-13. Outputs desconectados producen INFO.
+13. Fan-in requiere Device explícito.
 
-14. Cycles producen WARNING inicial.
+14. TopicChannels se derivan de topología.
 
-15. Snapshot permite warnings.
+15. Inputs desconectados producen WARNING.
 
-16. Snapshot bloquea Structural y Platform errors.
+16. Outputs desconectados producen INFO.
 
-17. Collections devueltas son copias.
+17. Ciclos producen SIMULATION_HAZARD.
 
-18. Operaciones fallidas son transaccionales.
+18. Ciclos no clasificados permiten Simulation.
 
-19. Orden de inserción es determinista.
+19. Ciclos no clasificados bloquean Hardware.
 
-20. DeviceGraph no toca DeviceBus.
+20. Detección de ciclos no utiliza recursión.
 
-21. Connection ID utiliza separador reservado.
+21. Snapshot permite Simulation Hazards.
 
-22. Device IDs y Port IDs no contienen `|`.
+22. Snapshot bloquea Structural y Platform errors.
 
-23. GraphSnapshot representa topología,
-	no ejecución.
+23. Colecciones devueltas son copias.
 
-24. Runtime requiere CompositionCompiler.
+24. Operaciones fallidas son transaccionales.
 
-25. Tests no modifican collections privadas.
+25. Orden es determinista.
 
-## 31. Estrategia de pruebas
+26. DeviceGraph no toca DeviceBus.
 
-DeviceGraph utilizará pruebas nuevas e independientes.
+27. Connection ID utiliza separador reservado.
 
-Suites previstas:
+28. IDs no contienen `|`.
+
+29. GraphSnapshot representa topología, no ejecución.
+
+30. Runtime requiere CompositionCompiler.
+
+31. Validator no modifica sus entradas.
+
+## 32. Estrategia de pruebas
+
+DeviceGraph utiliza pruebas nuevas e independientes.
+
+Suites:
 
 ```text
 PortSemanticKindsTest
@@ -1740,7 +1994,7 @@ DeviceGraphValidationTest
 DeviceGraphSnapshotTest
 ```
 
-Cada prueba utilizará:
+Cada prueba utiliza:
 
 - DeviceProfiles válidos;
 - DeviceConfigurations válidas;
@@ -1748,33 +2002,19 @@ Cada prueba utilizará:
 - objetos nuevos;
 - ValidationReports independientes.
 
-DeviceGraph no utilizará DeviceBus durante estas pruebas.
+DeviceGraph no utiliza DeviceBus durante estas pruebas.
 
-## 32. Fixtures de prueba
+Las cinco baselines existentes no se modifican para validar la arquitectura nueva.
 
-Las pruebas necesitarán Profiles ideales adicionales.
+## 33. Fixtures de prueba
 
-No se añadirán inmediatamente a BuiltinDeviceProfiles de producción.
-
-Los tests podrán construir snapshots directamente para:
-
-```text
-Ideal Sensor
-
-Ideal Local Controller
-
-Ideal Actuator
-
-Ideal Supervisory Controller
-```
-
-Los Profiles de prueba utilizarán namespace:
+Los tests pueden construir snapshots con namespace:
 
 ```text
 test.
 ```
 
-Ejemplos:
+Fixtures iniciales:
 
 ```text
 test.distance_sensor
@@ -1786,397 +2026,129 @@ test.hover_thruster
 test.fcc
 ```
 
-Las Configurations utilizarán IDs de instancia únicos.
+Las Configurations utilizan IDs de instancia únicos.
 
-Los Manifests se construirán mediante DeviceManifestBuilder cuando sea posible.
+Los Manifests se construyen mediante DeviceManifestBuilder cuando sea posible.
 
-No se utilizarán Dictionaries genéricos para representar Devices.
+No se utilizan Dictionaries genéricos para representar Devices.
 
-## 33. PortSemanticKindsTest
+## 34. PortSemanticKindsTest
 
-### Archivos previstos
+Verifica:
 
-```text
-test/core/device_graph/
-PortSemanticKindsTest.tscn
+- Kinds son StringName;
+- valores canónicos;
+- `is_valid()`;
+- rechazo de vacío;
+- rechazo de desconocido;
+- `get_all()`;
+- Array independiente.
 
-test/core/device_graph/
-port_semantic_kinds_test.gd
-```
-
-Debe verificar:
-
-```text
-UNSPECIFIED es StringName.
-
-MEASUREMENT es StringName.
-
-COMMAND es StringName.
-
-SETPOINT es StringName.
-
-RESULT es StringName.
-
-STATE es StringName.
-
-HEALTH es StringName.
-
-EVENT es StringName.
-
-Los valores utilizan lower_snake_case.
-
-is_valid() acepta Kinds canónicos.
-
-is_valid() rechaza vacío.
-
-is_valid() rechaza desconocido.
-
-get_all() contiene todos.
-
-get_all() devuelve Array independiente.
-```
-
-## 34. DeviceGraphPrimitivesTest
-
-### Archivos previstos
+Baseline aceptada:
 
 ```text
-test/core/device_graph/
-DeviceGraphPrimitivesTest.tscn
-
-test/core/device_graph/
-device_graph_primitives_test.gd
+Checks: 28
+Failures: 0
+RESULT: PASS
 ```
 
-### InputPort
+## 35. DeviceGraphPrimitivesTest
 
-Debe verificar:
+Verifica:
 
-- construcción válida;
+- InputPort;
+- OutputPort;
+- TopicChannel;
+- Connection;
+- identidad;
 - getters;
-- semantic kind;
-- identity inválida;
-- no setters.
+- inmutabilidad;
+- ausencia de setters.
 
-### OutputPort
-
-Debe verificar:
-
-- construcción válida;
-- getters;
-- semantic kind;
-- identity inválida;
-- no setters.
-
-### TopicChannel
-
-Debe verificar:
-
-- topic válido;
-- topic vacío inválido;
-- getter;
-- no setters.
-
-### Connection
-
-Debe verificar:
-
-- identity válida;
-- getters;
-- campos obligatorios;
-- no setters.
-
-No verifica compatibilidad con Graph.
-
-## 35. DeviceGraphNodeBuilderTest
-
-### Archivos previstos
+Baseline aceptada:
 
 ```text
-test/core/device_graph/
-DeviceGraphNodeBuilderTest.tscn
-
-test/core/device_graph/
-device_graph_node_builder_test.gd
+Checks: 57
+Failures: 0
+RESULT: PASS
 ```
 
-Debe verificar:
+## 36. DeviceGraphNodeBuilderTest
 
-### Argumentos nulos
+Verifica:
 
-```text
-Profile null.
-
-Configuration null.
-
-Manifest null.
-```
-
-Produce:
-
-```text
-Node null.
-
-STRUCTURAL_ERROR.
-```
-
-### Device ID vacío
-
-Produce:
-
-```text
-Node null.
-
-code:
-graph_device_id_missing.
-```
-
-### Profile mismatch
-
-Configuration referencia otro Profile.
-
-Produce error.
-
-### Configuration Device ID mismatch
-
-El Device ID solicitado no coincide con Configuration.
-
-Produce error.
-
-### Manifest duplicado
-
-Topics duplicados en publishes o subscribes producen error.
-
-### Build válido
-
-Debe verificar:
-
-- DeviceGraphNode no null;
-- Profile conservado;
-- Configuration conservada;
-- Manifest copiado;
-- Primary Role correcto;
-- InputPorts generados;
-- OutputPorts generados;
-- IDs `in.<topic>` y `out.<topic>`;
-- Semantic Kind inicial UNSPECIFIED;
-- orden conservado;
+- argumentos nulos;
+- Device ID vacío;
+- separador reservado;
+- Profile mismatch;
+- Configuration mismatch;
+- Manifest duplicado;
+- build válido;
+- Ports deterministas;
+- Semantic Kind UNSPECIFIED;
 - Arrays independientes;
-- Manifest externo no modifica Node.
+- Manifest copiado.
 
-## 36. DeviceGraphDraftDeviceTest
-
-### Archivos previstos
+Baseline aceptada:
 
 ```text
-test/core/device_graph/
-DeviceGraphDraftDeviceTest.tscn
-
-test/core/device_graph/
-device_graph_draft_device_test.gd
+Checks: 50
+Failures: 0
+RESULT: PASS
 ```
 
-Debe verificar:
+## 37. DeviceGraphDraftDeviceTest
 
-### Add Device
+Verifica:
+
+- add Device;
+- duplicate Device;
+- null Device;
+- collections independientes;
+- remove Device;
+- Device inexistente;
+- TopicChannels;
+- OperationResult inmutable.
+
+Baseline aceptada:
 
 ```text
-Node válido se añade.
-
-OperationResult success true.
-
-affected_id contiene Device ID.
-
-has_device() es true.
-
-get_device() devuelve el Node.
+Checks: 28
+Failures: 0
+RESULT: PASS
 ```
 
-### Duplicate Device ID
+## 38. DeviceGraphConnectionTest
+
+Verifica:
+
+- Connection válida;
+- ID determinista;
+- Source inexistente;
+- Target inexistente;
+- OutputPort inexistente;
+- InputPort inexistente;
+- Topic mismatch;
+- Semantic mismatch;
+- UNSPECIFIED;
+- self-connection;
+- duplicate;
+- separador reservado;
+- disconnect;
+- Device conectado;
+- colección independiente.
+
+Baseline aceptada:
 
 ```text
-segunda adición es rechazada;
-
-code:
-duplicate_device_id;
-
-Graph no cambia.
+Checks: 70
+Failures: 0
+RESULT: PASS
 ```
 
-### Invalid Node
+## 39. DeviceGraphValidationTest
 
-```text
-null es rechazado;
-
-Graph no cambia.
-```
-
-### Collections
-
-```text
-get_devices() devuelve copia;
-
-orden de inserción se conserva.
-```
-
-### Remove Device sin Connections
-
-```text
-Device se elimina;
-
-OperationResult success true;
-
-TopicChannels se reconstruyen.
-```
-
-### Device inexistente
-
-```text
-remove devuelve false;
-
-code:
-device_not_found.
-```
-
-## 37. DeviceGraphConnectionTest
-
-### Archivos previstos
-
-```text
-test/core/device_graph/
-DeviceGraphConnectionTest.tscn
-
-test/core/device_graph/
-device_graph_connection_test.gd
-```
-
-Debe verificar:
-
-### Connection válida
-
-```text
-Source OutputPort existe.
-
-Target InputPort existe.
-
-Topic coincide.
-
-Connection se crea.
-
-ID es determinista.
-
-TopicChannel existe.
-```
-
-### ID determinista
-
-Debe verificar el formato:
-
-```text
-source|source_port|target|target_port
-
-### Source inexistente
-
-```text
-rechazado;
-
-code:
-source_device_not_found.
-```
-
-### Target inexistente
-
-```text
-rechazado;
-
-code:
-target_device_not_found.
-```
-
-### OutputPort inexistente
-
-```text
-rechazado;
-
-code:
-source_port_not_found.
-```
-
-### InputPort inexistente
-
-```text
-rechazado;
-
-code:
-target_port_not_found.
-```
-
-### Topic mismatch
-
-```text
-rechazado;
-
-code:
-connection_topic_mismatch.
-```
-
-### Semantic mismatch
-
-Con Kinds específicos diferentes:
-
-```text
-rechazado;
-
-code:
-connection_semantic_mismatch.
-```
-
-### UNSPECIFIED
-
-Si uno o ambos Ports son UNSPECIFIED y Topic coincide:
-
-```text
-permitido.
-```
-
-### Self Connection
-
-```text
-rechazado;
-
-code:
-self_connection_not_supported.
-```
-
-### Duplicate
-
-```text
-segunda Connection rechazada;
-
-code:
-duplicate_connection.
-```
-
-### Disconnect
-
-```text
-Connection existente se elimina.
-
-Connection inexistente se rechaza.
-```
-
-### Remove connected Device
-
-```text
-rechazado;
-
-code:
-device_has_connections.
-```
-
-## 38. DeviceGraphValidationTest
-
-### Archivos previstos
+### 39.1 Archivos
 
 ```text
 test/core/device_graph/
@@ -2186,43 +2158,120 @@ test/core/device_graph/
 device_graph_validation_test.gd
 ```
 
+### 39.2 Graph vacío
+
 Debe verificar:
 
-### Graph vacío
+```text
+Graph vacío no produce Issues.
 
-La primera versión podrá considerar un Graph vacío estructuralmente válido.
+Report es válido para Simulation.
 
-No contiene errores.
+Report es válido para Hardware.
+```
 
-### Input sin Connection
+### 39.3 Input sin Connection
 
-Produce:
+Debe producir:
 
 ```text
 WARNING
 
 code:
-input_port_unconnected.
+input_port_unconnected
 ```
 
-El Graph continúa válido para Simulation.
+El Graph continúa válido para Simulation y Hardware.
 
-### Output sin Connection
+### 39.4 Output sin Connection
 
-Produce:
+Debe producir:
 
 ```text
 INFO
 
 code:
-output_port_unconnected.
+output_port_unconnected
 ```
 
-### Graph conectado
+No bloquea.
 
-No produce errores de Connection.
+### 39.5 Graph conectado
 
-### Cycle
+Debe verificar:
+
+- no errores de Connection;
+- endpoints válidos;
+- TopicChannels coherentes;
+- IDs deterministas.
+
+INFO por Outputs opcionales no conectados puede permanecer.
+
+### 39.6 Fan-in mediante API
+
+Debe:
+
+1. conectar Source A a Target InputPort;
+
+2. intentar conectar Source B al mismo Target InputPort;
+
+3. recibir:
+
+   ```text
+   STRUCTURAL_ERROR
+
+   code:
+   input_port_multiple_sources
+   ```
+
+4. comprobar que solo permanece la primera Connection.
+
+### 39.7 Fan-in defensivo del Validator
+
+La prueba puede invocar DeviceGraphValidator con Arrays controlados que contengan dos Connections hacia el mismo InputPort.
+
+Debe producir:
+
+```text
+STRUCTURAL_ERROR
+
+code:
+input_port_multiple_sources
+```
+
+Esto valida defensa en profundidad sin corromper campos privados del Draft.
+
+### 39.8 Connection ID incoherente
+
+Una fixture controlada con ID diferente de sus endpoints debe producir:
+
+```text
+STRUCTURAL_ERROR
+
+code:
+connection_id_mismatch
+```
+
+### 39.9 TopicChannel inconsistente
+
+Una fixture controlada con Channels faltantes o adicionales debe producir:
+
+```text
+STRUCTURAL_ERROR
+
+code:
+topic_channel_registry_mismatch
+```
+
+### 39.10 Graph acíclico
+
+Debe verificar que una cadena dirigida no produce:
+
+```text
+graph_cycle_requires_temporal_analysis
+```
+
+### 39.11 Ciclo
 
 Construir:
 
@@ -2232,34 +2281,51 @@ Controller A → Controller B
 Controller B → Controller A
 ```
 
-Debe producir:
+Debe producir exactamente un Issue:
 
 ```text
-WARNING
+SIMULATION_HAZARD
 
 code:
-cycle_requires_runtime_validation.
+graph_cycle_requires_temporal_analysis
 ```
 
-No bloquea Snapshot por sí solo.
-
-### Referencia corrupta
-
-Una Connection huérfana no debe poder entrar mediante API pública.
-
-La prueba puede validar que una operación fallida conserva Graph anterior.
-
-## 39. DeviceGraphSnapshotTest
-
-### Archivos previstos
+Debe verificar:
 
 ```text
-test/core/device_graph/
-DeviceGraphSnapshotTest.tscn
+Report válido para Simulation.
 
-test/core/device_graph/
-device_graph_snapshot_test.gd
+Report inválido para Hardware.
 ```
+
+### 39.12 Varios componentes cíclicos
+
+Dos componentes cíclicos independientes producen:
+
+```text
+un Issue por componente.
+```
+
+El orden debe ser determinista.
+
+### 39.13 No mutación
+
+Modificar Arrays externos después de validar no debe demostrar una modificación realizada por Validator.
+
+Validator no cambia:
+
+- Devices;
+- Connections;
+- TopicChannels;
+- orden de Arrays.
+
+### 39.14 Operación fallida
+
+Una operación inválida mediante API pública conserva el Graph válido anterior.
+
+No se modifican Dictionaries privados desde el test.
+
+## 40. DeviceGraphSnapshotTest
 
 Debe verificar:
 
@@ -2279,7 +2345,7 @@ TopicChannels conservados.
 Orden conservado.
 ```
 
-### Collections independientes
+### Colecciones independientes
 
 Modificar Arrays devueltos no cambia Snapshot.
 
@@ -2291,97 +2357,129 @@ Snapshot no expone operaciones de mutación.
 
 Modificar Draft después de crear Snapshot no cambia Snapshot.
 
-```markdown
-### Operación fallida antes del Snapshot
+### Operación fallida previa
 
-La prueba debe:
+La prueba:
 
-1. construir un Graph válido;
+1. construye Graph válido;
 
-2. intentar una mutación inválida mediante API pública;
+2. intenta mutación inválida;
 
-3. comprobar que la operación falla;
+3. comprueba fallo;
 
-4. crear Snapshot;
+4. crea Snapshot;
 
-5. comprobar que Snapshot conserva únicamente el estado válido anterior.
+5. comprueba que Snapshot contiene solo Last Known Good.
 
-Esto verifica transaccionalidad sin corromper estado privado.
+### Snapshot con ciclo no clasificado
+
+Debe verificar:
+
+```text
+Snapshot de Simulation puede crearse.
+
+Report contiene SIMULATION_HAZARD.
+
+Report no es válido para Hardware.
+```
 
 ### Snapshot no ejecutable
 
-Debe verificar mediante contrato y API que DeviceGraphSnapshot:
+DeviceGraphSnapshot:
 
 - no contiene DeviceBus;
 - no contiene Callables;
-- no expone método `execute()`;
-- no expone método `activate()`;
-- no expone método `publish()`.
+- no expone `execute()`;
+- no expone `activate()`;
+- no expone `publish()`.
 
 CompositionCompiler permanece como etapa futura.
-```
 
-La prueba utilizará una operación o fixture controlado que no requiera alterar collections privadas directamente.
-
-## 40. Orden de implementación
+## 41. Orden de implementación
 
 ```text
-1. Crear core/graph/.
+1. PortSemanticKinds.
+   COMPLETADO.
 
-2. Implementar PortSemanticKinds.
+2. InputPort.
+   COMPLETADO.
 
-3. Ejecutar PortSemanticKindsTest.
+3. OutputPort.
+   COMPLETADO.
 
-4. Implementar InputPort.
+4. TopicChannel.
+   COMPLETADO.
 
-5. Implementar OutputPort.
+5. Connection.
+   COMPLETADO.
 
-6. Implementar TopicChannel.
+6. DeviceGraphPrimitivesTest.
+   PASS.
 
-7. Implementar Connection.
+7. DeviceGraphNode.
+   COMPLETADO.
 
-8. Ejecutar DeviceGraphPrimitivesTest.
+8. DeviceGraphNodeBuildResult.
+   COMPLETADO.
 
-9. Implementar DeviceGraphNode.
+9. DeviceGraphNodeBuilder.
+   COMPLETADO.
 
-10. Implementar DeviceGraphNodeBuildResult.
+10. DeviceGraphNodeBuilderTest.
+	PASS.
 
-11. Implementar DeviceGraphNodeBuilder.
+11. DeviceGraphOperationResult.
+	COMPLETADO.
 
-12. Ejecutar DeviceGraphNodeBuilderTest.
+12. DeviceGraphDraft add/remove.
+	COMPLETADO.
 
-13. Implementar DeviceGraphOperationResult.
+13. DeviceGraphDraftDeviceTest.
+	PASS.
 
-14. Implementar DeviceGraphDraft
-	con add/remove.
+14. connect_ports()/disconnect_ports().
+	COMPLETADO.
 
-15. Ejecutar DeviceGraphDraftDeviceTest.
+15. DeviceGraphConnectionTest.
+	PASS.
 
-16. Implementar connect/disconnect.
+16. DeviceGraphValidator.
+	SIGUIENTE.
 
-17. Ejecutar DeviceGraphConnectionTest.
+17. Fan-in validation.
+	SIGUIENTE.
 
-18. Implementar validate y cycle detection.
+18. Iterative cycle detection.
+	SIGUIENTE.
 
-19. Ejecutar DeviceGraphValidationTest.
+19. DeviceGraphValidationTest.
+	SIGUIENTE.
 
-20. Implementar DeviceGraphSnapshot.
+20. DeviceGraphSnapshot.
+	PENDIENTE.
 
-21. Implementar DeviceGraphSnapshotResult.
+21. DeviceGraphSnapshotResult.
+	PENDIENTE.
 
-22. Implementar create_snapshot().
+22. create_snapshot().
+	PENDIENTE.
 
-23. Ejecutar DeviceGraphSnapshotTest.
+23. DeviceGraphSnapshotTest.
+	PENDIENTE.
 
-24. Ejecutar runner Run All.
+24. Runner Run All.
+	OBLIGATORIO.
 
 25. Registrar resultados.
+	OBLIGATORIO.
 
-26. Actualizar Core Architecture.```
+26. Actualizar Core Architecture.
+	OBLIGATORIO.
+```
 
-## 41. Criterios de aceptación
+## 42. Criterios de aceptación
 
-DeviceGraph 1.0 satisface el diseño cuando:
+DeviceGraph 1.1 satisface el diseño cuando:
 
 1. PortSemanticKinds está implementado.
 
@@ -2419,41 +2517,53 @@ DeviceGraph 1.0 satisface el diseño cuando:
 
 18. TopicChannels se derivan.
 
-19. Inputs desconectados generan WARNING.
+19. InputPort admite máximo una Connection.
 
-20. Outputs desconectados generan INFO.
+20. Fan-in implícito se rechaza.
 
-21. Cycles generan WARNING.
+21. Inputs desconectados generan WARNING.
 
-22. Snapshot es inmutable.
+22. Outputs desconectados generan INFO.
 
-23. Operaciones fallidas son transaccionales.
+23. DeviceGraphValidator no modifica entradas.
 
-24. Collections devueltas son copias.
+24. Detección de ciclos es iterativa.
 
-25. DeviceGraph no depende de DeviceBus runtime.
+25. Ciclos generan SIMULATION_HAZARD.
 
-26. pruebas sucesoras terminan correctamente.
+26. Ciclos no clasificados permiten Simulation.
 
-27. runner Run All termina PASS.
+27. Ciclos no clasificados bloquean Hardware.
 
-28. Connection ID utiliza formato determinista.
+28. Snapshot es inmutable.
 
-29. El separador `|` está reservado.
+29. Operaciones fallidas son transaccionales.
 
-30. IDs ambiguos son rechazados.
+30. Colecciones devueltas son copias.
 
-31. GraphSnapshot no es ejecutable.
+31. DeviceGraph no depende de DeviceBus runtime.
 
-32. CompositionCompiler permanece obligatorio
-	antes de runtime.
+32. Pruebas sucesoras terminan correctamente.
 
-33. Snapshot transaccional se prueba mediante
-	APIs públicas, no corrupción privada.
+33. Runner Run All termina PASS.
 
-## 42. Fuera de alcance
+34. Connection ID utiliza formato determinista.
 
-La implementación no añadirá:
+35. Separador `|` está reservado.
+
+36. IDs ambiguos son rechazados.
+
+37. GraphSnapshot no es ejecutable.
+
+38. CompositionCompiler permanece obligatorio.
+
+39. Snapshot se prueba mediante APIs públicas.
+
+40. Graph vacío es estructuralmente válido.
+
+## 43. Fuera de alcance
+
+Esta implementación no añade:
 
 - GraphEditor;
 - GraphLayout;
@@ -2463,8 +2573,9 @@ La implementación no añadirá:
 - DeviceRuntime;
 - TemporalBoundary metadata;
 - Named Input Slots;
-- Cardinality;
-- Hardware Mode;
+- Port cardinality configurable;
+- Merge Device canónico;
+- Hardware Mode activo;
 - Calibration;
 - AdaptationPolicy;
 - RuntimeAllocation;
@@ -2472,7 +2583,7 @@ La implementación no añadirá:
 - power;
 - mecánica.
 
-## 43. Resumen de implementación
+## 44. Resumen
 
 ```text
 Semantic Kinds:
@@ -2497,6 +2608,10 @@ DeviceGraphNodeBuilder
 Editable Graph:
 DeviceGraphDraft
 
+Validation:
+DeviceGraphValidator
+ValidationReport
+
 Immutable Graph:
 DeviceGraphSnapshot
 
@@ -2506,12 +2621,12 @@ DeviceGraphOperationResult
 Snapshot Result:
 DeviceGraphSnapshotResult
 
-Validation:
-ValidationReport
-
 Runtime Transport:
 DeviceBus separado
 
+Runtime Compilation:
+CompositionCompiler futuro
+
 Visual Editor:
-futuro
+GraphEditor futuro
 ```
