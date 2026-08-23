@@ -1,0 +1,267 @@
+PJ0022 – System Composition Pipeline Architecture
+
+Fecha:
+
+23/08/2026
+
+Objetivo:
+
+Definir la arquitectura que transforma
+una composición editable en un runtime activo
+sin mezclar definición, persistencia,
+topología, compilación y ejecución.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-009 — System Composition Pipeline.md
+
+docs/architecture/
+system_composition_pipeline_design.md
+
+docs/architecture/
+core_architecture.md
+
+Decisiones aceptadas:
+
+✔ ADR-009 aceptado.
+
+✔ System Composition Pipeline Design 1.0 activo.
+
+✔ Core Architecture actualizada a 2.7.
+
+Pipeline aprobado:
+
+Documento persistente
+
+↓
+
+SystemProfileLoader
+
+↓
+
+SystemProfileDraft
+
+↓
+
+SystemProfileCompiler
+
+↓
+
+SystemProfile
+
+↓
+
+DeviceGraphAssembler
+
+↓
+
+DeviceGraphSnapshot
+
+↓
+
+CompositionCompiler
+
+↓
+
+CompositionPlan
+
+↓
+
+CompositionRuntime
+
+Dependencias laterales:
+
+DeviceProfileResolver
+
+↓
+
+SystemProfileCompiler
+
+y
+
+DeviceGraphAssembler
+
+RuntimeFactoryRegistry
+
+↓
+
+CompositionCompiler
+
+SystemProfile:
+
+✔ Será RefCounted.
+
+✔ Será inmutable por contrato.
+
+✔ Será independiente de filesystem.
+
+✔ No será Resource editable directo.
+
+✔ No será Dictionary o JSON.
+
+✔ No ejecutará.
+
+✔ No construirá DeviceGraph.
+
+Dependencias:
+
+✔ SystemProfile utilizará Profile ID.
+
+✔ SystemProfile utilizará Profile Version exacta.
+
+✔ No existirá fallback latest.
+
+✔ No se embeberán DeviceProfiles completos.
+
+✔ Portabilidad futura utilizará bundle explícito.
+
+Activation Context:
+
+✔ SystemProfile declara contexto explícito.
+
+✔ SIMULATION y HARDWARE permanecen separados.
+
+✔ Todas las DeviceConfigurations deben coincidir.
+
+✔ Perfil vacío conserva contexto explícito.
+
+SystemProfileDraft:
+
+✔ Será editable.
+
+✔ Puede estar vacío.
+
+✔ Puede estar incompleto.
+
+✔ Contendrá DeviceConfiguration snapshots.
+
+✔ No contendrá DeviceConfigurationDraft.
+
+SystemConnectionSpec:
+
+✔ Representará endpoints antes de DeviceGraph.
+
+✔ Generará Connection ID determinista.
+
+✔ No almacenará Topic duplicado.
+
+✔ No almacenará Semantic Kind duplicado.
+
+✔ No contendrá referencias runtime.
+
+DeviceProfileResolver:
+
+✔ Será rol por comportamiento.
+
+✔ No tendrá clase base universal.
+
+✔ Resolverá ID y versión exactos.
+
+DeviceCatalog:
+
+✔ Será implementación futura del resolver.
+
+✔ No contendrá factories runtime.
+
+RuntimeFactoryRegistry:
+
+✔ Permanecerá separado del catálogo lógico.
+
+CompositionCompiler:
+
+✔ Recibirá DeviceGraphSnapshot.
+
+✔ Producirá CompositionPlan.
+
+✔ No creará Devices.
+
+✔ No ejecutará.
+
+CompositionPlan:
+
+✔ Será inmutable.
+
+✔ No ejecutará por sí solo.
+
+CompositionRuntime:
+
+✔ Poseerá DeviceBus activo.
+
+✔ Poseerá Devices activos.
+
+✔ Coordinará lifecycle.
+
+✔ Coordinará shutdown.
+
+✔ Observará Runtime Safety.
+
+Persistencia:
+
+✔ Permanecerá externa al Core lógico.
+
+✔ Loader y Serializer serán componentes separados.
+
+✔ Save As Service será futuro.
+
+Primera etapa autorizada:
+
+SystemProfile 1.0
+
+Componentes iniciales:
+
+- SystemConnectionSpec;
+
+- SystemProfileDraft;
+
+- SystemProfile;
+
+- SystemProfileCompileResult;
+
+- SystemProfileCompiler;
+
+- DeviceProfileResolver contract.
+
+Fuera de la primera etapa:
+
+- DeviceCatalog de producción;
+
+- persistencia;
+
+- DeviceGraphAssembler;
+
+- RuntimeFactoryRegistry;
+
+- CompositionCompiler;
+
+- CompositionPlan;
+
+- CompositionRuntime;
+
+- UI;
+
+- Hardware Mode activo.
+
+Siguiente paso:
+
+Implementar SystemConnectionSpec.
+
+Después:
+
+- SystemConnectionSpecTest;
+
+- SystemProfileDraft;
+
+- SystemProfileDraftTest;
+
+- SystemProfile;
+
+- SystemProfileCompileResult;
+
+- SystemProfileCompiler;
+
+- SystemProfileCompilerTest;
+
+- Run All;
+
+- registrar baseline.

@@ -206,10 +206,17 @@ Hover, sustentación, dirección, propulsión y frenado permanecen en sus módul
 | DeviceGraphSnapshot | Representar topología validada e inmutable | ADR-002 implementado y verificado |
 | DeviceGraphSnapshotResult | Describir creación transaccional de Snapshot | ADR-002 implementado y verificado |
 | Measurement | Representar un dato producido por un Sensor | Concepto definido; contrato pendiente |
-| SystemProfile | Representar composición persistente | Pendiente |
-| CompositionCompiler | Compilar Graph Snapshot a plan runtime | Pendiente |
-| CompositionRuntime | Ejecutar un Composition Plan | Pendiente |
-
+| SystemConnectionSpec | Representar endpoints persistibles antes de construir DeviceGraph | ADR-009 aceptado; System Composition Pipeline Design 1.0 activo; implementación pendiente |
+| SystemProfileDraft | Representar una composición editable | ADR-009 aceptado; diseño 1.0 activo; implementación pendiente |
+| DeviceProfileResolver | Resolver DeviceProfile mediante ID y versión exacta | ADR-009 aceptado; contrato por comportamiento pendiente |
+| SystemProfileCompiler | Compilar SystemProfileDraft a snapshot | ADR-009 aceptado; diseño 1.0 activo; implementación pendiente |
+| SystemProfile | Representar una composición validada e inmutable | ADR-009 aceptado; diseño 1.0 activo; implementación pendiente |
+| DeviceCatalog | Resolver DeviceProfiles canónicos | ADR-009 aceptado; implementación futura |
+| DeviceGraphAssembler | Convertir SystemProfile en DeviceGraphSnapshot | ADR-009 aceptado; implementación futura |
+| RuntimeFactoryRegistry | Resolver factories ejecutables | ADR-009 aceptado; implementación futura |
+| CompositionCompiler | Convertir DeviceGraphSnapshot en CompositionPlan | ADR-009 aceptado; implementación futura |
+| CompositionPlan | Representar instrucciones runtime inmutables | ADR-009 aceptado; implementación futura |
+| CompositionRuntime | Ejecutar CompositionPlan y poseer recursos activos | ADR-009 aceptado; implementación futura |
 Un componente pendiente solo se implementará cuando exista una necesidad verificable y su responsabilidad esté definida.
 
 ## 6. Responsabilidades de los componentes
@@ -388,7 +395,35 @@ DeviceGraphSnapshot representa estructura.
 
 No es un plan ejecutable.
 
-### 6.6 Measurement
+### 6.6 System Composition
+
+System Composition transforma una definición persistible en runtime mediante etapas separadas.
+
+```text
+SystemProfileDraft
+		│
+		▼
+SystemProfileCompiler
+		│
+		▼
+SystemProfile
+		│
+		▼
+DeviceGraphAssembler
+		│
+		▼
+DeviceGraphSnapshot
+		│
+		▼
+CompositionCompiler
+		│
+		▼
+CompositionPlan
+		│
+		▼
+CompositionRuntime```
+
+### 6.7 Measurement
 
 Measurement representa conceptualmente un dato producido por un Sensor.
 
@@ -830,6 +865,27 @@ SystemProfile
 Drafts son editables.
 
 Snapshots son validados e inmutables por contrato.
+
+### ADR-009 — System Composition Pipeline
+
+Velocity separará:
+
+```text
+SystemProfileDraft
+
+SystemProfileCompiler
+
+SystemProfile
+
+DeviceGraphAssembler
+
+DeviceGraphSnapshot
+
+CompositionCompiler
+
+CompositionPlan
+
+CompositionRuntime```
 
 ## 15. Estado vigente y trabajo futuro
 
