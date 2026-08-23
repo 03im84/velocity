@@ -410,6 +410,25 @@ func connect_ports(
 			&"",
 			report
 		)
+		
+	if _input_port_has_connection(
+		target_device_id,
+		target_port_id
+		):
+
+		_add_structural_error(
+			report,
+			&"input_port_multiple_sources",
+			"InputPort already has a source Connection.",
+			target_device_id,
+			&"target_port_id"
+		)
+
+		return DeviceGraphOperationResult.new(
+			false,
+			&"",
+			report
+		)
 
 	var connection := DeviceGraphConnection.new(
 		connection_id,
@@ -542,8 +561,42 @@ func get_topic_channels(
 
 
 # =============================================================================
+# VALIDATION API
+# =============================================================================
+
+func validate(
+) -> ValidationReport:
+
+	var validator := DeviceGraphValidator.new()
+
+	return validator.validate(
+		get_devices(),
+		get_connections(),
+		get_topic_channels()
+	)
+
+
+# =============================================================================
 # CONNECTION HELPERS
 # =============================================================================
+
+func _input_port_has_connection(
+	target_device_id: String,
+	target_port_id: StringName
+) -> bool:
+
+	for connection: DeviceGraphConnection in _connections_by_id.values():
+
+		if (
+			connection.get_target_device_id()
+			== target_device_id
+			and connection.get_target_port_id()
+			== target_port_id
+		):
+
+			return true
+
+	return false
 
 func _build_connection_id(
 	source_device_id: String,
