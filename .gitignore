@@ -14,3 +14,11 @@ export_credentials.cfg
 .mono/
 data_*/
 mono_crash.*.json
+
+# Velocity Test Dashboard local state
+test/tools/test_dashboard.local.json
+test/tools/.test_dashboard/
+
+# Python generated files
+__pycache__/
+*.py[cod]

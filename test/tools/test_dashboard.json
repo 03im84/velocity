@@ -1,0 +1,41 @@
+{
+  "project_root": "../..",
+  "runner": "test/tools/run_godot_tests.ps1",
+  "test_roots": [
+    "test/core"
+  ],
+  "include_patterns": [
+    "*Test.tscn",
+    "*_test.tscn"
+  ],
+  "exclude_patterns": [
+    "test/infrastructure",
+    "device_bus_failure_isolation_test.tscn"
+  ],
+  "default_timeout_seconds": 10,
+  "default_repeat": 1,
+  "suites": {
+    "All": [
+      "test/core"
+    ],
+    "DeviceBus": [
+      "test/core/device_bus"
+    ],
+    "DeviceCore": [
+      "test/core/device_core",
+      "test/core/device"
+    ],
+    "Providers": [
+      "test/core/provider"
+    ],
+    "Profiles": [
+      "test/core/profile"
+    ],
+    "Message Contracts": [
+      "test/core/message_contract"
+    ],
+    "Debug": [
+      "test/core/debug"
+    ]
+  }
+}
