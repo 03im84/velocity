@@ -1,0 +1,288 @@
+PJ0021 – DeviceGraph 1.0 Completed
+
+Fecha:
+
+22/08/2026
+
+Objetivo:
+
+Implementar DeviceGraphSnapshot,
+verificar creación transaccional
+y cerrar DeviceGraph 1.0.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-002 — DeviceGraph.md
+
+docs/architecture/
+device_graph_design.md
+
+docs/architecture/
+core_architecture.md
+
+docs/decisions/
+VP-002 — The Simulation May Fail; The Simulator Must Not.md
+
+Versiones:
+
+ADR-002:
+
+1.1
+
+DeviceGraph Design:
+
+1.3
+
+Core Architecture:
+
+2.6
+
+Componentes creados:
+
+res://core/graph/
+device_graph_snapshot.gd
+
+res://core/graph/
+device_graph_snapshot_result.gd
+
+API añadida:
+
+DeviceGraphDraft.create_snapshot()
+
+Responsabilidades:
+
+DeviceGraphDraft:
+
+Topología editable.
+
+DeviceGraphValidator:
+
+Validación global.
+
+DeviceGraphSnapshot:
+
+Topología validada e inmutable.
+
+DeviceGraphSnapshotResult:
+
+Resultado transaccional de creación.
+
+Decisiones aplicadas:
+
+✔ Snapshot copia Arrays durante construcción.
+
+✔ Snapshot devuelve copias de Collections.
+
+✔ Elementos inmutables pueden compartir referencia.
+
+✔ Draft posterior no modifica Snapshot.
+
+✔ Snapshot representa estructura.
+
+✔ Snapshot no representa ejecución.
+
+✔ Snapshot no contiene DeviceBus.
+
+✔ Snapshot no contiene Callables.
+
+✔ Snapshot no publica.
+
+✔ Snapshot no activa runtime.
+
+✔ Snapshot vacío es válido.
+
+✔ Snapshot.is_valid() significa
+  válido para Simulation.
+
+✔ Hardware se decide mediante
+  ValidationReport y CompositionCompiler.
+
+✔ Simulation Hazard permite Snapshot.
+
+✔ Simulation Hazard bloquea Hardware.
+
+✔ Structural Error produce Snapshot null.
+
+✔ Operación fallida conserva
+  Last Known Good.
+
+✔ SnapshotResult valida Snapshot y Report.
+
+Flujo implementado:
+
+DeviceGraphDraft
+
+↓
+
+validate()
+
+↓
+
+ValidationReport
+
+↓
+
+si válido para Simulation:
+
+crear DeviceGraphSnapshot
+
+↓
+
+DeviceGraphSnapshotResult
+
+Error estructural:
+
+ValidationReport
+
+↓
+
+Snapshot null
+
+↓
+
+Draft sin cambios
+
+Cycle Snapshot:
+
+graph_cycle_requires_temporal_analysis
+
+Severity:
+
+SIMULATION_HAZARD
+
+Simulation:
+
+PERMITIDA
+
+Hardware:
+
+BLOQUEADO
+
+Prueba sucesora creada:
+
+res://test/core/device_graph/
+DeviceGraphSnapshotTest.tscn
+
+res://test/core/device_graph/
+device_graph_snapshot_test.gd
+
+Cobertura:
+
+✔ Snapshot vacío.
+
+✔ Snapshot conectado.
+
+✔ orden de Devices.
+
+✔ lookup de Device.
+
+✔ lookup de Connection.
+
+✔ Collections independientes.
+
+✔ constructor copia Arrays.
+
+✔ ausencia de mutaciones.
+
+✔ ausencia de setters.
+
+✔ Snapshot no ejecutable.
+
+✔ Draft posterior independiente.
+
+✔ Last Known Good.
+
+✔ fan-in fallido no contamina Snapshot.
+
+✔ ciclo permite Snapshot.
+
+✔ ciclo bloquea Hardware.
+
+✔ Structural Error bloquea Snapshot.
+
+✔ SnapshotResult defensivo.
+
+Resultado unitario:
+
+Checks: 71
+Failures: 0
+RESULT: PASS
+
+DeviceGraph baseline:
+
+Tests: 7
+Checks: 359
+Failures: 0
+
+Regresión completa:
+
+Planned: 40
+Completed: 40
+Passed: 40
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Plan ExitCode: 0
+RESULT: PASS
+
+Total de checks:
+
+1051
+
+Commits relacionados:
+
+c83b9bc
+docs(device-graph): define full validation policy
+
+da62a37
+feat(device-graph): add full graph validation
+
+413cdb7
+docs(device-graph): record full validation baseline
+
+e6aeaf0
+feat(device-graph): add immutable graph snapshots
+
+Estado:
+
+DEVICEGRAPH PRIMITIVES VERIFICADO
+
+DEVICEGRAPH NODE BUILDER VERIFICADO
+
+DEVICEGRAPH DRAFT VERIFICADO
+
+DEVICEGRAPH CONNECTIONS VERIFICADO
+
+DEVICEGRAPH VALIDATOR VERIFICADO
+
+FAN-IN PROTECTION VERIFICADO
+
+ITERATIVE CYCLE DETECTION VERIFICADO
+
+DEVICEGRAPH SNAPSHOT VERIFICADO
+
+DEVICEGRAPH SNAPSHOT RESULT VERIFICADO
+
+CREATE SNAPSHOT VERIFICADO
+
+DEVICEGRAPH 1.0 COMPLETADO
+
+Siguiente paso:
+
+Realizar análisis arquitectónico para:
+
+- SystemProfile concreto;
+
+- DeviceCatalog;
+
+- CompositionCompiler;
+
+- CompositionPlan;
+
+- CompositionRuntime.
+
+No implementar estos componentes
+sin definir primero responsabilidad,
+orden y dependencias.

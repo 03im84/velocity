@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.1 |
+| Versión | 1.3 |
 | Fecha | 22/08/2026 |
 | ADR relacionado | ADR-002 — DeviceGraph |
 | Alcance | Topología lógica y validación para Devices ideales |
@@ -63,30 +63,43 @@ core/graph/
 
 Estado actual:
 
-por:
-
-````markdown
-Estado actual:
-
 ```text
-Implementado hasta:
-DeviceGraphValidator.
+DeviceGraph Primitives:
+COMPLETADO.
 
-Validación global:
-COMPLETADA.
+DeviceGraphNodeBuilder:
+COMPLETADO.
 
-Fan-in protection:
-COMPLETADA.
+DeviceGraphDraft:
+COMPLETADO.
 
-Iterative cycle detection:
-COMPLETADA.
+Connections:
+COMPLETADO.
 
-Siguiente:
-DeviceGraphSnapshot.
+DeviceGraphValidator:
+COMPLETADO.
 
-Posterior:
-DeviceGraphSnapshotResult
-y create_snapshot().```
+Fan-in Protection:
+COMPLETADO.
+
+Iterative Cycle Detection:
+COMPLETADO.
+
+DeviceGraphSnapshot:
+COMPLETADO.
+
+DeviceGraphSnapshotResult:
+COMPLETADO.
+
+create_snapshot():
+COMPLETADO.
+
+DeviceGraph 1.0:
+IMPLEMENTADO Y VERIFICADO.
+
+Siguiente arquitectura:
+SystemProfile y CompositionCompiler.
+```
 
 ### 2.2 Pruebas
 
@@ -2499,25 +2512,52 @@ CompositionCompiler permanece como etapa futura.
 	PASS — 55 checks.
 
 20. DeviceGraphSnapshot.
-	SIGUIENTE.
+	COMPLETADO.
 
 21. DeviceGraphSnapshotResult.
-	PENDIENTE.
+	COMPLETADO.
 
 22. create_snapshot().
-	PENDIENTE.
+	COMPLETADO.
 
 23. DeviceGraphSnapshotTest.
-	PENDIENTE.
+	PASS — 71 checks.
 
 24. Runner Run All.
-	PASS — 39 tests, 980 checks.
+	PASS — 40 tests, 1051 checks.
 
 25. Registrar resultados.
-	COMPLETADO PARA VALIDATION.
+	COMPLETADO.
 
 26. Actualizar Core Architecture.
-	PENDIENTE HASTA COMPLETAR SNAPSHOT.
+	COMPLETADO — versión 2.6.```
+
+### Baseline aceptada
+
+```text
+Checks: 71
+Failures: 0
+RESULT: PASS
+```
+
+DeviceGraph acumulado:
+
+```text
+Tests: 7
+Checks: 359
+Failures: 0
+```
+
+Regresión completa:
+
+```text
+Tests: 40
+Checks: 1051
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Plan ExitCode: 0
+RESULT: PASS
 ```
 
 ## 42. Criterios de aceptación
@@ -2603,6 +2643,12 @@ DeviceGraph 1.1 satisface el diseño cuando:
 39. Snapshot se prueba mediante APIs públicas.
 
 40. Graph vacío es estructuralmente válido.
+
+Estado de aceptación:
+
+```text
+DEVICEGRAPH 1.0
+IMPLEMENTADO Y VERIFICADO```
 
 ## 43. Fuera de alcance
 
