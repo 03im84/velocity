@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bolk1bymy5km"]
+
+[ext_resource type="Script" uid="uid://dp0qcxm6d4qy" path="res://test/core/device_graph/device_graph_snapshot_test.gd" id="1_utuso"]
+
+[node name="DeviceGraphSnapshotTest" type="Node" unique_id=1780509431]
+script = ExtResource("1_utuso")

@@ -575,6 +575,43 @@ func validate(
 		get_topic_channels()
 	)
 
+func create_snapshot(
+) -> DeviceGraphSnapshotResult:
+
+	var report := validate()
+
+	if not report.is_valid_for_simulation():
+
+		return DeviceGraphSnapshotResult.new(
+			null,
+			report
+		)
+
+	var snapshot := DeviceGraphSnapshot.new(
+		get_devices(),
+		get_connections(),
+		get_topic_channels()
+	)
+
+	if not snapshot.is_valid():
+
+		_add_structural_error(
+			report,
+			&"graph_snapshot_invalid",
+			"Created DeviceGraphSnapshot is invalid.",
+			"",
+			&"snapshot"
+		)
+
+		return DeviceGraphSnapshotResult.new(
+			null,
+			report
+		)
+
+	return DeviceGraphSnapshotResult.new(
+		snapshot,
+		report
+	)
 
 # =============================================================================
 # CONNECTION HELPERS
