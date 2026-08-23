@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dhs5hkd0vyurn"]
+
+[ext_resource type="Script" uid="uid://bqnb6akgm03jo" path="res://test/core/profile/device_configuration_compiler_test.gd" id="1_3tga6"]
+
+[node name="DeviceConfigurationCompilerTest" type="Node" unique_id=1866981124]
+script = ExtResource("1_3tga6")

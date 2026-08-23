@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://ckl6shtpb815"]
+
+[ext_resource type="Script" uid="uid://bucfipv3stasb" path="res://test/core/profile/device_roles_test.gd" id="1_2ssfy"]
+
+[node name="DeviceRolesTest" type="Node" unique_id=1527476689]
+script = ExtResource("1_2ssfy")

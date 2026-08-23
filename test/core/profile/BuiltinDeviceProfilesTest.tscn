@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://d1cm1pr8m72yq"]
+
+[ext_resource type="Script" uid="uid://bobaceup6h66u" path="res://test/core/profile/builtin_device_profiles_test.gd" id="1_3ipv1"]
+
+[node name="BuiltinDeviceProfilesTest" type="Node" unique_id=1365508790]
+script = ExtResource("1_3ipv1")

@@ -1,0 +1,615 @@
+EN007 – Profile and Configuration System Audit
+
+Fecha:
+16/08/2026
+
+Tema:
+
+Auditoría del estado actual de Profile,
+Configuration y definiciones de Devices.
+
+Decisiones relacionadas:
+
+VP-002 — The Simulation May Fail;
+The Simulator Must Not
+
+ADR-002 — DeviceGraph
+pendiente
+
+Componentes relacionados:
+
+DeviceIdentity
+
+DeviceManifest
+
+DeviceGraph futuro
+
+Composition Root
+
+SystemProfile futuro
+
+--------------------------------------------------
+IMPLEMENTACIÓN ACTUAL
+--------------------------------------------------
+
+Archivo encontrado:
+
+profiles/profile.gd
+
+Contenido actual:
+
+extends Resource
+
+class_name Profile
+
+La clase no contiene:
+
+- identidad;
+- versión;
+- datos;
+- validación;
+- tipo de Profile;
+- configuración;
+- referencias;
+- lifecycle;
+- hard limits;
+- Manifest;
+- Connections;
+- Devices.
+
+Actualmente Profile es únicamente
+un nombre global sin contrato.
+
+--------------------------------------------------
+PROBLEMA DE NOMBRE
+--------------------------------------------------
+
+El nombre:
+
+Profile
+
+es demasiado general.
+
+Puede significar:
+
+- DeviceProfile;
+- SystemProfile;
+- UserProfile;
+- VehicleProfile;
+- HardwareProfile;
+- SimulationProfile;
+- PerformanceProfile;
+- Configuration preset.
+
+Utilizar una clase global genérica crea
+ambigüedad y riesgo de crecimiento monolítico.
+
+Debe sustituirse por conceptos con
+responsabilidades explícitas.
+
+--------------------------------------------------
+DEVICE PROFILE
+--------------------------------------------------
+
+Concepto requerido:
+
+DeviceProfile
+
+Responsabilidad prevista:
+
+Describir las características de un modelo
+de Device como un datasheet.
+
+Ejemplos de información:
+
+- canonical ID;
+- name;
+- version;
+- primary role;
+- capabilities;
+- supported Ports;
+- hard limits;
+- supported modes;
+- compatibility;
+- requirements;
+- fabricante o namespace futuro.
+
+DeviceProfile describe:
+
+lo que un modelo puede hacer.
+
+No describe:
+
+cómo está configurada una instancia concreta.
+
+VP-002 requiere que las definiciones
+canónicas sean inmutables.
+
+--------------------------------------------------
+DEVICE CONFIGURATION
+--------------------------------------------------
+
+Concepto requerido:
+
+DeviceConfiguration
+
+Responsabilidad prevista:
+
+Describir cómo se utiliza una instancia
+concreta de Device.
+
+Ejemplos:
+
+- Device ID;
+- DeviceProfile utilizado;
+- valores configurados;
+- Ports activos;
+- mapping lógico;
+- límites configurados;
+- modo nominal;
+- configuración específica del Device.
+
+DeviceConfiguration describe:
+
+cómo queremos utilizar una instancia.
+
+Debe validarse contra DeviceProfile.
+
+--------------------------------------------------
+DEVICE MANIFEST
+--------------------------------------------------
+
+Componente actual:
+
+core/device/device_manifest.gd
+
+DeviceManifest contiene:
+
+- capabilities;
+- publishes;
+- subscribes;
+- requirements.
+
+DeviceManifest ya no debe confundirse
+con DeviceProfile.
+
+Diferencia propuesta:
+
+DeviceProfile:
+
+Todo lo que el modelo puede ofrecer.
+
+DeviceConfiguration:
+
+Selección para una instancia.
+
+DeviceManifest:
+
+Interfaz efectiva que la instancia expone
+después de aplicar la Configuration.
+
+DeviceGraph deberá consumir principalmente
+DeviceManifest.
+
+--------------------------------------------------
+SYSTEM PROFILE
+--------------------------------------------------
+
+Concepto requerido:
+
+SystemProfile
+
+Responsabilidad prevista:
+
+Describir un sistema o nave ensamblada.
+
+Puede contener:
+
+- Device instances;
+- DeviceProfile references;
+- DeviceConfigurations;
+- Device IDs;
+- Graph topology;
+- Connections;
+- requisitos;
+- versión;
+- metadata.
+
+SystemProfile no debe ejecutar el runtime.
+
+Será una representación persistente
+que puede utilizarse para construir
+DeviceGraph y Composition Plan.
+
+--------------------------------------------------
+IDEAL DEVICES
+--------------------------------------------------
+
+La primera etapa utilizará Devices ideales
+o prototipo.
+
+No se modelarán inicialmente:
+
+- tolerancias físicas;
+- ruido;
+- calibración;
+- desgaste;
+- hardware real;
+- firmware real;
+- temperatura detallada;
+- fallos aleatorios;
+- canales eléctricos reales.
+
+Los perfiles ideales deberán ser canónicos
+e inmutables.
+
+El usuario podrá:
+
+- utilizar;
+- consultar;
+- clonar;
+- Save As;
+- derivar.
+
+No podrá sobrescribir el original
+mediante las herramientas soportadas.
+
+--------------------------------------------------
+CONFIGURACIÓN ESPECIALIZADA
+--------------------------------------------------
+
+Una clase DeviceConfiguration universal
+con todos los campos posibles produciría
+un componente monolítico.
+
+Ejemplos de campos incompatibles:
+
+- sensor offset;
+- MCU channel mapping;
+- screen resolution;
+- servo limits;
+- network port;
+- thruster power.
+
+La configuración deberá permitir
+especialización.
+
+Ejemplos conceptuales:
+
+DistanceSensorConfiguration
+
+HoverMCUConfiguration
+
+HoverThrusterConfiguration
+
+FlightControlConfiguration
+
+El contrato común todavía debe definirse.
+
+--------------------------------------------------
+COMPONENTES OPCIONALES FUTUROS
+--------------------------------------------------
+
+DeviceCalibration
+
+Correcciones medidas de una instancia física.
+
+AdaptationPolicy
+
+Reglas autorizadas para adaptación local.
+
+RuntimeAllocation
+
+Asignación efectiva durante ejecución.
+
+Estos conceptos son necesarios para el
+modelo futuro, pero no deben implementarse
+durante la etapa ideal sin una necesidad
+verificable.
+
+--------------------------------------------------
+VP-002
+--------------------------------------------------
+
+Profile y Configuration deben cumplir:
+
+- canonical definitions inmutables;
+- Save As para derivación;
+- versionado;
+- Draft;
+- Active Simulation;
+- Active Hardware;
+- validación transaccional;
+- Last Known Good;
+- Structural Errors bloqueantes;
+- Platform Safety Errors bloqueantes;
+- Simulation Hazards permitidos
+  en Simulation Mode;
+- Hardware Safety Errors bloqueados
+  en Hardware Mode.
+
+La implementación actual no ofrece
+ninguna de estas garantías.
+
+--------------------------------------------------
+DIRECTORIO ACTUAL
+--------------------------------------------------
+
+Código y datos se encuentran potencialmente
+mezclados dentro de:
+
+profiles/
+
+Debe decidirse una separación entre:
+
+- clases del Core;
+- definiciones canónicas;
+- configuraciones de usuario;
+- SystemProfiles;
+- datos generados;
+- runtime snapshots.
+
+No debe asumirse una estructura de carpetas
+antes de definir los contratos.
+
+--------------------------------------------------
+RELACIÓN CON DEVICEGRAPH
+--------------------------------------------------
+
+DeviceGraph necesita:
+
+- Devices identificables;
+- Manifest efectivo;
+- Ports;
+- configuración lógica mínima;
+- referencias a definiciones;
+- SystemProfile futuro;
+- validación.
+
+DeviceGraph no debe convertirse en:
+
+- editor de Profile;
+- serializador;
+- ConfigurationValidator universal;
+- propietario de definiciones;
+- sistema de versionado.
+
+Pero debe servir como modelo lógico común
+para herramientas que creen y utilicen
+Profiles y Configurations.
+
+--------------------------------------------------
+RELACIÓN CON EDITOR VISUAL
+--------------------------------------------------
+
+El flujo previsto es:
+
+DeviceCatalog
+
+↓
+
+seleccionar Device ideal
+
+↓
+
+crear DeviceNode
+
+↓
+
+aplicar DeviceConfiguration
+
+↓
+
+generar Manifest efectivo
+
+↓
+
+crear Ports
+
+↓
+
+conectar mediante DeviceGraph
+
+↓
+
+validar
+
+↓
+
+generar SystemProfile o Composition Plan
+
+GraphEditor facilita el proceso.
+
+DeviceGraph conserva el modelo.
+
+Profile y Configuration conservan
+la descripción persistente.
+
+--------------------------------------------------
+DECISIONES PENDIENTES
+--------------------------------------------------
+
+Debe definirse:
+
+1. El nombre y responsabilidad de DeviceProfile.
+
+2. El nombre y responsabilidad de
+   DeviceConfiguration.
+
+3. El contrato común de configuraciones
+   especializadas.
+
+4. La relación Profile → Configuration.
+
+5. La relación Configuration → Manifest.
+
+6. La forma de SystemProfile.
+
+7. La identidad y versión de definiciones.
+
+8. La semántica de Save As.
+
+9. La inmutabilidad canónica.
+
+10. Draft, Active Simulation y Active Hardware.
+
+11. Validación y ValidationReport.
+
+12. Last Known Good.
+
+13. Persistencia.
+
+14. Separación entre código y assets.
+
+15. Cómo DeviceGraph consume esta información.
+
+16. Qué queda pospuesto durante Devices ideales.
+
+--------------------------------------------------
+RIESGOS
+--------------------------------------------------
+
+Implementar DeviceGraph sin resolver Profile
+y Configuration puede producir:
+
+- Ports generados desde fuentes ambiguas;
+- configuración dentro de Graph;
+- Graph monolítico;
+- datos persistentes mezclados con runtime;
+- definiciones sobrescritas;
+- falta de versionado;
+- incompatibilidad con VP-002;
+- dificultad para crear herramientas visuales.
+
+--------------------------------------------------
+CONCLUSIÓN
+--------------------------------------------------
+
+La clase Profile actual no tiene un contrato
+suficiente y no debe ampliarse gradualmente
+sin una decisión arquitectónica.
+
+Antes de finalizar DeviceGraph debe definirse:
+
+ADR-008 — Device Definitions,
+Profiles and Configuration
+
+La primera versión debe trabajar con
+Devices ideales y configuración lógica mínima.
+
+Calibration, AdaptationPolicy y
+RuntimeAllocation permanecerán pospuestos.
+
+Estado:
+
+AUDITORÍA COMPLETA
+
+IMPLEMENTACIÓN SIN MODIFICAR
+
+Implementación posterior:
+
+Se creó:
+
+core/profile/device_roles.gd
+
+core/profile/validation_issue.gd
+
+core/profile/validation_report.gd
+
+core/profile/device_profile_draft.gd
+
+core/profile/device_profile.gd
+
+core/profile/device_profile_compile_result.gd
+
+core/profile/device_profile_compiler.gd
+
+core/profile/builtin_device_profiles.gd
+
+core/profile/device_configuration_draft.gd
+
+core/profile/device_configuration.gd
+
+core/profile/
+device_configuration_compile_result.gd
+
+core/profile/device_configuration_compiler.gd
+
+core/profile/
+device_manifest_build_result.gd
+
+core/profile/device_manifest_builder.gd
+
+Modelo implementado:
+
+Draft
+→ Compiler
+→ ValidationReport
+→ Immutable Snapshot
+→ DeviceManifest
+
+Profile canónico inicial:
+
+velocity.distance_sensor.ideal@1
+
+Profile genérico:
+
+RETIRADO
+
+Pruebas:
+
+DeviceRolesTest:
+16 PASS
+
+ValidationReportTest:
+38 PASS
+
+DeviceProfileDraftTest:
+12 PASS
+
+DeviceProfileCompilerTest:
+47 PASS
+
+BuiltinDeviceProfilesTest:
+16 PASS
+
+DeviceConfigurationDraftTest:
+12 PASS
+
+DeviceConfigurationCompilerTest:
+56 PASS
+
+DeviceManifestBuilderTest:
+24 PASS
+
+Total Profile Configuration:
+
+221 verificaciones correctas.
+
+0 fallos.
+
+Regresión completa:
+
+Tests:
+33
+
+Passed:
+33
+
+Failed:
+0
+
+Timeout:
+0
+
+Engine Error:
+0
+
+Plan ExitCode:
+0
+
+Estado:
+
+IMPLEMENTADO Y VERIFICADO
+
+AUDITORÍA CERRADA

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://v1p0ys5upkgu"]
+
+[ext_resource type="Script" uid="uid://cicnupuruerl4" path="res://test/core/profile/validation_report_test.gd" id="1_6mb0j"]
+
+[node name="ValidationReportTest" type="Node" unique_id=717244623]
+script = ExtResource("1_6mb0j")

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://h83ohxjh1epl"]
+
+[ext_resource type="Script" uid="uid://cor7tp3hwr31v" path="res://test/core/profile/device_configuration_draft_test.gd" id="1_7irjy"]
+
+[node name="DeviceConfigurationDraftTest" type="Node" unique_id=1574229977]
+script = ExtResource("1_7irjy")
