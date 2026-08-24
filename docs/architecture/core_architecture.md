@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.8 |
+| Versión | 2.9 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 23/08/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -218,7 +218,7 @@ Hover, sustentación, dirección, propulsión y frenado permanecen en sus módul
 | SystemProfileCompiler | Compilar SystemProfileDraft a snapshot | ADR-009 implementado y verificado |
 | SystemProfile | Representar una composición validada e inmutable | ADR-009 implementado y verificado |
 | SystemProfileCompileResult | Describir compilación transaccional de SystemProfile | Implementado y verificado |
-| DeviceCatalog | Resolver DeviceProfiles canónicos | ADR-009 aceptado; siguiente milestone |
+| DeviceCatalog | Resolver DeviceProfiles mediante ID y versión exacta | ADR-009 aceptado; DeviceCatalog Design 1.0 activo; implementación pendiente |
 | DeviceGraphAssembler | Convertir SystemProfile en DeviceGraphSnapshot | ADR-009 aceptado; implementación futura |
 | RuntimeFactoryRegistry | Resolver factories ejecutables | ADR-009 aceptado; implementación futura |
 | CompositionCompiler | Convertir DeviceGraphSnapshot en CompositionPlan | ADR-009 aceptado; implementación futura |
@@ -454,6 +454,16 @@ qué definición lógica existe.
 RuntimeFactoryRegistry:
 cómo construir su implementación runtime.
 ```
+DeviceCatalog 1.0 utilizará:
+
+```text
+DeviceCatalogDraft
+		│
+		▼
+DeviceCatalogCompiler
+		│
+		▼
+DeviceCatalog```
 
 Persistencia permanece externa al Core lógico.
 

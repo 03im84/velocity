@@ -1,0 +1,162 @@
+PJ0024 – DeviceCatalog Architecture
+
+Fecha:
+
+23/08/2026
+
+Objetivo:
+
+Definir DeviceCatalog 1.0 como
+implementación estable del contrato
+DeviceProfileResolver.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-009 — System Composition Pipeline.md
+
+docs/architecture/
+device_catalog_design.md
+
+docs/architecture/
+core_architecture.md
+
+Versiones:
+
+ADR-009:
+
+1.0
+
+DeviceCatalog Design:
+
+1.0
+
+Core Architecture:
+
+2.9
+
+Decisiones aceptadas:
+
+✔ DeviceCatalog utilizará Draft–Compiler–Snapshot.
+
+✔ DeviceCatalogDraft será editable.
+
+✔ DeviceCatalog será inmutable.
+
+✔ Catálogo vacío será válido.
+
+✔ DeviceCatalog no tendrá ID propio.
+
+✔ DeviceCatalog no tendrá versión propia.
+
+✔ La identidad pertenece a DeviceProfile.
+
+✔ La identidad exacta será:
+
+  Profile ID
+  +
+  Profile Version
+
+✔ Un mismo Profile ID podrá conservar
+  varias versiones.
+
+✔ Un duplicado exacto será
+  Structural Error.
+
+✔ No existirá overwrite silencioso.
+
+✔ No existirá last write wins.
+
+✔ No existirá get_latest().
+
+✔ No existirá fallback automático.
+
+✔ Resolución será exacta.
+
+✔ Orden de entrada será preservado.
+
+✔ get_profiles() devolverá copia.
+
+✔ El índice interno utilizará:
+
+  Profile ID
+  →
+  Profile Version
+  →
+  DeviceProfile
+
+✔ El índice no utilizará key concatenada.
+
+✔ DeviceCatalog satisfará
+  DeviceProfileResolver.
+
+✔ DeviceCatalog permanecerá separado
+  de RuntimeFactoryRegistry.
+
+✔ DeviceCatalog no conocerá factories.
+
+✔ DeviceCatalog no creará Devices.
+
+✔ DeviceCatalog no construirá Graph.
+
+✔ DeviceCatalog no abrirá archivos.
+
+✔ Persistencia permanecerá externa.
+
+Componentes autorizados:
+
+res://core/catalog/
+device_catalog_draft.gd
+
+res://core/catalog/
+device_catalog.gd
+
+res://core/catalog/
+device_catalog_compile_result.gd
+
+res://core/catalog/
+device_catalog_compiler.gd
+
+Pruebas previstas:
+
+DeviceCatalogDraftTest
+
+DeviceCatalogCompilerTest
+
+SystemProfileDeviceCatalogIntegrationTest
+
+Baselines que no se modificarán:
+
+DeviceProfileCompilerTest
+
+BuiltinDeviceProfilesTest
+
+SystemProfileCompilerTest
+
+DeviceGraphNodeBuilderTest
+
+DeviceGraphSnapshotTest
+
+Siguiente paso:
+
+Implementar DeviceCatalogDraft.
+
+Después:
+
+- DeviceCatalogDraftTest;
+
+- DeviceCatalog;
+
+- DeviceCatalogCompileResult;
+
+- DeviceCatalogCompiler;
+
+- DeviceCatalogCompilerTest;
+
+- integración con SystemProfileCompiler;
+
+- Run All;
+
+- registrar baseline;
+
+- diseñar DeviceGraphAssembler.
