@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.6 |
+| Versión | 2.8 |
 | Fecha inicial | 2026-08-14 |
-| Última revisión | 22/08/2026 |
+| Última revisión | 23/08/2026 |
 | Alcance | Núcleo lógico de Velocity |
 
 ## 1. Propósito
@@ -61,6 +61,8 @@ Dentro del Core existen conceptos como:
 - DeviceManifest;
 - ValidationReport;
 - DeviceGraph;
+- SystemProfile;
+- System Composition;
 - contratos de estado;
 - contratos de salud;
 - contratos de lifecycle.
@@ -77,6 +79,7 @@ Por ejemplo, DeviceBus pertenece al Core, pero no conoce:
 - física;
 - telemetría;
 - DeviceGraph;
+- SystemProfile;
 - hardware.
 
 ## 3. Límites del Core
@@ -148,6 +151,10 @@ core/graph/
 		Topología lógica, validación y snapshots
 		de DeviceGraph.
 
+core/composition/
+		SystemProfile Draft–Snapshot y pipeline
+		futuro de composición.
+
 core/debug/
 		Observación y diagnóstico del Core.
 
@@ -205,18 +212,20 @@ Hover, sustentación, dirección, propulsión y frenado permanecen en sus módul
 | DeviceGraphValidator | Validar topología y detectar ciclos iterativamente | ADR-002 implementado y verificado |
 | DeviceGraphSnapshot | Representar topología validada e inmutable | ADR-002 implementado y verificado |
 | DeviceGraphSnapshotResult | Describir creación transaccional de Snapshot | ADR-002 implementado y verificado |
-| Measurement | Representar un dato producido por un Sensor | Concepto definido; contrato pendiente |
-| SystemConnectionSpec | Representar endpoints persistibles antes de construir DeviceGraph | ADR-009 aceptado; System Composition Pipeline Design 1.0 activo; implementación pendiente |
-| SystemProfileDraft | Representar una composición editable | ADR-009 aceptado; diseño 1.0 activo; implementación pendiente |
-| DeviceProfileResolver | Resolver DeviceProfile mediante ID y versión exacta | ADR-009 aceptado; contrato por comportamiento pendiente |
-| SystemProfileCompiler | Compilar SystemProfileDraft a snapshot | ADR-009 aceptado; diseño 1.0 activo; implementación pendiente |
-| SystemProfile | Representar una composición validada e inmutable | ADR-009 aceptado; diseño 1.0 activo; implementación pendiente |
-| DeviceCatalog | Resolver DeviceProfiles canónicos | ADR-009 aceptado; implementación futura |
+| SystemConnectionSpec | Representar endpoints persistibles antes de construir DeviceGraph | ADR-009 implementado y verificado |
+| SystemProfileDraft | Representar una composición editable | ADR-009 implementado y verificado |
+| DeviceProfileResolver | Resolver DeviceProfile mediante ID y versión exacta | Contrato por comportamiento implementado y verificado |
+| SystemProfileCompiler | Compilar SystemProfileDraft a snapshot | ADR-009 implementado y verificado |
+| SystemProfile | Representar una composición validada e inmutable | ADR-009 implementado y verificado |
+| SystemProfileCompileResult | Describir compilación transaccional de SystemProfile | Implementado y verificado |
+| DeviceCatalog | Resolver DeviceProfiles canónicos | ADR-009 aceptado; siguiente milestone |
 | DeviceGraphAssembler | Convertir SystemProfile en DeviceGraphSnapshot | ADR-009 aceptado; implementación futura |
 | RuntimeFactoryRegistry | Resolver factories ejecutables | ADR-009 aceptado; implementación futura |
 | CompositionCompiler | Convertir DeviceGraphSnapshot en CompositionPlan | ADR-009 aceptado; implementación futura |
 | CompositionPlan | Representar instrucciones runtime inmutables | ADR-009 aceptado; implementación futura |
 | CompositionRuntime | Ejecutar CompositionPlan y poseer recursos activos | ADR-009 aceptado; implementación futura |
+| Measurement | Representar un dato producido por un Sensor | Concepto definido; contrato pendiente |
+
 Un componente pendiente solo se implementará cuando exista una necesidad verificable y su responsabilidad esté definida.
 
 ## 6. Responsabilidades de los componentes
@@ -397,7 +406,7 @@ No es un plan ejecutable.
 
 ### 6.6 System Composition
 
-System Composition transforma una definición persistible en runtime mediante etapas separadas.
+System Composition transforma una definición editable en una composición validada, una topología lógica, un plan y finalmente un runtime activo.
 
 ```text
 SystemProfileDraft
@@ -421,7 +430,82 @@ CompositionCompiler
 CompositionPlan
 		│
 		▼
-CompositionRuntime```
+CompositionRuntime
+```
+
+SystemProfile utiliza referencias exactas:
+
+```text
+Profile ID
++
+Profile Version
+```
+
+DeviceProfileResolver resuelve esas referencias.
+
+DeviceCatalog será una implementación futura del resolver.
+
+RuntimeFactoryRegistry permanece separado de DeviceCatalog.
+
+```text
+DeviceCatalog:
+qué definición lógica existe.
+
+RuntimeFactoryRegistry:
+cómo construir su implementación runtime.
+```
+
+Persistencia permanece externa al Core lógico.
+
+SystemProfile no abre ni guarda archivos.
+
+SystemProfile contiene:
+
+- identidad;
+- versión;
+- Display Name;
+- descripción;
+- Activation Context;
+- DeviceConfiguration snapshots;
+- SystemConnectionSpecs.
+
+SystemProfile no contiene:
+
+- DeviceProfileDraft;
+- DeviceConfigurationDraft;
+- DeviceGraph;
+- DeviceBus;
+- runtime factories;
+- filesystem;
+- UI.
+
+SystemProfileCompiler valida:
+
+- identidad;
+- contexto;
+- Configurations;
+- Device IDs;
+- referencias exactas;
+- dependencias;
+- Connection Specs;
+- endpoints conocidos.
+
+SystemProfileCompiler no valida Ports.
+
+La validación de Ports, Topics, Semantic Kinds, fan-in y ciclos pertenece a DeviceGraphAssembler y DeviceGraphValidator.
+
+CompositionCompiler no crea Devices.
+
+CompositionPlan no ejecuta.
+
+CompositionRuntime poseerá:
+
+- DeviceBus activo;
+- Devices activos;
+- suscripciones;
+- lifecycle;
+- shutdown;
+- supervisión runtime.
 
 ### 6.7 Measurement
 
@@ -446,27 +530,35 @@ Measurement Identity, provenance y snapshots de datos permanecen pendientes.
 
 2. DeviceGraph no depende de DeviceBus runtime.
 
-3. Un productor no conoce a sus consumidores.
+3. SystemProfile no depende de DeviceGraph.
 
-4. Un consumidor no necesita conocer la implementación del productor.
+4. SystemProfile no depende de filesystem.
 
-5. Un Provider no conoce los destinos finales de sus datos.
+5. DeviceCatalog no depende de runtime factories.
 
-6. Presentación depende de datos estructurados; los datos no dependen de presentación.
+6. CompositionCompiler no ejecuta CompositionPlan.
 
-7. Telemetría depende del estado; el juego no depende de telemetría.
+7. Un productor no conoce a sus consumidores.
 
-8. Hardware depende de contratos de plataforma; el Core no depende de hardware concreto.
+8. Un consumidor no necesita conocer la implementación del productor.
 
-9. Ningún componente crea otro si esa creación no forma parte de su responsabilidad.
+9. Un Provider no conoce los destinos finales de sus datos.
 
-10. Las dependencias se entregan explícitamente cuando sea posible.
+10. Presentación depende de datos estructurados; los datos no dependen de presentación.
 
-11. Añadir un consumidor no obliga a modificar al productor.
+11. Telemetría depende del estado; el juego no depende de telemetría.
 
-12. Drafts no se utilizan directamente por runtime.
+12. Hardware depende de contratos de plataforma; el Core no depende de hardware concreto.
 
-13. Runtime utiliza snapshots o planes compilados.
+13. Ningún componente crea otro si esa creación no forma parte de su responsabilidad.
+
+14. Las dependencias se entregan explícitamente cuando sea posible.
+
+15. Añadir un consumidor no obliga a modificar al productor.
+
+16. Drafts no se utilizan directamente por runtime.
+
+17. Runtime utiliza snapshots o planes compilados.
 
 Dirección general:
 
@@ -687,22 +779,33 @@ Las conversiones de presentación ocurren fuera del estado canónico.
 
 22. DeviceBus transporta mensajes, no topología.
 
-23. CompositionCompiler será obligatorio antes de runtime compuesto.
+23. SystemProfile representa composición, no Graph.
+
+24. DeviceProfileResolver utiliza ID y versión exactos.
+
+25. No existe fallback automático de versión.
+
+26. CompositionCompiler será obligatorio antes de runtime compuesto.
+
+27. CompositionRuntime será propietario de recursos activos.
 
 ## 13. Composición y comunicación
 
 DeviceGraph no se inserta físicamente dentro del transporte de cada mensaje.
 
-Flujo de composición futuro:
+Flujo de composición:
 
 ```text
+SystemProfileDraft
+		│
+		▼
+SystemProfileCompiler
+		│
+		▼
 SystemProfile
 		│
 		▼
-DeviceGraphDraft
-		│
-		▼
-DeviceGraphValidator
+DeviceGraphAssembler
 		│
 		▼
 DeviceGraphSnapshot
@@ -729,7 +832,9 @@ DeviceBus
 Consumer
 ```
 
-DeviceGraph describe relaciones.
+SystemProfile describe composición.
+
+DeviceGraph describe topología.
 
 CompositionCompiler produce instrucciones.
 
@@ -868,7 +973,7 @@ Snapshots son validados e inmutables por contrato.
 
 ### ADR-009 — System Composition Pipeline
 
-Velocity separará:
+Velocity separa:
 
 ```text
 SystemProfileDraft
@@ -885,7 +990,32 @@ CompositionCompiler
 
 CompositionPlan
 
-CompositionRuntime```
+CompositionRuntime
+```
+
+SystemProfile utiliza referencias exactas:
+
+```text
+Profile ID
++
+Profile Version
+```
+
+DeviceProfileResolver es un rol por comportamiento.
+
+DeviceCatalog y RuntimeFactoryRegistry permanecen separados.
+
+```text
+DeviceCatalog:
+qué definición lógica existe.
+
+RuntimeFactoryRegistry:
+cómo construir su implementación runtime.
+```
+
+SystemProfile es un snapshot RefCounted independiente de persistencia.
+
+CompositionCompiler produce un plan y no ejecuta runtime.
 
 ## 15. Estado vigente y trabajo futuro
 
@@ -932,6 +1062,18 @@ DeviceGraphSnapshot
 
 DeviceGraphSnapshotResult
 
+SystemConnectionSpec
+
+SystemProfileDraft
+
+DeviceProfileResolver contract
+
+SystemProfileCompiler
+
+SystemProfile
+
+SystemProfileCompileResult
+
 Velocity Test Runner
 
 Velocity Test Dashboard
@@ -948,9 +1090,17 @@ DeviceCatalog persistente
 
 Save As Service
 
-SystemProfile concreto
+SystemProfileDocument
 
-GraphSerializer o ProfileBuilder
+SystemProfileLoader
+
+SystemProfileSerializer
+
+DeviceGraphAssembler
+
+DeviceGraphAssemblyResult
+
+RuntimeFactoryRegistry
 
 CompositionCompiler
 
@@ -1086,6 +1236,14 @@ Draft validation
 +
 
 Snapshot validation
+
++
+
+Dependency resolution
+
++
+
+Graph assembly
 
 +
 

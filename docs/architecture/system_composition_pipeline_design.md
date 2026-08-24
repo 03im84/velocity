@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACEPTADO |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 23/08/2026 |
 | ADR relacionado | ADR-009 — System Composition Pipeline |
 | Alcance | Definición, resolución, Graph assembly, compilación y runtime |
@@ -26,7 +26,7 @@ Define la relación entre:
 - CompositionRuntime;
 - persistencia externa.
 
-La primera implementación se limitará a:
+SystemProfile 1.0 implementa y verifica:
 
 - SystemConnectionSpec;
 - SystemProfileDraft;
@@ -34,9 +34,11 @@ La primera implementación se limitará a:
 - SystemProfileCompileResult;
 - SystemProfileCompiler;
 - contrato de DeviceProfileResolver;
-- pruebas unitarias.
+- resolver controlado de pruebas;
+- pruebas unitarias;
+- regresión completa.
 
-DeviceCatalog, Graph assembly y runtime se diseñarán e implementarán en milestones sucesivos.
+DeviceCatalog, Graph assembly y runtime permanecen en milestones sucesivos.
 
 ## 2. Pipeline completo
 
@@ -1290,6 +1292,15 @@ Verifica:
 - Draft posterior no modifica Snapshot;
 - Result sin setters.
 
+### 28.1 Baselines aceptadas
+
+SystemConnectionSpecTest:
+
+```text
+Checks: 23
+Failures: 0
+RESULT: PASS```
+
 ## 29. Fixtures de prueba
 
 Los tests utilizarán namespace:
@@ -1345,36 +1356,52 @@ System Composition utiliza pruebas sucesoras nuevas.
 
 ```text
 1. Aceptar este diseño.
+   COMPLETADO.
 
 2. Crear core/composition/.
+   COMPLETADO.
 
 3. Implementar SystemConnectionSpec.
+   COMPLETADO.
 
 4. Ejecutar SystemConnectionSpecTest.
+   PASS — 23 checks.
 
 5. Implementar SystemProfileDraft.
+   COMPLETADO.
 
 6. Ejecutar SystemProfileDraftTest.
+   PASS — 32 checks.
 
 7. Implementar SystemProfile.
+   COMPLETADO.
 
 8. Implementar SystemProfileCompileResult.
+   COMPLETADO.
 
 9. Implementar SystemProfileCompiler.
+   COMPLETADO.
 
 10. Crear resolver de prueba.
+	COMPLETADO.
 
 11. Ejecutar SystemProfileCompilerTest.
+	PASS — 87 checks.
 
 12. Ejecutar Run All.
+	PASS — 43 tests, 1193 checks.
 
 13. Registrar baseline.
+	COMPLETADO.
 
 14. Actualizar Core Architecture.
+	COMPLETADO — versión 2.8.
 
 15. Cerrar SystemProfile 1.0.
+	COMPLETADO.
 
 16. Diseñar DeviceCatalog.
+	SIGUIENTE.
 ```
 
 ## 32. Criterios de aceptación de SystemProfile 1.0
@@ -1497,13 +1524,17 @@ persistencia externa futura.
 
 DISEÑO ACTIVO
 
-SystemProfile 1.0 está autorizado
-para implementación incremental.
-
-Primer componente:
+SYSTEMPROFILE 1.0
+IMPLEMENTADO Y VERIFICADO
 
 SystemConnectionSpec
 
-Los componentes posteriores permanecen
-sujetos al orden de implementación
-y a sus pruebas sucesoras.
+SystemProfileDraft
+
+SystemProfile
+
+SystemProfileCompileResult
+
+SystemProfileCompiler
+
+DeviceProfileResolver contract

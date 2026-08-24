@@ -1,0 +1,244 @@
+PJ0023 – SystemProfile 1.0 Completed
+
+Fecha:
+
+23/08/2026
+
+Objetivo:
+
+Implementar la primera etapa
+de System Composition Pipeline:
+
+SystemProfile Draft–Snapshot.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-009 — System Composition Pipeline.md
+
+docs/architecture/
+system_composition_pipeline_design.md
+
+docs/architecture/
+core_architecture.md
+
+Versiones:
+
+ADR-009:
+
+1.0
+
+System Composition Pipeline Design:
+
+1.1
+
+Core Architecture:
+
+2.8
+
+Componentes creados:
+
+res://core/composition/
+system_connection_spec.gd
+
+res://core/composition/
+system_profile_draft.gd
+
+res://core/composition/
+system_profile.gd
+
+res://core/composition/
+system_profile_compile_result.gd
+
+res://core/composition/
+system_profile_compiler.gd
+
+Soporte de prueba:
+
+res://test/core/composition/
+system_profile_test_resolver.gd
+
+Decisiones aplicadas:
+
+✔ SystemConnectionSpec es inmutable.
+
+✔ Connection ID es determinista.
+
+✔ El separador `|` está reservado.
+
+✔ SystemConnectionSpec no almacena Topic.
+
+✔ SystemConnectionSpec no almacena Semantic Kind.
+
+✔ SystemProfileDraft es editable.
+
+✔ SystemProfile es inmutable por contrato.
+
+✔ SystemProfile copia Arrays.
+
+✔ Getters devuelven Arrays independientes.
+
+✔ DeviceConfigurations son snapshots.
+
+✔ DeviceConfigurationDraft no entra en SystemProfile.
+
+✔ Activation Context es explícito.
+
+✔ Configurations deben coincidir con el contexto.
+
+✔ SystemProfile vacío es válido.
+
+✔ DeviceProfileResolver es rol por comportamiento.
+
+✔ No existe clase base universal.
+
+✔ Resolución utiliza Profile ID exacto.
+
+✔ Resolución utiliza Profile Version exacta.
+
+✔ No existe fallback latest.
+
+✔ Dependencia faltante es Structural Error.
+
+✔ Dependencia inválida es Structural Error.
+
+✔ Identity mismatch es Structural Error.
+
+✔ Device IDs duplicados son rechazados.
+
+✔ Connection Specs duplicadas son rechazadas.
+
+✔ Endpoints desconocidos son rechazados.
+
+✔ Ports no se validan prematuramente.
+
+✔ SystemProfileCompiler no construye DeviceGraph.
+
+✔ SystemProfile no depende de filesystem.
+
+✔ SystemProfile no ejecuta.
+
+Validaciones implementadas:
+
+system_profile_draft_missing
+
+device_profile_resolver_missing
+
+device_profile_resolver_contract_invalid
+
+system_profile_id_missing
+
+system_profile_version_invalid
+
+system_profile_display_name_missing
+
+system_profile_activation_context_invalid
+
+system_profile_configuration_missing
+
+system_profile_configuration_invalid
+
+duplicate_system_device_id
+
+system_profile_activation_context_mismatch
+
+system_profile_dependency_missing
+
+system_profile_dependency_invalid
+
+system_profile_dependency_identity_mismatch
+
+system_connection_spec_missing
+
+system_connection_spec_invalid
+
+duplicate_system_connection
+
+system_connection_source_device_not_found
+
+system_connection_target_device_not_found
+
+Pruebas sucesoras:
+
+SystemConnectionSpecTest:
+
+Checks: 23
+Failures: 0
+RESULT: PASS
+
+SystemProfileDraftTest:
+
+Checks: 32
+Failures: 0
+RESULT: PASS
+
+SystemProfileCompilerTest:
+
+Checks: 87
+Failures: 0
+RESULT: PASS
+
+SystemProfile baseline:
+
+Tests: 3
+Checks: 142
+Failures: 0
+
+Regresión completa:
+
+Planned: 43
+Completed: 43
+Passed: 43
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Plan ExitCode: 0
+RESULT: PASS
+
+Total de checks:
+
+1193
+
+Commit relacionado:
+
+60cc438
+feat(composition): add system profile draft snapshot pipeline
+
+Estado:
+
+SYSTEM CONNECTION SPEC VERIFICADO
+
+SYSTEM PROFILE DRAFT VERIFICADO
+
+SYSTEM PROFILE SNAPSHOT VERIFICADO
+
+SYSTEM PROFILE COMPILER VERIFICADO
+
+EXACT DEPENDENCY RESOLUTION VERIFICADA
+
+ACTIVATION CONTEXT VALIDATION VERIFICADA
+
+SYSTEMPROFILE 1.0 COMPLETADO
+
+Siguiente paso:
+
+Diseñar DeviceCatalog.
+
+DeviceCatalog deberá:
+
+- resolver Profile ID;
+
+- resolver Profile Version exacta;
+
+- mantener orden determinista;
+
+- rechazar duplicados;
+
+- permanecer separado de runtime factories;
+
+- permanecer independiente de filesystem;
+
+- producir colecciones independientes;
+
+- utilizar pruebas sucesoras.
