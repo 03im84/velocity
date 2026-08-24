@@ -1,0 +1,590 @@
+PJ0027 – DeviceGraphAssembler 1.0 Completed
+
+Fecha:
+
+23/08/2026
+
+Objetivo:
+
+Implementar DeviceGraphAssembler
+como frontera transaccional entre:
+
+SystemProfile
+
+y
+
+DeviceGraphSnapshot
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-009 — System Composition Pipeline.md
+
+docs/architecture/
+device_graph_assembler_design.md
+
+docs/architecture/
+system_composition_pipeline_design.md
+
+docs/architecture/
+core_architecture.md
+
+docs/
+engineering_standars.md
+
+Versiones de cierre:
+
+ADR-009:
+
+1.0
+
+DeviceGraphAssembler Design:
+
+1.1
+
+System Composition Pipeline Design:
+
+1.3
+
+Core Architecture:
+
+2.12
+
+Engineering Standards:
+
+1.3
+
+Componentes creados:
+
+res://core/composition/
+device_graph_assembly_result.gd
+
+res://core/composition/
+device_graph_assembler.gd
+
+Pruebas creadas:
+
+res://test/core/composition/
+DeviceGraphAssemblerTest.tscn
+
+res://test/core/composition/
+device_graph_assembler_test.gd
+
+res://test/core/composition/
+SystemProfileCatalogGraphAssemblyIntegrationTest.tscn
+
+res://test/core/composition/
+system_profile_catalog_graph_assembly_integration_test.gd
+
+Responsabilidades:
+
+DeviceGraphAssemblyResult:
+
+Resultado inmutable y defensivo
+de Graph assembly.
+
+DeviceGraphAssembler:
+
+Construcción transaccional de
+DeviceGraphSnapshot desde:
+
+SystemProfile
+
++
+
+DeviceProfileResolver
+
+Pipeline verificado:
+
+DeviceProfiles
+
+↓
+
+DeviceCatalogDraft
+
+↓
+
+DeviceCatalogCompiler
+
+↓
+
+DeviceCatalog
+
+↓
+
+SystemProfileDraft
+
+↓
+
+SystemProfileCompiler
+
+↓
+
+SystemProfile
+
+↓
+
+DeviceGraphAssembler
+
+↓
+
+DeviceGraphSnapshot
+
+Activation Context:
+
+DeviceGraphAssembler 1.0 soporta:
+
+SIMULATION
+
+DeviceGraphAssembler 1.0 rechaza:
+
+HARDWARE
+
+Hardware rejection:
+
+Code:
+
+device_graph_assembly_hardware_not_supported
+
+Severity:
+
+HARDWARE_SAFETY_ERROR
+
+Snapshot:
+
+null
+
+Assembly Result:
+
+failure
+
+Política de etapas:
+
+1. Devices
+
+2. Connections
+
+3. Snapshot
+
+Reglas:
+
+✔ Agregar errores dentro de etapa.
+
+✔ Detenerse entre etapas.
+
+✔ No procesar Connections
+  cuando Devices falla.
+
+✔ No crear Snapshot
+  cuando Connections falla.
+
+✔ No devolver Graph parcial.
+
+✔ No producir errores derivados
+  de una etapa anterior fallida.
+
+Etapa Devices:
+
+Por cada DeviceConfiguration:
+
+1. validar Configuration;
+
+2. validar Activation Context;
+
+3. resolver Profile ID exacto;
+
+4. resolver Profile Version exacta;
+
+5. construir DeviceManifest;
+
+6. construir DeviceGraphNode;
+
+7. añadir Node a DeviceGraphDraft.
+
+Componentes reutilizados:
+
+DeviceProfileResolver
+
+DeviceManifestBuilder
+
+DeviceGraphNodeBuilder
+
+DeviceGraphDraft
+
+Validaciones propias de Devices:
+
+device_graph_assembly_configuration_missing
+
+device_graph_assembly_configuration_invalid
+
+device_graph_assembly_configuration_context_mismatch
+
+device_graph_assembly_dependency_missing
+
+device_graph_assembly_dependency_invalid
+
+device_graph_assembly_dependency_identity_mismatch
+
+device_graph_assembly_manifest_missing
+
+device_graph_assembly_node_missing
+
+device_graph_assembly_add_device_failed
+
+Etapa Connections:
+
+Por cada SystemConnectionSpec:
+
+1. validar Spec;
+
+2. ejecutar connect_ports();
+
+3. agregar OperationResult Report;
+
+4. verificar Connection ID.
+
+Validaciones propias de Connections:
+
+device_graph_assembly_connection_spec_missing
+
+device_graph_assembly_connection_spec_invalid
+
+device_graph_assembly_connect_failed
+
+device_graph_assembly_connection_id_mismatch
+
+Validaciones delegadas a DeviceGraphDraft:
+
+source_device_not_found
+
+target_device_not_found
+
+source_port_not_found
+
+target_port_not_found
+
+connection_topic_mismatch
+
+connection_semantic_mismatch
+
+duplicate_connection
+
+input_port_multiple_sources
+
+self_connection_not_supported
+
+Etapa Snapshot:
+
+DeviceGraphDraft
+
+↓
+
+create_snapshot()
+
+↓
+
+DeviceGraphValidator
+
+↓
+
+DeviceGraphSnapshot
+
+Validaciones globales delegadas:
+
+TopicChannel Registry
+
+unconnected Ports
+
+stream ownership
+
+cycle detection
+
+Snapshot validity
+
+Ciclos:
+
+Un ciclo produce:
+
+graph_cycle_requires_temporal_analysis
+
+Severity:
+
+SIMULATION_HAZARD
+
+Simulation:
+
+permitida
+
+Hardware:
+
+bloqueado
+
+El Assembler no detecta ciclos
+por cuenta propia.
+
+DeviceGraphValidator permanece
+como autoridad de topología global.
+
+SystemProfile vacío:
+
+✔ Permitido.
+
+✔ Produce Snapshot vacío.
+
+✔ CompositionCompiler decidirá
+  utilidad runtime futura.
+
+Agregación de Reports:
+
+Fuentes:
+
+- Assembler validation;
+
+- DeviceManifestBuilder;
+
+- DeviceGraphNodeBuilder;
+
+- DeviceGraphDraft.add_device();
+
+- DeviceGraphDraft.connect_ports();
+
+- DeviceGraphDraft.create_snapshot().
+
+El merge conserva:
+
+- Issue code;
+
+- severity;
+
+- message;
+
+- related object;
+
+- related field;
+
+- orden.
+
+Los Reports fuente no se modifican.
+
+Si una dependencia devuelve
+ValidationReport null:
+
+Code:
+
+device_graph_assembly_report_missing
+
+Severity:
+
+PLATFORM_SAFETY_ERROR
+
+Transaccionalidad:
+
+Una operación fallida:
+
+- no modifica SystemProfile;
+
+- no modifica DeviceCatalog;
+
+- no modifica DeviceProfiles;
+
+- no expone DeviceGraphDraft temporal;
+
+- no devuelve Snapshot parcial;
+
+- no reemplaza Last Known Good externo.
+
+No responsabilidades:
+
+DeviceGraphAssembler no:
+
+- compila SystemProfileDraft;
+
+- registra Profiles;
+
+- modifica DeviceCatalog;
+
+- crea Devices runtime;
+
+- posee DeviceBus;
+
+- registra suscripciones runtime;
+
+- controla Lifecycle;
+
+- resuelve factories;
+
+- produce CompositionPlan;
+
+- abre archivos;
+
+- guarda archivos;
+
+- dibuja UI;
+
+- activa hardware.
+
+Pruebas sucesoras:
+
+DeviceGraphAssemblerTest:
+
+Checks: 87
+Failures: 0
+RESULT: PASS
+
+SystemProfileCatalogGraphAssemblyIntegrationTest:
+
+Checks: 27
+Failures: 0
+RESULT: PASS
+
+DeviceGraphAssembler baseline:
+
+Tests: 2
+Checks: 114
+Failures: 0
+
+Regresión completa:
+
+Planned: 48
+Completed: 48
+Passed: 48
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Total Runs: 48
+Plan ExitCode: 0
+RESULT: PASS
+
+Total de checks:
+
+1396
+
+Commit de implementación:
+
+cbb0f2a
+feat(composition): add device graph assembler
+
+Baselines preservadas:
+
+DeviceManifestBuilderTest
+
+DeviceGraphNodeBuilderTest
+
+DeviceGraphConnectionTest
+
+DeviceGraphValidationTest
+
+DeviceGraphSnapshotTest
+
+SystemProfileCompilerTest
+
+DeviceCatalogCompilerTest
+
+SystemProfileDeviceCatalogIntegrationTest
+
+Ninguna baseline anterior fue modificada.
+
+Refactorización:
+
+Se corrigió antes de aceptar baseline
+el orden de validación de Activation Context.
+
+Razón:
+
+SystemProfile.is_valid_identity()
+también valida contexto.
+
+El orden inicial hacía inalcanzable:
+
+device_graph_assembly_activation_context_invalid
+
+Orden corregido:
+
+SystemProfile null
+
+↓
+
+Activation Context
+
+↓
+
+SystemProfile identity
+
+↓
+
+Resolver
+
+↓
+
+Hardware policy
+
+No se observaron más defectos
+que justificaran refactorización.
+
+Nueva directriz universal:
+
+Toda modificación entregada:
+
+- código;
+
+- texto;
+
+- documento;
+
+debe proporcionarse como
+archivo completo consolidado.
+
+No se utilizarán instrucciones quirúrgicas.
+
+Estado:
+
+DEVICE GRAPH ASSEMBLY RESULT VERIFICADO
+
+DEVICE GRAPH ASSEMBLER VERIFICADO
+
+SIMULATION ASSEMBLY VERIFICADO
+
+HARDWARE REJECTION VERIFICADO
+
+STAGED ERROR AGGREGATION VERIFICADA
+
+SYSTEMPROFILE PIPELINE VERIFICADO
+
+DEVICECATALOG PIPELINE VERIFICADO
+
+DEVICEGRAPH SNAPSHOT PIPELINE VERIFICADO
+
+DEVICEGRAPHASSEMBLER 1.0 COMPLETADO
+
+Siguiente paso:
+
+Diseñar conjuntamente:
+
+RuntimeFactoryRegistry
+
+y
+
+CompositionPlan
+
+Antes de implementar CompositionCompiler.
+
+Razón:
+
+CompositionCompiler necesita conocer:
+
+- qué factory binding produce;
+
+- qué datos contiene el plan;
+
+- qué orden de creación representa;
+
+- qué orden de initialize representa;
+
+- qué orden de start representa;
+
+- qué orden de shutdown representa;
+
+- qué políticas runtime conserva;
+
+sin ejecutar recursos activos.

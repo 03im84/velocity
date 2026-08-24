@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.2 |
+| Versión | 1.3 |
 | Última revisión | 23/08/2026 |
 | Engine | Godot Engine 4.7.1 stable |
 | Alcance | Arquitectura, implementación, pruebas, documentación y Git |
@@ -95,12 +95,14 @@ Si cambia la responsabilidad de un componente, se rediseña.
 
 No se añade una condición, flag o dependencia únicamente para conservar una responsabilidad equivocada.
 
-Una corrección local es válida cuando:
+Una corrección local es válida conceptualmente cuando:
 
 - la responsabilidad sigue siendo correcta;
 - el contrato no cambia de significado;
 - la modificación permanece dentro del componente responsable;
 - las pruebas existentes se conservan.
+
+Aunque el cambio conceptual sea local, la entrega se realiza mediante el archivo completo consolidado.
 
 ### 2.4 Composición sobre herencia
 
@@ -136,13 +138,37 @@ Una característica estructural no está completa si:
 - Core Architecture todavía describe el estado anterior;
 - el journal no registra el milestone.
 
-### 2.7 Documento canónico completo
+### 2.7 El archivo completo es la unidad de entrega
 
-Un documento versionado se trata como una unidad.
+La unidad de modificación entregada al usuario es el archivo completo.
 
-Cuando cambia su versión, debe existir un archivo completo consolidado que represente el nuevo estado.
+Aplica a:
 
-No se considera suficiente una colección de instrucciones parciales dispersas.
+- código;
+- tests;
+- escenas;
+- documentos;
+- configuraciones;
+- scripts de herramientas;
+- journals nuevos;
+- archivos de diseño;
+- ADR;
+- Core Architecture.
+
+No se entregan instrucciones quirúrgicas para reconstruir un archivo existente.
+
+### 2.8 Estado canónico único
+
+Después de una modificación debe existir una sola versión canónica completa del archivo.
+
+No se distribuye el estado final entre:
+
+- fragmentos;
+- reemplazos parciales;
+- mensajes anteriores;
+- instrucciones “inserta después de”;
+- instrucciones “elimina esta parte”;
+- parches manuales.
 
 ## 3. Metodología obligatoria
 
@@ -201,7 +227,7 @@ Se crea o actualiza un ADR cuando cambia:
 - ciclo de vida;
 - contrato estructural.
 
-No se crea un ADR nuevo cuando la decisión pertenece claramente al alcance de un ADR existente.
+No se crea un ADR nuevo cuando la decisión pertenece claramente al alcance de uno existente.
 
 En ese caso se actualiza su versión.
 
@@ -228,6 +254,8 @@ La implementación comienza únicamente después de aceptar responsabilidad y co
 Los componentes nuevos se introducen de forma incremental.
 
 Cada parser gate debe pasar antes de añadir la siguiente responsabilidad.
+
+Cuando un archivo cambia, se entrega de nuevo completo.
 
 ### 3.6 Pruebas unitarias
 
@@ -257,6 +285,8 @@ Solo se refactoriza cuando existe una necesidad observada:
 - dependencia incorrecta.
 
 No se refactoriza por gusto después de una regresión satisfactoria.
+
+Si una refactorización modifica un archivo, se entrega el archivo completo resultante.
 
 ## 4. Responsabilidad y dependencias
 
@@ -303,6 +333,8 @@ SystemProfile no conoce DeviceGraph.
 DeviceCatalog no conoce SystemProfileCompiler.
 
 DeviceCatalog no conoce runtime factories.
+
+DeviceGraphAssembler no conoce runtime factories.
 
 DeviceGraphSnapshot no conoce CompositionRuntime.
 
@@ -592,8 +624,6 @@ Se utilizan tipos explícitos cuando:
 - previenen incompatibilidades;
 - mejoran el análisis estático.
 
-No se añaden tipos que obliguen a conversiones artificiales o escondan una responsabilidad incorrecta.
-
 ### 7.8 Null
 
 Un componente que acepta `null` debe definir explícitamente:
@@ -644,8 +674,6 @@ func connect(
 ) -> bool:
 ```
 
-`Object.connect()` ya tiene otro contrato.
-
 Correcto:
 
 ```gdscript
@@ -665,10 +693,6 @@ func disconnect_ports(
 ) -> DeviceGraphOperationResult:
 ```
 
-La coincidencia de nombre no se acepta únicamente porque el parser todavía no haya fallado.
-
-El nombre público debe comunicar la responsabilidad real y evitar ambigüedad con el engine.
-
 ## 9. Contratos y datos
 
 ### 9.1 StringName
@@ -679,7 +703,7 @@ Se utiliza `StringName` para identidades canónicas repetidas:
 - semantic kinds;
 - roles;
 - códigos;
-- Connection IDs cuando corresponda;
+- Connection IDs;
 - Profile IDs;
 - System Profile IDs.
 
@@ -708,16 +732,6 @@ Un objeto tratado como snapshot:
 Referencias a objetos inmutables pueden compartirse.
 
 No se realizan deep copies sin una necesidad concreta.
-
-Ejemplo:
-
-```text
-DeviceGraphSnapshot copia Arrays.
-
-DeviceGraphNode y DeviceGraphConnection
-pueden conservarse por referencia
-porque son inmutables por contrato.
-```
 
 ### 9.5 Variant
 
@@ -780,14 +794,11 @@ Los Results:
 - representan éxito o fallo;
 - contienen producto y ValidationReport;
 - no exponen setters;
-- no sustituyen excepciones de plataforma;
 - permiten fallo esperado de dominio.
 
 ### 10.5 Last Known Good
 
 Una operación fallida no modifica el último estado válido.
-
-Flujo:
 
 ```text
 estado válido
@@ -829,13 +840,9 @@ Una operación fallida no debe:
 - contaminar un Report posterior;
 - alterar Last Known Good.
 
-Cuando una operación puede fallar de forma esperada, devuelve un Result estructurado.
-
 ## 12. ValidationIssue y ValidationReport
 
 ### 12.1 Categorías
-
-Velocity distingue:
 
 ```text
 INFO
@@ -860,7 +867,7 @@ Simulation puede aceptar:
 - SIMULATION_HAZARD;
 - Hardware Safety Error cuando la política lo permita.
 
-Simulation no acepta:
+No acepta:
 
 - Structural Error;
 - Platform Safety Error.
@@ -876,25 +883,13 @@ Hardware no acepta:
 
 ### 12.4 Códigos
 
-Cada Issue utiliza un código estable.
+Tests y herramientas comprueban códigos estables, no texto de presentación.
 
-Tests y herramientas comprueban códigos, no texto de presentación.
-
-### 12.5 Mensajes
-
-Los mensajes deben:
-
-- describir el problema;
-- evitar ambigüedad;
-- identificar objeto relacionado;
-- identificar campo relacionado;
-- no depender de UI.
-
-### 12.6 No mutación
+### 12.5 No mutación
 
 ValidationReport describe.
 
-No corrige ni modifica automáticamente el objeto validado.
+No corrige automáticamente el objeto validado.
 
 ## 13. Runtime Safety
 
@@ -904,7 +899,7 @@ No corrige ni modifica automáticamente el objeto validado.
 
 ### 13.2 Nunca permitido
 
-Una configuración creada por el usuario no puede provocar:
+Una configuración del usuario no puede provocar:
 
 - stack overflow;
 - recursión ilimitada;
@@ -918,15 +913,13 @@ Una configuración creada por el usuario no puede provocar:
 
 ### 13.3 Algoritmos sobre datos del usuario
 
-Los algoritmos sobre Graphs, mensajes o configuraciones del usuario deben ser:
+Los algoritmos deben ser:
 
-- iterativos cuando la profundidad no está acotada;
+- iterativos cuando profundidad no está acotada;
 - lineales o justificadamente acotados;
 - deterministas;
 - capaces de abortar o reportar;
 - resistentes a entradas mal formadas.
-
-No se utiliza recursión sobre un Graph de tamaño controlado por el usuario.
 
 ### 13.4 Defensa en profundidad
 
@@ -958,27 +951,15 @@ Runtime budgets
 Runtime supervision
 ```
 
-Ninguna capa sustituye a las demás.
-
 ## 14. DeviceBus
-
-### 14.1 Responsabilidad
 
 DeviceBus transporta mensajes.
 
 No interpreta payloads ni topología.
 
-### 14.2 Ownership
+Tiene propietario explícito.
 
-DeviceBus tiene propietario explícito.
-
-No es:
-
-- autoload;
-- singleton global;
-- Node por conveniencia.
-
-### 14.3 Dispatch
+No es autoload, singleton global ni Node por conveniencia.
 
 Dispatch utiliza:
 
@@ -992,33 +973,9 @@ Dispatch utiliza:
 - DispatchReport;
 - recuperación.
 
-### 14.4 Reentrancia
-
-Una publicación realizada desde un callback se encola.
-
-No inicia recursión depth-first.
-
-### 14.5 Fan-out
-
-Una publicación se entrega a todos los suscriptores válidos según orden contractual.
-
-El mismo mensaje puede conservar la misma referencia cuando el contrato es inmutable.
-
-### 14.6 Mutación durante dispatch
-
-La iteración actual utiliza un snapshot de suscriptores.
-
-Mutaciones afectan publicaciones posteriores según el contrato probado.
-
-### 14.7 Topic ownership
-
-DeviceBus no valida ownership semántico.
-
-La validación pertenece a componentes externos como DeviceGraph o CompositionCompiler.
-
 ## 15. DeviceGraph
 
-### 15.1 Responsabilidades separadas
+Responsabilidades:
 
 ```text
 DeviceGraphDraft:
@@ -1031,59 +988,13 @@ DeviceGraphSnapshot:
 estructura validada e inmutable.
 ```
 
-### 15.2 No ejecución
-
-DeviceGraph no:
-
-- transporta mensajes;
-- publica;
-- se suscribe;
-- ejecuta Devices;
-- controla Lifecycle;
-- crea runtime;
-- serializa;
-- dibuja UI.
-
-### 15.3 Colecciones
-
-Dictionaries internos no se exponen.
-
-Getters de colecciones devuelven Arrays independientes.
-
-### 15.4 Connection IDs
+DeviceGraph no ejecuta.
 
 Connection IDs son deterministas.
 
-Formato:
+Fan-out está permitido.
 
-```text
-source_device
-|
-source_port
-|
-target_device
-|
-target_port
-```
-
-El separador `|` está reservado.
-
-### 15.5 Fan-out
-
-Un OutputPort puede alimentar múltiples InputPorts.
-
-### 15.6 Fan-in
-
-Un InputPort admite una Connection entrante.
-
-Varias fuentes requieren un Device explícito de:
-
-- merge;
-- arbitraje;
-- selección;
-- transformación.
-
-### 15.7 Ciclos
+Fan-in implícito está rechazado.
 
 Los ciclos se detectan sin recursión.
 
@@ -1094,26 +1005,6 @@ SIMULATION_HAZARD
 
 graph_cycle_requires_temporal_analysis
 ```
-
-Simulation puede continuar.
-
-Hardware queda bloqueado.
-
-### 15.8 Snapshot
-
-Snapshot significa válido para Simulation cuando:
-
-```gdscript
-snapshot.is_valid()
-```
-
-Hardware se decide mediante ValidationReport y CompositionCompiler.
-
-### 15.9 Graph vacío
-
-Un Graph vacío es estructuralmente válido.
-
-CompositionCompiler puede decidir que no es ejecutable.
 
 ## 16. System Composition
 
@@ -1144,21 +1035,7 @@ CompositionPlan
 CompositionRuntime
 ```
 
-### 16.2 Referencias exactas
-
-SystemProfile utiliza:
-
-```text
-Profile ID
-+
-Profile Version
-```
-
-No existe fallback automático.
-
-### 16.3 DeviceCatalog
-
-DeviceCatalog satisface DeviceProfileResolver.
+### 16.2 DeviceCatalog
 
 ```text
 DeviceCatalogDraft
@@ -1175,11 +1052,23 @@ DeviceCatalog:
 - es inmutable;
 - conserva múltiples versiones;
 - rechaza duplicados exactos;
-- conserva orden;
 - no tiene ID propio;
 - no tiene versión propia;
 - no conoce factories;
 - no abre archivos.
+
+### 16.3 DeviceGraphAssembler
+
+DeviceGraphAssembler:
+
+- es stateless;
+- soporta Simulation;
+- rechaza Hardware;
+- procesa Devices antes de Connections;
+- agrega Reports por etapas;
+- no devuelve Graph parcial;
+- no modifica entradas;
+- no crea runtime.
 
 ### 16.4 Factories
 
@@ -1199,25 +1088,17 @@ SystemProfile no construye Graph.
 
 DeviceCatalog no crea Devices.
 
-DeviceGraphAssembler no ejecutará runtime.
+DeviceGraphAssembler no ejecuta runtime.
 
-CompositionCompiler no creará Devices.
+CompositionCompiler no crea Devices.
 
-CompositionPlan no ejecutará.
+CompositionPlan no ejecuta.
 
 CompositionRuntime poseerá recursos activos.
 
 ## 17. Pruebas
 
-### 17.1 Ubicación
-
-Las pruebas nuevas del Core se ubican bajo:
-
-```text
-res://test/core/
-```
-
-### 17.2 Naming
+### 17.1 Naming
 
 Escena:
 
@@ -1231,91 +1112,41 @@ Script:
 component_name_test.gd
 ```
 
-### 17.3 Independencia
+### 17.2 Independencia
 
-Cada test crea sus propios objetos.
+Cada test crea sus objetos y no depende del orden de ejecución.
 
-No depende del orden de ejecución de otros tests.
-
-No utiliza estado global compartido.
-
-### 17.4 Salida
-
-Cada prueba imprime:
+### 17.3 Salida
 
 ```text
 [PASS] descripción
-```
 
-Resumen:
-
-```text
 Checks: N
 Failures: N
 RESULT: PASS o FAIL
 ```
 
-Finaliza mediante:
+### 17.4 Fallos
 
-```gdscript
-get_tree().quit(
-	_failure_count
-)
-```
+Ante un fallo:
 
-### 17.5 Fallos
+1. no modificar código inmediatamente;
 
-Si una prueba falla:
+2. capturar primer error completo;
 
-1. no se modifica código inmediatamente;
+3. identificar archivo y línea;
 
-2. se captura el primer error completo;
+4. clasificar parser, contrato o comportamiento;
 
-3. se identifica archivo y línea;
+5. después proponer cambio.
 
-4. se determina si es parser, contrato o comportamiento;
+### 17.5 Baselines
 
-5. después se propone el cambio.
+Una prueba aceptada es baseline inmutable.
 
-### 17.6 Baselines inmutables
+Otra arquitectura requiere prueba sucesora.
 
-Una prueba aceptada se convierte en baseline.
-
-No se modifica para probar una arquitectura diferente.
-
-Se crea una prueba sucesora.
-
-Antes de retirar una prueba anterior:
-
-1. crear sucesora;
-
-2. ejecutar sucesora;
-
-3. ejecutar regresión;
-
-4. registrar sustitución;
-
-5. retirar del árbol activo;
-
-6. conservar historia en Git.
-
-### 17.7 No corrupción privada
-
-Las pruebas no modifican Dictionaries privados para fabricar estados.
-
-Se utilizan:
-
-- APIs públicas;
-- constructores;
-- fixtures controlados;
-- Validators que aceptan Arrays;
-- operaciones fallidas reales.
-
-### 17.8 Ejecución autoritativa
-
-No se utiliza `Run Current Scene` del editor como evidencia autoritativa.
-
-Se utiliza:
+### 17.6 Ejecución autoritativa
 
 ```text
 Godot Console
@@ -1325,23 +1156,7 @@ headless
 Velocity Test Runner
 ```
 
-Variable de sistema:
-
-```text
-GODOT_CONSOLE
-```
-
-### 17.9 Runner
-
-El runner debe:
-
-- aplicar timeout;
-- continuar después de fallos;
-- detectar errores de Godot aunque ExitCode sea cero;
-- producir summary;
-- devolver exit code agregado.
-
-Códigos reservados:
+### 17.7 Códigos del runner
 
 ```text
 124:
@@ -1354,36 +1169,11 @@ proceso no confirmado
 ENGINE_ERROR con ExitCode Godot 0
 ```
 
-### 17.10 Dashboard
-
-Velocity Test Dashboard es interfaz del runner.
-
-No define contratos del Core.
-
-El estado local no se versiona:
-
-```text
-test/tools/test_dashboard.local.json
-test/tools/.test_dashboard/
-```
-
-`Pause` y `Resume` utilizan un único botón dinámico.
-
 ## 18. Archivos generados y UID
 
-### 18.1 UID de Godot
-
-Los archivos:
-
-```text
-*.gd.uid
-```
-
-generados por Godot se versionan junto con su script cuando forman parte del proyecto.
+Los `*.gd.uid` generados por Godot se versionan con su script.
 
 No se crean manualmente.
-
-### 18.2 Caché
 
 No se versionan:
 
@@ -1392,212 +1182,136 @@ __pycache__/
 *.py[cod]
 ```
 
-### 18.3 Estado local
-
-Configuraciones personales y estado de UI se excluyen mediante `.gitignore`.
-
-### 18.4 Archivos accidentales
-
-Capturas temporales como:
-
-```text
-list.txt
-shorts.txt
-```
-
-no se añaden al repositorio.
-
-Antes de eliminarlas se verifica su contenido.
+Estado local y archivos accidentales no entran al repositorio.
 
 ## 19. Documentación
 
-### 19.1 ADR
+### 19.1 Rutas
 
-Ruta:
+ADR:
 
 ```text
 res://docs/architecture/adr/
 ```
 
-Nombre:
-
-```text
-ADR-XXX — Título.md
-```
-
-Cada ADR registra:
-
-- estado;
-- versión;
-- fecha;
-- contexto;
-- problema;
-- decisión;
-- alternativas;
-- consecuencias;
-- invariantes;
-- criterios de aceptación;
-- fuera de alcance.
-
-### 19.2 Diseños
-
-Los diseños se ubican en:
+Diseños:
 
 ```text
 res://docs/architecture/
 ```
 
-Un diseño incluye:
-
-- responsabilidad;
-- estructura;
-- API;
-- invariantes;
-- estrategia de pruebas;
-- orden de implementación;
-- criterios de aceptación;
-- estado actual.
-
-### 19.3 Project Decisions
-
-Ruta:
-
-```text
-res://docs/decisions/
-```
-
-Las Project Decisions expresan reglas que atraviesan varios ADR.
-
-### 19.4 Engineering Notes
-
-Ruta:
+Engineering Notes:
 
 ```text
 res://docs/engineering_notes/
 ```
 
-Una Engineering Note registra:
-
-- auditoría;
-- hallazgo;
-- riesgo;
-- evidencia;
-- acciones.
-
-No sustituye ADR o diseño.
-
-### 19.5 Project Journal
-
-Ruta:
+Project Journal:
 
 ```text
 res://docs/project_journal/
 ```
 
-Formato de nombre:
+### 19.2 Journal
+
+Formato:
 
 ```text
 pjXXXX_DDMMAA.txt
 ```
 
-Ejemplo:
+Zona horaria:
 
 ```text
-pj0025_230826.txt
+GMT-5
+sin DST
 ```
 
-El journal utiliza:
+### 19.3 Encoding
 
-- zona horaria GMT-5;
-- sin DST;
-- fecha visible DD/MM/AAAA.
+Documentos se guardan como UTF-8.
 
-El journal es histórico.
+No se copian caracteres mojibake.
 
-No se reescribe para fingir que una decisión posterior ya existía.
+### 19.4 Entrega completa universal
 
-### 19.6 Encoding
-
-Los documentos se guardan como UTF-8.
-
-No se copian al archivo caracteres mojibake como:
-
-```text
-Ã
-â
-Â
-```
-
-Si PowerShell muestra mojibake, se verifica la codificación antes de modificar el archivo.
-
-### 19.7 Entrega completa obligatoria
-
-Cuando un documento versionado cambia, la nueva versión se entrega como un archivo completo consolidado.
+Toda modificación entregada se proporciona como archivo completo consolidado.
 
 Aplica a:
 
+- código;
+- tests;
+- escenas;
+- documentos;
+- configuraciones;
+- scripts;
+- herramientas;
+- journals nuevos;
 - ADR;
 - diseños;
 - Core Architecture;
-- Engineering Standards;
-- documentos de herramientas;
-- especificaciones;
-- glosario cuando cambia de versión.
+- Engineering Standards.
 
-La entrega debe indicar:
+La entrega indica:
 
 1. ruta exacta;
 
-2. versión anterior;
+2. si es creación o reemplazo;
 
-3. versión nueva;
+3. versión anterior cuando corresponda;
 
-4. contenido completo;
+4. versión nueva cuando corresponda;
 
-5. instrucción de reemplazo total;
+5. contenido completo;
 
-6. comando de verificación.
+6. instrucción de reemplazo total;
 
-No se utilizan como método de actualización documental:
+7. comando de verificación.
 
-- “busca esta sección”;
+### 19.5 Prohibición de cirugía manual
+
+No se entregan instrucciones como:
+
+- “busca esta línea”;
 - “inserta después de”;
-- reemplazos quirúrgicos;
-- listas de fragmentos;
-- parches parciales distribuidos en mensajes.
+- “elimina este bloque”;
+- “reemplaza esta sección”;
+- parches parciales;
+- diffs como método de construcción;
+- fragmentos distribuidos entre mensajes.
 
-Los diffs se utilizan para auditoría, no como instrucciones de construcción.
+Los diffs se utilizan únicamente para auditoría.
 
-### 19.8 Journals nuevos
+### 19.6 Aplicación a cambios pequeños
 
-Un journal nuevo se entrega completo.
+La regla de archivo completo aplica incluso cuando el cambio conceptual sea pequeño.
 
-Un journal histórico no se reescribe, excepto una corrección explícita de formato que no cambie significado.
+Razón:
 
-### 19.9 Documento canónico
+- evita omisiones;
+- evita versiones parciales;
+- evita referencias desalineadas;
+- preserva contexto;
+- reduce errores manuales;
+- mantiene una fuente canónica.
 
-Después de reemplazar un documento:
+### 19.7 Una entrega por archivo
 
-- la cabecera debe mostrar versión correcta;
-- la fecha debe ser correcta;
-- todas las secciones deben estar integradas;
-- no deben quedar estados anteriores contradictorios;
-- code fences deben estar cerrados;
-- `git diff --check` debe quedar limpio.
+Cuando varios archivos extensos cambian, se entregan uno por uno.
 
-### 19.10 Una entrega por documento
+Después se realiza auditoría conjunta.
 
-Cuando varios documentos extensos cambian, se entregan uno por uno como archivos completos.
+### 19.8 Verificación documental
 
-Después se realiza una auditoría conjunta antes del commit.
+Después de reemplazar:
 
-Esto reduce:
-
-- omisiones;
-- cruces de versiones;
-- secciones fuera de lugar;
-- referencias a contenido inexistente;
-- errores de copia.
+- verificar cabecera;
+- verificar versión;
+- verificar fecha;
+- verificar estado;
+- verificar code fences;
+- verificar ausencia de contradicciones;
+- ejecutar `git diff --check`.
 
 ## 20. Git
 
@@ -1605,77 +1319,29 @@ Esto reduce:
 
 Cada commit representa una responsabilidad coherente.
 
-Ejemplos:
-
-```text
-feat(device-graph): add full graph validation
-
-feat(catalog): add immutable versioned device catalog
-
-docs(catalog): record device catalog 1.0 baseline
-```
-
 ### 20.2 Staging explícito
 
-Cuando el working tree contiene varios milestones no se utiliza:
+No se utiliza:
 
 ```powershell
 git add .
 ```
 
-Se añaden rutas explícitas.
+cuando existen varios cambios.
 
-### 20.3 Auditoría previa
-
-Antes del commit:
+### 20.3 Auditoría
 
 ```powershell
 git status --short
 git diff --check
 git diff --cached --name-status
+git diff --cached --check
 ```
 
-### 20.4 Commit de implementación
-
-Incluye:
-
-- código;
-- UID;
-- pruebas sucesoras;
-- retiro de archivos reemplazados cuando corresponda.
-
-### 20.5 Commit documental
-
-Puede incluir:
-
-- ADR;
-- diseño;
-- Core Architecture;
-- journal;
-- Engineering Standards;
-- Engineering Notes.
-
-### 20.6 Working tree
-
-Después del commit:
-
-```powershell
-git status --short
-```
-
-debe estar vacío o contener únicamente cambios explícitamente diferidos.
-
-### 20.7 Push
-
-Después de cerrar y verificar el milestone:
+### 20.4 Push
 
 ```powershell
 git push origin main
-```
-
-Después:
-
-```powershell
 git status -sb
 ```
 
@@ -1684,12 +1350,6 @@ Resultado esperado:
 ```text
 ## main...origin/main
 ```
-
-### 20.8 Historia
-
-Git conserva la historia de archivos retirados.
-
-No se mantienen implementaciones obsoletas en el árbol activo únicamente por miedo a perderlas.
 
 ## 21. Anti-patterns prohibidos
 
@@ -1705,36 +1365,36 @@ No se acepta:
 - UI como modelo de dominio;
 - test que corrompe campos privados;
 - modificar baseline para otra arquitectura;
-- mezclar código, UI y hardware en un componente;
+- mezclar código, UI y hardware;
 - republishing sin transformación;
 - fan-in implícito;
 - DeviceGraph transportando mensajes;
 - DeviceBus validando topología;
-- Provider distribuyendo a consumidores;
+- Provider distribuyendo consumidores;
 - DeviceCatalog conteniendo runtime factories;
 - resolución latest automática;
-- overwrite silencioso de versiones;
-- componentes nombrados como métodos nativos incompatibles;
-- parche que conserva una responsabilidad incorrecta;
-- documentación que describe un estado anterior;
-- actualización documental mediante fragmentos quirúrgicos;
+- overwrite silencioso;
+- método público incompatible con Object;
+- parche que conserva responsabilidad incorrecta;
+- documentación desactualizada;
+- entrega de archivos mediante cirugía manual;
+- fragmentos de código como estado final;
 - commit con caché o estado local.
 
-## 22. Checklist de implementación
-
-Antes de considerar terminada una característica:
+## 22. Checklist
 
 ### Arquitectura
 
-- [ ] El problema está definido.
-- [ ] La responsabilidad es única.
-- [ ] Las dependencias son explícitas.
+- [ ] Problema definido.
+- [ ] Responsabilidad única.
+- [ ] Dependencias explícitas.
 - [ ] ADR creado o actualizado.
 - [ ] Diseño aceptado.
 - [ ] Fuera de alcance documentado.
 
 ### Código
 
+- [ ] Archivo completo entregado.
 - [ ] Naming correcto.
 - [ ] Sin conflicto con métodos nativos.
 - [ ] Sin líneas comenzando con `.`.
@@ -1746,6 +1406,7 @@ Antes de considerar terminada una característica:
 
 ### Pruebas
 
+- [ ] Archivo de prueba completo entregado.
 - [ ] Prueba sucesora creada.
 - [ ] Prueba aislada PASS.
 - [ ] Parser sin errores.
@@ -1756,18 +1417,16 @@ Antes de considerar terminada una característica:
 
 ### Documentación
 
-- [ ] Cada documento actualizado fue entregado completo.
+- [ ] Cada documento se entregó completo.
 - [ ] Versión anterior identificada.
 - [ ] Versión nueva identificada.
 - [ ] Cabecera verificada.
-- [ ] Diseño actualizado.
 - [ ] Core Architecture actualizado.
 - [ ] Journal creado.
-- [ ] Engineering Note creada si corresponde.
 - [ ] Versiones y fechas correctas.
 - [ ] Code fences cerrados.
 - [ ] Sin estados contradictorios.
-- [ ] Encoding UTF-8.
+- [ ] UTF-8.
 - [ ] `git diff --check` limpio.
 
 ### Git
@@ -1783,7 +1442,9 @@ Cuando exista duda entre avanzar rápido y conservar una responsabilidad correct
 
 Cuando exista duda entre ocultar un fallo y reportarlo, se reporta.
 
-Cuando un documento cambia de versión, se entrega completo y consolidado.
+Toda modificación se entrega como archivo completo consolidado.
+
+No se realizan cirugías manuales sobre archivos.
 
 Cuando exista duda entre permitir una simulación peligrosa y comprometer la plataforma:
 

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 23/08/2026 |
 | ADR relacionado | ADR-009 — System Composition Pipeline |
 | Alcance | Construcción transaccional de DeviceGraphSnapshot desde SystemProfile |
@@ -41,6 +41,8 @@ y
 
 DeviceGraph
 ```
+
+DeviceGraphAssembler 1.0 está implementado y verificado.
 
 ## 2. Problema
 
@@ -143,7 +145,43 @@ failure
 
 La existencia de un Hardware Safety Error no autoriza producir un Snapshot mediante este Assembler.
 
-## 5. Agregación por etapas
+## 5. Orden de validación de argumentos
+
+El orden implementado es:
+
+```text
+1. SystemProfile no null.
+
+2. Activation Context válido.
+
+3. SystemProfile identity válida.
+
+4. Resolver no null.
+
+5. Resolver contract válido.
+
+6. Hardware policy.
+
+7. Device stage.
+```
+
+Activation Context se valida antes de `SystemProfile.is_valid_identity()`.
+
+Razón:
+
+`SystemProfile.is_valid_identity()` también valida contexto.
+
+Si identity se comprobara primero, el código específico:
+
+```text
+device_graph_assembly_activation_context_invalid
+```
+
+sería inalcanzable.
+
+Esta corrección se realizó antes de aceptar la baseline.
+
+## 6. Agregación por etapas
 
 DeviceGraphAssembler utiliza tres etapas:
 
@@ -194,7 +232,7 @@ Agrega el Report resultante.
 
 No devuelve topología parcial.
 
-## 6. Razón para no usar fail-fast
+## 7. Razón para no usar fail-fast
 
 Detenerse en el primer error obligaría al usuario a corregir problemas independientes uno por uno.
 
@@ -210,7 +248,7 @@ Profile C con Configuration inválida
 
 Los tres problemas pueden reportarse durante la etapa Devices.
 
-## 7. Razón para no continuar todas las etapas
+## 8. Razón para no continuar todas las etapas
 
 Si faltan Nodes y aun así se procesan Connections, aparecerían errores derivados:
 
@@ -230,9 +268,9 @@ agregar dentro de etapa
 detener entre etapas
 ```
 
-## 8. Estructura propuesta
+## 9. Estructura implementada
 
-### 8.1 Código
+### 9.1 Código
 
 ```text
 core/composition/
@@ -240,7 +278,7 @@ core/composition/
 └── device_graph_assembly_result.gd
 ```
 
-### 8.2 Pruebas
+### 9.2 Pruebas
 
 ```text
 test/core/composition/
@@ -250,7 +288,7 @@ test/core/composition/
 └── system_profile_catalog_graph_assembly_integration_test.gd
 ```
 
-## 9. Dependencias permitidas
+## 10. Dependencias permitidas
 
 ```text
 SystemProfile
@@ -280,7 +318,7 @@ DeviceCatalog puede entregarse como resolver.
 
 El Assembler no depende de la clase concreta DeviceCatalog.
 
-## 10. Dependencias no permitidas
+## 11. Dependencias no permitidas
 
 ```text
 DeviceBus runtime
@@ -310,26 +348,26 @@ hardware adapters
 telemetría
 ```
 
-## 11. DeviceGraphAssemblyResult
+## 12. DeviceGraphAssemblyResult
 
-### 11.1 Archivo
+### 12.1 Archivo
 
 ```text
 core/composition/device_graph_assembly_result.gd
 ```
 
-### 11.2 Forma
+### 12.2 Forma
 
 ```gdscript
 extends RefCounted
 class_name DeviceGraphAssemblyResult
 ```
 
-### 11.3 Responsabilidad
+### 12.3 Responsabilidad
 
 > Describir el resultado transaccional de ensamblar DeviceGraphSnapshot.
 
-### 11.4 Estado
+### 12.4 Estado
 
 ```gdscript
 var _snapshot: DeviceGraphSnapshot
@@ -337,7 +375,7 @@ var _snapshot: DeviceGraphSnapshot
 var _report: ValidationReport
 ```
 
-### 11.5 API
+### 12.5 API
 
 ```gdscript
 get_snapshot() -> DeviceGraphSnapshot
@@ -347,7 +385,7 @@ get_report() -> ValidationReport
 is_success() -> bool
 ```
 
-### 11.6 Success
+### 12.6 Success
 
 `is_success()` requiere:
 
@@ -363,30 +401,30 @@ Snapshot válido.
 
 DeviceGraphAssembler 1.0 no produce éxito para Hardware.
 
-### 11.7 Inmutabilidad
+### 12.7 Inmutabilidad
 
 No expone setters.
 
-## 12. DeviceGraphAssembler
+## 13. DeviceGraphAssembler
 
-### 12.1 Archivo
+### 13.1 Archivo
 
 ```text
 core/composition/device_graph_assembler.gd
 ```
 
-### 12.2 Forma
+### 13.2 Forma
 
 ```gdscript
 extends RefCounted
 class_name DeviceGraphAssembler
 ```
 
-### 12.3 Responsabilidad
+### 13.3 Responsabilidad
 
 > Construir DeviceGraphSnapshot sin modificar SystemProfile ni DeviceProfileResolver.
 
-### 12.4 API
+### 13.4 API
 
 ```gdscript
 assemble(
@@ -395,7 +433,7 @@ assemble(
 ) -> DeviceGraphAssemblyResult
 ```
 
-### 12.5 Stateless
+### 13.5 Stateless
 
 DeviceGraphAssembler no conserva:
 
@@ -408,9 +446,9 @@ DeviceGraphAssembler no conserva:
 
 Cada llamada crea estado temporal nuevo.
 
-## 13. Validación de argumentos
+## 14. Validación de argumentos
 
-### 13.1 SystemProfile null
+### 14.1 SystemProfile null
 
 ```text
 STRUCTURAL_ERROR
@@ -419,7 +457,7 @@ code:
 device_graph_assembly_system_profile_missing
 ```
 
-### 13.2 SystemProfile identity inválida
+### 14.2 SystemProfile identity inválida
 
 ```text
 STRUCTURAL_ERROR
@@ -428,7 +466,7 @@ code:
 device_graph_assembly_system_profile_invalid
 ```
 
-### 13.3 Resolver null
+### 14.3 Resolver null
 
 ```text
 STRUCTURAL_ERROR
@@ -437,7 +475,7 @@ code:
 device_profile_resolver_missing
 ```
 
-### 13.4 Resolver incompleto
+### 14.4 Resolver incompleto
 
 Debe exponer:
 
@@ -456,7 +494,7 @@ code:
 device_profile_resolver_contract_invalid
 ```
 
-### 13.5 Contexto inválido
+### 14.5 Contexto inválido
 
 ```text
 STRUCTURAL_ERROR
@@ -465,7 +503,7 @@ code:
 device_graph_assembly_activation_context_invalid
 ```
 
-### 13.6 Hardware
+### 14.6 Hardware
 
 ```text
 HARDWARE_SAFETY_ERROR
@@ -474,7 +512,7 @@ code:
 device_graph_assembly_hardware_not_supported
 ```
 
-## 14. Etapa Devices
+## 15. Etapa Devices
 
 Para cada DeviceConfiguration, en orden:
 
@@ -500,7 +538,7 @@ Para cada DeviceConfiguration, en orden:
 
 El orden de DeviceGraphNodes coincide con el orden de DeviceConfigurations.
 
-## 15. Configuration defensiva
+## 16. Configuration defensiva
 
 SystemProfileCompiler ya valida DeviceConfigurations.
 
@@ -538,7 +576,7 @@ code:
 device_graph_assembly_configuration_context_mismatch
 ```
 
-## 16. Resolución de Profile
+## 17. Resolución de Profile
 
 Para cada Configuration:
 
@@ -586,7 +624,7 @@ device_graph_assembly_dependency_identity_mismatch
 
 No existe fallback.
 
-## 17. Construcción de Manifest
+## 18. Construcción de Manifest
 
 DeviceGraphAssembler utiliza:
 
@@ -605,9 +643,15 @@ Si Manifest es null o el Report bloquea Simulation:
 - se continúa con las demás Configurations;
 - la etapa Devices termina en fallo.
 
+Defensa adicional:
+
+```text
+device_graph_assembly_manifest_missing
+```
+
 DeviceGraphAssembler no duplica las validaciones internas de ManifestBuilder.
 
-## 18. Construcción de Graph Node
+## 19. Construcción de Graph Node
 
 Con Manifest válido:
 
@@ -627,7 +671,13 @@ Si Node es null o el Report bloquea Simulation:
 - no se añade ese Device;
 - se continúa con las demás Configurations.
 
-## 19. Add Device
+Defensa adicional:
+
+```text
+device_graph_assembly_node_missing
+```
+
+## 20. Add Device
 
 Con Node válido:
 
@@ -645,7 +695,13 @@ Si add falla:
 - se continúa con las demás Configurations;
 - la etapa Devices termina en fallo.
 
-## 20. Gate entre Devices y Connections
+Defensa ante fallo sin Issue:
+
+```text
+device_graph_assembly_add_device_failed
+```
+
+## 21. Gate entre Devices y Connections
 
 Después de procesar Configurations:
 
@@ -659,7 +715,7 @@ si Report no es válido para Simulation:
 
 Esto evita errores derivados.
 
-## 21. Etapa Connections
+## 22. Etapa Connections
 
 Para cada SystemConnectionSpec, en orden:
 
@@ -677,7 +733,7 @@ Para cada SystemConnectionSpec, en orden:
 
 El orden de DeviceGraphConnections coincide con el orden de SystemConnectionSpecs aceptadas.
 
-## 22. Spec defensiva
+## 23. Spec defensiva
 
 ### Spec null
 
@@ -708,11 +764,20 @@ code:
 device_graph_assembly_connection_id_mismatch
 ```
 
-Este caso representa inconsistencia interna entre contratos deterministas.
+### Fallo sin Issue
 
-## 23. Errores de Connection
+Si DeviceGraphDraft rechaza una Connection sin reportar error:
 
-DeviceGraphAssembler no duplica las reglas de DeviceGraphDraft.
+```text
+STRUCTURAL_ERROR
+
+code:
+device_graph_assembly_connect_failed
+```
+
+## 24. Errores de Connection
+
+DeviceGraphAssembler no duplica reglas de DeviceGraphDraft.
 
 Agrega sus códigos existentes:
 
@@ -736,11 +801,11 @@ input_port_multiple_sources
 self_connection_not_supported
 ```
 
-Una Connection fallida no modifica las Connections anteriores.
+Una Connection fallida no modifica las anteriores.
 
 El Assembler continúa procesando las demás Specs de la etapa.
 
-## 24. Gate antes de Snapshot
+## 25. Gate antes de Snapshot
 
 Después de procesar Connection Specs:
 
@@ -754,7 +819,7 @@ si Report no es válido para Simulation:
 
 No se devuelve Graph parcial.
 
-## 25. Etapa Snapshot
+## 26. Etapa Snapshot
 
 Con Devices y Connections válidas:
 
@@ -774,6 +839,12 @@ Assembly Result:
 failure
 ```
 
+Defensa ante Snapshot null sin Issue:
+
+```text
+device_graph_assembly_snapshot_missing
+```
+
 Si SnapshotResult tiene Simulation Hazard y Snapshot válido:
 
 ```text
@@ -784,7 +855,7 @@ Hardware:
 bloqueado por Report
 ```
 
-## 26. Ciclos
+## 27. Ciclos
 
 DeviceGraphAssembler no detecta ciclos directamente.
 
@@ -801,7 +872,7 @@ Simulation puede producir Snapshot.
 
 Hardware permanece bloqueado.
 
-## 27. SystemProfile vacío
+## 28. SystemProfile vacío
 
 Un SystemProfile vacío de Simulation es válido.
 
@@ -817,7 +888,7 @@ Result success
 
 CompositionCompiler podrá decidir posteriormente que un plan vacío no es ejecutable.
 
-## 28. Agregación de Reports
+## 29. Agregación de Reports
 
 DeviceGraphAssembler utiliza un ValidationReport agregado.
 
@@ -848,7 +919,18 @@ El merge:
 - conserva severity;
 - conserva related object;
 - conserva related field;
-- evita crear texto sustituto genérico.
+- evita texto sustituto genérico.
+
+### Report null
+
+Si una dependencia devuelve Report null:
+
+```text
+PLATFORM_SAFETY_ERROR
+
+code:
+device_graph_assembly_report_missing
+```
 
 ### Provenance
 
@@ -860,7 +942,7 @@ La procedencia inicial se reconoce mediante:
 
 Metadata explícita de stage podrá añadirse en una evolución futura si existe una necesidad verificable.
 
-## 29. Report determinista
+## 30. Report determinista
 
 Orden global:
 
@@ -876,7 +958,7 @@ Orden global:
 
 Dentro de cada dependencia se conserva el orden de su Report.
 
-## 30. Transaccionalidad
+## 31. Transaccionalidad
 
 DeviceGraphAssembler es transaccional respecto a su salida.
 
@@ -890,7 +972,7 @@ Una operación fallida:
 
 El Graph Draft temporal puede contener estado parcial internamente durante assembly, pero nunca se devuelve.
 
-## 31. No mutación de entradas
+## 32. No mutación de entradas
 
 Assembler no modifica:
 
@@ -903,9 +985,9 @@ Assembler no modifica:
 - orden de Profiles;
 - Reports fuente.
 
-Tests verificarán tamaños, orden y referencias antes y después.
+Las pruebas verifican tamaños, orden y referencias antes y después.
 
-## 32. No responsabilidades
+## 33. No responsabilidades
 
 DeviceGraphAssembler no:
 
@@ -923,7 +1005,7 @@ DeviceGraphAssembler no:
 - dibuja UI;
 - activa hardware.
 
-## 33. DeviceGraphAssemblyResult defensivo
+## 34. DeviceGraphAssemblyResult defensivo
 
 El constructor es público para tests y composición controlada.
 
@@ -936,11 +1018,11 @@ El constructor es público para tests y composición controlada.
 
 Un Report vacío no puede aprobar Snapshot inválido.
 
-## 34. Estrategia de pruebas unitarias
+## 35. Prueba unitaria
 
 ### DeviceGraphAssemblerTest
 
-Verifica:
+Cobertura:
 
 - SystemProfile null;
 - SystemProfile identity inválida;
@@ -958,24 +1040,29 @@ Verifica:
 - Profile identity mismatch;
 - múltiples errores de Devices agregados;
 - Connections no procesadas cuando Devices falla;
-- ManifestBuilder failure;
-- NodeBuilder failure;
-- add Device failure;
+- duplicate Device;
 - Spec null;
 - Spec inválida;
 - Port inexistente;
 - Topic mismatch;
-- duplicate Connection;
 - fan-in;
 - múltiples errores de Connections agregados;
 - Snapshot válido;
-- ciclo produce Simulation Hazard;
+- ciclo como Simulation Hazard;
 - orden preservado;
 - entradas no modificadas;
 - Result defensivo;
 - Assembler sin runtime API.
 
-## 35. Estrategia de integración
+Baseline:
+
+```text
+Checks: 87
+Failures: 0
+RESULT: PASS
+```
+
+## 36. Prueba de integración
 
 ### SystemProfileCatalogGraphAssemblyIntegrationTest
 
@@ -1003,7 +1090,7 @@ DeviceGraphAssembler
 DeviceGraphSnapshot
 ```
 
-Verifica:
+Cobertura:
 
 - Catalog exacto;
 - SystemProfile válido;
@@ -1015,30 +1102,59 @@ Verifica:
 - Snapshot;
 - orden;
 - referencias;
-- no runtime;
-- no modificación de entradas.
+- Snapshot vacío;
+- ciclo;
+- estabilidad después de mutar Drafts;
+- no runtime.
 
-No modifica pruebas anteriores.
+Baseline:
 
-## 36. Fixtures
+```text
+Checks: 27
+Failures: 0
+RESULT: PASS
+```
 
-Fixtures iniciales:
+## 37. Baseline acumulada
+
+DeviceGraphAssembler 1.0:
+
+```text
+Tests: 2
+Checks: 114
+Failures: 0
+```
+
+Regresión completa:
+
+```text
+Tests: 48
+Checks: 1396
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+## 38. Fixtures
+
+Fixtures implementadas:
 
 ```text
 Ideal Sensor
 
 Ideal Local Controller
-
-Ideal Actuator opcional
 ```
 
-Utilizarán:
+Utilizan:
 
 - DeviceProfile snapshots válidos;
 - DeviceConfiguration snapshots válidas;
 - BusTopics canónicos;
 - SystemConnectionSpecs deterministas;
-- DeviceCatalog real.
+- resolver controlado;
+- DeviceCatalog real en integración.
 
 Namespace:
 
@@ -1046,9 +1162,9 @@ Namespace:
 test.
 ```
 
-## 37. Baselines preservadas
+## 39. Baselines preservadas
 
-No se modifican:
+No se modificaron:
 
 ```text
 DeviceManifestBuilderTest
@@ -1070,44 +1186,57 @@ SystemProfileDeviceCatalogIntegrationTest
 
 DeviceGraphAssembler utiliza pruebas sucesoras.
 
-## 38. Orden de implementación
+## 40. Orden de implementación
 
 ```text
 1. Aceptar este diseño.
    COMPLETADO.
 
 2. Crear DeviceGraphAssemblyResult.
-   SIGUIENTE.
+   COMPLETADO.
 
 3. Ejecutar parser gate.
+   PASS.
 
 4. Crear DeviceGraphAssembler.
+   COMPLETADO.
 
 5. Ejecutar parser gate.
+   PASS.
 
 6. Crear DeviceGraphAssemblerTest.
+   COMPLETADO.
 
 7. Ejecutar prueba unitaria.
+   PASS — 87 checks.
 
 8. Crear integración sucesora.
+   COMPLETADO.
 
 9. Ejecutar integración.
+   PASS — 27 checks.
 
 10. Ejecutar Run All.
+	PASS — 48 tests, 1396 checks.
 
 11. Registrar baseline.
+	COMPLETADO.
 
 12. Actualizar System Composition Pipeline Design.
+	PENDIENTE EN COMMIT DOCUMENTAL.
 
 13. Actualizar Core Architecture.
+	PENDIENTE EN COMMIT DOCUMENTAL.
 
 14. Cerrar DeviceGraphAssembler 1.0.
+	PENDIENTE EN COMMIT DOCUMENTAL.
 
 15. Diseñar RuntimeFactoryRegistry
 	y CompositionPlan.
+	SIGUIENTE.
 ```
 
-## 39. Criterios de aceptación
+## 41. Criterios de aceptación
 
 1. Assembler recibe SystemProfile.
 
@@ -1163,9 +1292,18 @@ DeviceGraphAssembler utiliza pruebas sucesoras.
 
 27. Run All termina PASS.
 
-## 40. Fuera de alcance
+Estado de aceptación:
 
-DeviceGraphAssembler 1.0 no implementará:
+```text
+DEVICEGRAPHASSEMBLER 1.0
+IMPLEMENTADO Y VERIFICADO
+```
+
+Todos los criterios de aceptación están satisfechos.
+
+## 42. Fuera de alcance
+
+DeviceGraphAssembler 1.0 no implementa:
 
 - Hardware assembly;
 - RuntimeFactoryRegistry;
@@ -1189,7 +1327,7 @@ DeviceGraphAssembler 1.0 no implementará:
 - AdaptationPolicy;
 - RuntimeAllocation.
 
-## 41. Consecuencias positivas
+## 43. Consecuencias positivas
 
 - separación entre composición y topología;
 - reutilización de Builders existentes;
@@ -1199,10 +1337,10 @@ DeviceGraphAssembler 1.0 no implementará:
 - sin errores derivados entre etapas;
 - no exposición de Graph parcial;
 - orden determinista;
-- integración comprobable;
+- integración comprobada;
 - preparación para CompositionCompiler.
 
-## 42. Consecuencias negativas
+## 44. Consecuencias negativas
 
 - nuevo componente Result;
 - nuevo Assembler;
@@ -1213,7 +1351,7 @@ DeviceGraphAssembler 1.0 no implementará:
 
 Estas consecuencias son aceptadas.
 
-## 43. Invariantes
+## 45. Invariantes
 
 1. Assembler es stateless.
 
@@ -1251,18 +1389,43 @@ Estas consecuencias son aceptadas.
 
 18. Assembler no abre archivos.
 
-## 44. Estado
+## 46. Estado
 
 ```text
-DISEÑO ACTIVO
+DEVICEGRAPHASSEMBLER 1.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
-DeviceGraphAssembler 1.0 está autorizado para implementación incremental.
-
-Primer componente:
+Componentes completados:
 
 ```text
 DeviceGraphAssemblyResult
+
+DeviceGraphAssembler
 ```
 
-Los componentes posteriores permanecen sujetos al orden de implementación y a sus pruebas sucesoras.
+Baselines:
+
+```text
+Tests: 2
+Checks: 114
+Failures: 0
+```
+
+Regresión:
+
+```text
+Tests: 48
+Checks: 1396
+Failures: 0
+```
+
+Siguiente milestone:
+
+```text
+RuntimeFactoryRegistry
++
+CompositionPlan
+```
+
+Ambos requieren diseño antes de implementar CompositionCompiler.
