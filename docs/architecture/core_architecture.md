@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.9 |
+| Versión | 2.10 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 23/08/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -62,6 +62,7 @@ Dentro del Core existen conceptos como:
 - ValidationReport;
 - DeviceGraph;
 - SystemProfile;
+- DeviceCatalog;
 - System Composition;
 - contratos de estado;
 - contratos de salud;
@@ -80,6 +81,7 @@ Por ejemplo, DeviceBus pertenece al Core, pero no conoce:
 - telemetría;
 - DeviceGraph;
 - SystemProfile;
+- DeviceCatalog;
 - hardware.
 
 ## 3. Límites del Core
@@ -155,6 +157,10 @@ core/composition/
 		SystemProfile Draft–Snapshot y pipeline
 		futuro de composición.
 
+core/catalog/
+		DeviceCatalog Draft–Snapshot y resolución
+		exacta de DeviceProfiles.
+
 core/debug/
 		Observación y diagnóstico del Core.
 
@@ -218,8 +224,11 @@ Hover, sustentación, dirección, propulsión y frenado permanecen en sus módul
 | SystemProfileCompiler | Compilar SystemProfileDraft a snapshot | ADR-009 implementado y verificado |
 | SystemProfile | Representar una composición validada e inmutable | ADR-009 implementado y verificado |
 | SystemProfileCompileResult | Describir compilación transaccional de SystemProfile | Implementado y verificado |
-| DeviceCatalog | Resolver DeviceProfiles mediante ID y versión exacta | ADR-009 aceptado; DeviceCatalog Design 1.0 activo; implementación pendiente |
-| DeviceGraphAssembler | Convertir SystemProfile en DeviceGraphSnapshot | ADR-009 aceptado; implementación futura |
+| DeviceCatalogDraft | Representar una colección editable de DeviceProfiles | DeviceCatalog Design 1.1 implementado y verificado |
+| DeviceCatalog | Resolver DeviceProfiles mediante ID y versión exacta | ADR-009 y DeviceCatalog Design 1.1 implementados y verificados |
+| DeviceCatalogCompileResult | Describir compilación transaccional del catálogo | Implementado y verificado |
+| DeviceCatalogCompiler | Compilar DeviceCatalogDraft a snapshot | Implementado y verificado |
+| DeviceGraphAssembler | Convertir SystemProfile en DeviceGraphSnapshot | ADR-009 aceptado; siguiente milestone |
 | RuntimeFactoryRegistry | Resolver factories ejecutables | ADR-009 aceptado; implementación futura |
 | CompositionCompiler | Convertir DeviceGraphSnapshot en CompositionPlan | ADR-009 aceptado; implementación futura |
 | CompositionPlan | Representar instrucciones runtime inmutables | ADR-009 aceptado; implementación futura |
@@ -443,7 +452,7 @@ Profile Version
 
 DeviceProfileResolver resuelve esas referencias.
 
-DeviceCatalog será una implementación futura del resolver.
+DeviceCatalog implementa DeviceProfileResolver.
 
 RuntimeFactoryRegistry permanece separado de DeviceCatalog.
 
@@ -454,16 +463,6 @@ qué definición lógica existe.
 RuntimeFactoryRegistry:
 cómo construir su implementación runtime.
 ```
-DeviceCatalog 1.0 utilizará:
-
-```text
-DeviceCatalogDraft
-		│
-		▼
-DeviceCatalogCompiler
-		│
-		▼
-DeviceCatalog```
 
 Persistencia permanece externa al Core lógico.
 
@@ -504,9 +503,52 @@ SystemProfileCompiler no valida Ports.
 
 La validación de Ports, Topics, Semantic Kinds, fan-in y ciclos pertenece a DeviceGraphAssembler y DeviceGraphValidator.
 
-CompositionCompiler no crea Devices.
+#### DeviceCatalog
 
-CompositionPlan no ejecuta.
+DeviceCatalog utiliza:
+
+```text
+DeviceCatalogDraft
+		│
+		▼
+DeviceCatalogCompiler
+		│
+		▼
+DeviceCatalog
+```
+
+DeviceCatalog está implementado y verificado.
+
+Propiedades:
+
+- snapshot inmutable;
+- resolución exacta;
+- múltiples versiones;
+- duplicados exactos bloqueados;
+- orden preservado;
+- Arrays independientes;
+- sin overwrite;
+- sin latest;
+- sin factories;
+- sin filesystem.
+
+La identidad de resolución es:
+
+```text
+Profile ID
++
+Profile Version
+```
+
+DeviceCatalog no tiene ID o versión propios en 1.0.
+
+#### Etapas futuras
+
+DeviceGraphAssembler construirá DeviceGraphSnapshot.
+
+CompositionCompiler producirá CompositionPlan.
+
+CompositionPlan no ejecutará.
 
 CompositionRuntime poseerá:
 
@@ -544,31 +586,37 @@ Measurement Identity, provenance y snapshots de datos permanecen pendientes.
 
 4. SystemProfile no depende de filesystem.
 
-5. DeviceCatalog no depende de runtime factories.
+5. SystemProfileCompiler depende de DeviceProfileResolver por comportamiento.
 
-6. CompositionCompiler no ejecuta CompositionPlan.
+6. DeviceCatalog implementa DeviceProfileResolver.
 
-7. Un productor no conoce a sus consumidores.
+7. DeviceCatalog no depende de SystemProfileCompiler.
 
-8. Un consumidor no necesita conocer la implementación del productor.
+8. DeviceCatalog no depende de runtime factories.
 
-9. Un Provider no conoce los destinos finales de sus datos.
+9. CompositionCompiler no ejecuta CompositionPlan.
 
-10. Presentación depende de datos estructurados; los datos no dependen de presentación.
+10. Un productor no conoce a sus consumidores.
 
-11. Telemetría depende del estado; el juego no depende de telemetría.
+11. Un consumidor no necesita conocer la implementación del productor.
 
-12. Hardware depende de contratos de plataforma; el Core no depende de hardware concreto.
+12. Un Provider no conoce los destinos finales de sus datos.
 
-13. Ningún componente crea otro si esa creación no forma parte de su responsabilidad.
+13. Presentación depende de datos estructurados; los datos no dependen de presentación.
 
-14. Las dependencias se entregan explícitamente cuando sea posible.
+14. Telemetría depende del estado; el juego no depende de telemetría.
 
-15. Añadir un consumidor no obliga a modificar al productor.
+15. Hardware depende de contratos de plataforma; el Core no depende de hardware concreto.
 
-16. Drafts no se utilizan directamente por runtime.
+16. Ningún componente crea otro si esa creación no forma parte de su responsabilidad.
 
-17. Runtime utiliza snapshots o planes compilados.
+17. Las dependencias se entregan explícitamente cuando sea posible.
+
+18. Añadir un consumidor no obliga a modificar al productor.
+
+19. Drafts no se utilizan directamente por runtime.
+
+20. Runtime utiliza snapshots o planes compilados.
 
 Dirección general:
 
@@ -793,11 +841,15 @@ Las conversiones de presentación ocurren fuera del estado canónico.
 
 24. DeviceProfileResolver utiliza ID y versión exactos.
 
-25. No existe fallback automático de versión.
+25. DeviceCatalog es estable e inmutable.
 
-26. CompositionCompiler será obligatorio antes de runtime compuesto.
+26. No existe fallback automático de Profile version.
 
-27. CompositionRuntime será propietario de recursos activos.
+27. RuntimeFactoryRegistry permanece separado de DeviceCatalog.
+
+28. CompositionCompiler será obligatorio antes de runtime compuesto.
+
+29. CompositionRuntime será propietario de recursos activos.
 
 ## 13. Composición y comunicación
 
@@ -830,6 +882,15 @@ CompositionPlan
 CompositionRuntime
 ```
 
+Resolución lógica:
+
+```text
+DeviceCatalog
+		│
+		├──► SystemProfileCompiler
+		└──► DeviceGraphAssembler
+```
+
 Flujo de mensajes runtime:
 
 ```text
@@ -843,6 +904,8 @@ Consumer
 ```
 
 SystemProfile describe composición.
+
+DeviceCatalog resuelve definiciones.
 
 DeviceGraph describe topología.
 
@@ -1013,6 +1076,8 @@ Profile Version
 
 DeviceProfileResolver es un rol por comportamiento.
 
+DeviceCatalog implementa ese contrato.
+
 DeviceCatalog y RuntimeFactoryRegistry permanecen separados.
 
 ```text
@@ -1084,6 +1149,16 @@ SystemProfile
 
 SystemProfileCompileResult
 
+DeviceCatalogDraft
+
+DeviceCatalogCompiler
+
+DeviceCatalog
+
+DeviceCatalogCompileResult
+
+SystemProfile–DeviceCatalog Integration
+
 Velocity Test Runner
 
 Velocity Test Dashboard
@@ -1096,7 +1171,11 @@ Measurement Identity
 
 Measurement snapshots y provenance
 
-DeviceCatalog persistente
+DeviceCatalogDocument
+
+DeviceCatalogLoader
+
+DeviceCatalogSerializer
 
 Save As Service
 

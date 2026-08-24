@@ -1,0 +1,382 @@
+PJ0025 – DeviceCatalog 1.0 Completed
+
+Fecha:
+
+23/08/2026
+
+Objetivo:
+
+Implementar DeviceCatalog como
+resolver exacto e inmutable
+de DeviceProfile snapshots.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-009 — System Composition Pipeline.md
+
+docs/architecture/
+device_catalog_design.md
+
+docs/architecture/
+system_composition_pipeline_design.md
+
+docs/architecture/
+core_architecture.md
+
+Versiones:
+
+ADR-009:
+
+1.0
+
+DeviceCatalog Design:
+
+1.1
+
+System Composition Pipeline Design:
+
+1.2
+
+Core Architecture:
+
+2.10
+
+Componentes creados:
+
+res://core/catalog/
+device_catalog_draft.gd
+
+res://core/catalog/
+device_catalog.gd
+
+res://core/catalog/
+device_catalog_compile_result.gd
+
+res://core/catalog/
+device_catalog_compiler.gd
+
+Pruebas creadas:
+
+res://test/core/catalog/
+DeviceCatalogDraftTest.tscn
+
+res://test/core/catalog/
+device_catalog_draft_test.gd
+
+res://test/core/catalog/
+DeviceCatalogCompilerTest.tscn
+
+res://test/core/catalog/
+device_catalog_compiler_test.gd
+
+res://test/core/catalog/
+SystemProfileDeviceCatalogIntegrationTest.tscn
+
+res://test/core/catalog/
+system_profile_device_catalog_integration_test.gd
+
+Responsabilidades:
+
+DeviceCatalogDraft:
+
+Colección editable de
+DeviceProfile snapshots.
+
+DeviceCatalogCompiler:
+
+Validación y compilación
+Draft–Snapshot.
+
+DeviceCatalog:
+
+Resolución exacta e inmutable
+de DeviceProfiles.
+
+DeviceCatalogCompileResult:
+
+Resultado transaccional
+de compilación.
+
+Decisiones aplicadas:
+
+✔ DeviceCatalogDraft es editable.
+
+✔ DeviceCatalog es inmutable.
+
+✔ DeviceCatalog no tiene ID propio.
+
+✔ DeviceCatalog no tiene versión propia.
+
+✔ La identidad pertenece a DeviceProfile.
+
+✔ Resolución utiliza Profile ID exacto.
+
+✔ Resolución utiliza Profile Version exacta.
+
+✔ Múltiples versiones pueden coexistir.
+
+✔ Un mismo Profile ID puede tener
+  versiones diferentes.
+
+✔ Una identidad exacta duplicada
+  es Structural Error.
+
+✔ La misma instancia repetida
+  también es duplicado.
+
+✔ No existe overwrite.
+
+✔ No existe last write wins.
+
+✔ No existe first write wins silencioso.
+
+✔ No existe get_latest().
+
+✔ No existe fallback automático.
+
+✔ No existe upgrade automático.
+
+✔ No existe downgrade automático.
+
+✔ Orden de entrada se conserva.
+
+✔ get_profiles() devuelve copia.
+
+✔ Draft posterior no modifica Catalog.
+
+✔ Catalog permanece estable
+  durante resolución.
+
+✔ Catálogo vacío es válido.
+
+✔ Profiles canónicos son aceptados.
+
+✔ Profiles de usuario son aceptados.
+
+✔ DeviceCatalog satisface
+  DeviceProfileResolver.
+
+✔ DeviceCatalog no depende
+  de SystemProfileCompiler.
+
+✔ SystemProfileCompiler no depende
+  de la clase concreta DeviceCatalog.
+
+✔ DeviceCatalog no contiene factories.
+
+✔ DeviceCatalog no crea Devices.
+
+✔ DeviceCatalog no construye Graph.
+
+✔ DeviceCatalog no abre archivos.
+
+✔ DeviceCatalog no conoce filesystem.
+
+✔ Persistencia permanece externa.
+
+Índice interno:
+
+Profile ID
+
+↓
+
+Profile Version
+
+↓
+
+DeviceProfile
+
+El índice no utiliza key concatenada.
+
+Validaciones implementadas:
+
+device_catalog_draft_missing
+
+device_catalog_profile_missing
+
+device_catalog_profile_invalid
+
+duplicate_device_profile_identity
+
+device_catalog_snapshot_invalid
+
+Comportamiento de resolución:
+
+Profile ID conocido
++
+Profile Version conocida:
+
+DeviceProfile exacto
+
+Profile ID conocido
++
+Profile Version desconocida:
+
+null
+
+Profile ID desconocido:
+
+null
+
+Profile ID vacío:
+
+null
+
+Profile Version cero o negativa:
+
+null
+
+No existe sustitución de versión.
+
+Pruebas sucesoras:
+
+DeviceCatalogDraftTest:
+
+Checks: 14
+Failures: 0
+RESULT: PASS
+
+DeviceCatalogCompilerTest:
+
+Checks: 53
+Failures: 0
+RESULT: PASS
+
+SystemProfileDeviceCatalogIntegrationTest:
+
+Checks: 22
+Failures: 0
+RESULT: PASS
+
+DeviceCatalog baseline:
+
+Tests: 3
+Checks: 89
+Failures: 0
+
+Regresión completa:
+
+Planned: 46
+Completed: 46
+Passed: 46
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Total Runs: 46
+Plan ExitCode: 0
+RESULT: PASS
+
+Total de checks:
+
+1282
+
+Commit de implementación:
+
+4222c38
+feat(catalog): add immutable versioned device catalog
+
+Baselines preservadas:
+
+DeviceProfileCompilerTest
+
+BuiltinDeviceProfilesTest
+
+SystemProfileCompilerTest
+
+DeviceGraphNodeBuilderTest
+
+DeviceGraphSnapshotTest
+
+Ninguna baseline anterior fue modificada.
+
+Refactorización:
+
+No se observó mezcla de responsabilidades.
+
+No se añadió mutabilidad al Catalog.
+
+No se añadió persistencia prematura.
+
+No se añadió resolución latest.
+
+No se añadió RuntimeFactoryRegistry
+dentro de DeviceCatalog.
+
+No se realizó refactorización por gusto.
+
+Estado:
+
+DEVICE CATALOG DRAFT VERIFICADO
+
+DEVICE CATALOG SNAPSHOT VERIFICADO
+
+DEVICE CATALOG COMPILER VERIFICADO
+
+EXACT VERSION RESOLUTION VERIFICADA
+
+MULTIPLE VERSION SUPPORT VERIFICADO
+
+CANONICAL PROFILE SUPPORT VERIFICADO
+
+USER PROFILE SUPPORT VERIFICADO
+
+SYSTEMPROFILE INTEGRATION VERIFICADA
+
+DEVICECATALOG 1.0 COMPLETADO
+
+Siguiente paso:
+
+Diseñar DeviceGraphAssembler.
+
+DeviceGraphAssembler deberá:
+
+- recibir SystemProfile;
+
+- recibir DeviceProfileResolver;
+
+- resolver cada Profile ID;
+
+- resolver cada Profile Version exacta;
+
+- construir DeviceManifest efectivo;
+
+- construir DeviceGraphNode;
+
+- conservar orden de Configurations;
+
+- aplicar SystemConnectionSpecs;
+
+- conservar orden de Connections;
+
+- crear DeviceGraphSnapshot;
+
+- agregar ValidationReports;
+
+- preservar Last Known Good;
+
+- no modificar SystemProfile;
+
+- no modificar DeviceCatalog;
+
+- no crear Devices runtime;
+
+- no conocer RuntimeFactoryRegistry;
+
+- no abrir archivos;
+
+- no ejecutar CompositionPlan;
+
+- utilizar pruebas sucesoras.
+
+Persistencia futura:
+
+DeviceCatalogDocument
+
+DeviceCatalogLoader
+
+DeviceCatalogSerializer
+
+Estos componentes permanecen fuera
+de DeviceCatalog 1.0.

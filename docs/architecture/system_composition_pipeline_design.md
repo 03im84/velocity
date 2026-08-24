@@ -2,8 +2,8 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACEPTADO |
-| Versión | 1.1 |
+| Estado | ACTIVO |
+| Versión | 1.2 |
 | Fecha | 23/08/2026 |
 | ADR relacionado | ADR-009 — System Composition Pipeline |
 | Alcance | Definición, resolución, Graph assembly, compilación y runtime |
@@ -38,7 +38,23 @@ SystemProfile 1.0 implementa y verifica:
 - pruebas unitarias;
 - regresión completa.
 
-DeviceCatalog, Graph assembly y runtime permanecen en milestones sucesivos.
+DeviceCatalog 1.0 implementa y verifica:
+
+- DeviceCatalogDraft;
+- DeviceCatalog;
+- DeviceCatalogCompileResult;
+- DeviceCatalogCompiler;
+- resolución exacta;
+- múltiples versiones;
+- integración con SystemProfileCompiler.
+
+Siguiente etapa:
+
+```text
+DeviceGraphAssembler
+```
+
+Persistencia, CompositionCompiler y runtime permanecen en milestones posteriores.
 
 ## 2. Pipeline completo
 
@@ -95,9 +111,9 @@ SystemProfileSerializer
 		└── save
 ```
 
-## 3. Estructura propuesta
+## 3. Estructura
 
-### 3.1 Código inicial
+### 3.1 Código implementado de SystemProfile
 
 ```text
 core/composition/
@@ -108,7 +124,17 @@ core/composition/
 └── system_profile_compiler.gd
 ```
 
-### 3.2 Pruebas iniciales
+### 3.2 Código implementado de DeviceCatalog
+
+```text
+core/catalog/
+├── device_catalog_draft.gd
+├── device_catalog.gd
+├── device_catalog_compile_result.gd
+└── device_catalog_compiler.gd
+```
+
+### 3.3 Pruebas implementadas
 
 ```text
 test/core/composition/
@@ -117,16 +143,23 @@ test/core/composition/
 ├── SystemProfileDraftTest.tscn
 ├── system_profile_draft_test.gd
 ├── SystemProfileCompilerTest.tscn
-└── system_profile_compiler_test.gd
+├── system_profile_compiler_test.gd
+└── system_profile_test_resolver.gd
 ```
 
-### 3.3 Componentes futuros
+```text
+test/core/catalog/
+├── DeviceCatalogDraftTest.tscn
+├── device_catalog_draft_test.gd
+├── DeviceCatalogCompilerTest.tscn
+├── device_catalog_compiler_test.gd
+├── SystemProfileDeviceCatalogIntegrationTest.tscn
+└── system_profile_device_catalog_integration_test.gd
+```
+
+### 3.4 Componentes futuros
 
 ```text
-core/catalog/
-├── device_catalog.gd
-└── device_catalog_result.gd
-
 core/composition/
 ├── device_graph_assembler.gd
 ├── device_graph_assembly_result.gd
@@ -138,9 +171,11 @@ core/composition/
 └── composition_activation_result.gd
 ```
 
-Las rutas futuras son conceptuales y deberán confirmarse en sus diseños correspondientes.
+Las rutas futuras deberán confirmarse en sus diseños correspondientes.
 
-## 4. Dependencias permitidas para la primera etapa
+## 4. Dependencias permitidas
+
+SystemProfile y DeviceCatalog pueden depender de:
 
 ```text
 DeviceProfile
@@ -152,9 +187,13 @@ ValidationIssue
 ValidationReport
 ```
 
-SystemProfileCompiler puede depender del contrato de comportamiento de DeviceProfileResolver.
+SystemProfileCompiler depende del comportamiento de DeviceProfileResolver.
 
-## 5. Dependencias no permitidas para la primera etapa
+DeviceCatalog satisface ese contrato.
+
+## 5. Dependencias no permitidas
+
+SystemProfile y DeviceCatalog no dependen de:
 
 ```text
 DeviceBus runtime
@@ -180,11 +219,17 @@ telemetría
 runtime factories
 ```
 
-SystemProfile representa definición de composición.
+SystemProfile representa composición.
 
-No representa topología construida ni ejecución.
+DeviceCatalog representa resolución.
+
+Ninguno representa topología construida ni ejecución.
 
 ## 6. Terminología
+
+### SystemConnectionSpec
+
+Especificación persistible de endpoints antes de construir DeviceGraph.
 
 ### SystemProfileDraft
 
@@ -198,17 +243,21 @@ Componente que valida Draft y produce SystemProfile.
 
 Snapshot validado e inmutable de una composición.
 
-### SystemConnectionSpec
-
-Especificación persistible de una Connection antes de construir DeviceGraph.
-
 ### DeviceProfileResolver
 
-Rol por comportamiento que resuelve DeviceProfile mediante ID y versión exacta.
+Rol por comportamiento que resuelve DeviceProfile mediante ID y versión exactos.
+
+### DeviceCatalogDraft
+
+Colección editable de DeviceProfile snapshots.
+
+### DeviceCatalogCompiler
+
+Componente que valida Draft y produce DeviceCatalog.
 
 ### DeviceCatalog
 
-Implementación futura de DeviceProfileResolver.
+Snapshot inmutable que implementa DeviceProfileResolver.
 
 ### DeviceGraphAssembler
 
@@ -224,7 +273,7 @@ Plan runtime validado e inmutable.
 
 ### CompositionRuntime
 
-Componente que ejecuta CompositionPlan y posee recursos activos.
+Componente futuro que ejecuta CompositionPlan y posee recursos activos.
 
 ## 7. Identidad de SystemProfile
 
@@ -272,13 +321,13 @@ SIMULATION
 HARDWARE
 ```
 
-Se utilizarán los valores canónicos definidos por:
+Se utilizan los valores canónicos de:
 
 ```gdscript
 DeviceConfiguration.ActivationContext
 ```
 
-Todas las DeviceConfigurations de la composición deben coincidir con el contexto de SystemProfile.
+Todas las DeviceConfigurations deben coincidir con el contexto de SystemProfile.
 
 Mismatch:
 
@@ -290,6 +339,10 @@ system_profile_activation_context_mismatch
 ```
 
 Un SystemProfile vacío conserva contexto explícito.
+
+Hardware Mode permanece fuera del alcance de la implementación runtime actual.
+
+Un SystemProfile con contexto Hardware puede representarse y validarse como definición, pero no activarse.
 
 ## 9. SystemConnectionSpec
 
@@ -326,7 +379,7 @@ var _target_port_id: StringName
 
 ### 9.5 Construcción
 
-El caller entrega únicamente endpoints:
+El caller entrega endpoints:
 
 ```gdscript
 SystemConnectionSpec.new(
@@ -387,23 +440,14 @@ is_valid_identity() -> bool
 
 Debe cumplirse:
 
-```text
-Connection ID no vacío;
-
-Source Device ID no vacío;
-
-Source Port ID no vacío;
-
-Target Device ID no vacío;
-
-Target Port ID no vacío;
-
-ningún componente contiene `|`;
-
-Source Device y Target Device son diferentes;
-
-Connection ID coincide con endpoints.
-```
+- Connection ID no vacío;
+- Source Device ID no vacío;
+- Source Port ID no vacío;
+- Target Device ID no vacío;
+- Target Port ID no vacío;
+- ningún componente contiene `|`;
+- Source y Target son diferentes;
+- ID coincide con endpoints.
 
 ### 9.9 No responsabilidades
 
@@ -463,8 +507,6 @@ var device_configurations: Array[DeviceConfiguration] = []
 var connection_specs: Array[SystemConnectionSpec] = []
 ```
 
-Los tipos de colección permanecen completos en una línea física durante implementación.
-
 ### 10.5 Draft vacío
 
 Un Draft recién creado puede estar vacío.
@@ -477,23 +519,18 @@ Identidad y colecciones se validan durante compilación.
 has_valid_identity() -> bool
 ```
 
-La primera versión permite editar campos directamente, igual que los Drafts existentes.
+La primera versión permite editar campos directamente.
 
-No añade operaciones complejas antes de existir una necesidad de herramienta.
+No añade operaciones complejas sin una necesidad concreta de herramienta.
 
 ### 10.7 Identity validation
 
 `has_valid_identity()` comprueba únicamente:
 
-```text
-System Profile ID no vacío;
-
-versión positiva;
-
-Display Name no vacío;
-
-Activation Context válido.
-```
+- System Profile ID no vacío;
+- versión positiva;
+- Display Name no vacío;
+- Activation Context válido.
 
 No valida:
 
@@ -521,7 +558,7 @@ SystemProfileDraft no:
 
 DeviceProfileResolver es un rol por comportamiento.
 
-No se crea una clase base universal.
+No existe clase base universal.
 
 ### 11.2 Contrato
 
@@ -566,11 +603,11 @@ code:
 device_profile_resolver_contract_invalid
 ```
 
-### 11.5 Implementaciones de prueba
+### 11.5 Implementaciones
 
-Los tests utilizarán un resolver local controlado.
+Durante la primera etapa se utilizó un resolver controlado de prueba.
 
-No se añadirá DeviceCatalog de producción durante la primera etapa.
+DeviceCatalog 1.0 implementa el contrato para producción lógica.
 
 ## 12. SystemProfile
 
@@ -723,15 +760,10 @@ is_success() -> bool
 
 `is_success()` requiere:
 
-```text
-Profile no null;
-
-Report no null;
-
-Report válido para Activation Context;
-
-Profile identity válida.
-```
+- Profile no null;
+- Report no null;
+- Report válido para Activation Context;
+- Profile identity válida.
 
 Para SIMULATION:
 
@@ -745,7 +777,7 @@ Para HARDWARE:
 report.is_valid_for_hardware()
 ```
 
-La primera implementación no activa Hardware.
+La implementación no activa Hardware.
 
 Solo valida el contexto declarado.
 
@@ -772,7 +804,7 @@ class_name SystemProfileCompiler
 
 > Validar SystemProfileDraft y producir SystemProfile snapshot.
 
-### 14.4 API conceptual
+### 14.4 API
 
 ```gdscript
 compile(
@@ -821,7 +853,19 @@ Compiler no modifica:
 
 El orden de Issues es determinista.
 
-## 15. Validación de Draft
+### 14.7 No responsabilidades
+
+SystemProfileCompiler no:
+
+- construye DeviceGraphNode;
+- construye DeviceManifest;
+- valida Topics de Ports;
+- detecta ciclos;
+- crea DeviceGraphSnapshot;
+- crea Devices runtime;
+- guarda archivos.
+
+## 15. Validación de SystemProfileDraft
 
 ### 15.1 Draft null
 
@@ -935,8 +979,6 @@ system_profile_dependency_missing
 
 ### 16.6 Dependency result inválido
 
-Si resolver afirma que existe pero devuelve null o Profile inválido:
-
 ```text
 STRUCTURAL_ERROR
 
@@ -945,8 +987,6 @@ system_profile_dependency_invalid
 ```
 
 ### 16.7 Dependency identity mismatch
-
-Si el Profile devuelto no coincide exactamente con ID y versión solicitados:
 
 ```text
 STRUCTURAL_ERROR
@@ -1006,12 +1046,6 @@ system_connection_target_device_not_found
 
 SystemConnectionSpec rechaza Source y Target iguales.
 
-Código:
-
-```text
-system_connection_spec_invalid
-```
-
 DeviceGraph conserva validación defensiva adicional.
 
 ### 17.7 Ports
@@ -1020,7 +1054,7 @@ SystemProfileCompiler no valida existencia de Ports.
 
 Eso pertenece a DeviceGraphAssembler.
 
-## 18. Draft transaccional
+## 18. Transaccionalidad de SystemProfile
 
 SystemProfileCompiler produce un snapshot nuevo.
 
@@ -1064,13 +1098,57 @@ Report válido.
 
 CompositionCompiler podrá rechazar posteriormente un plan sin Devices.
 
-## 21. DeviceCatalog futuro
+## 21. DeviceCatalog
 
-### 21.1 Responsabilidad
+### 21.1 Estado
+
+```text
+DEVICECATALOG 1.0
+IMPLEMENTADO Y VERIFICADO
+```
+
+### 21.2 Pipeline
+
+```text
+DeviceCatalogDraft
+		│
+		▼
+DeviceCatalogCompiler
+		│
+		▼
+DeviceCatalog
+```
+
+### 21.3 Responsabilidad
 
 > Resolver DeviceProfile snapshots mediante ID y versión exacta.
 
-### 21.2 API mínima prevista
+### 21.4 Componentes
+
+```text
+core/catalog/
+├── device_catalog_draft.gd
+├── device_catalog.gd
+├── device_catalog_compile_result.gd
+└── device_catalog_compiler.gd
+```
+
+### 21.5 Propiedades verificadas
+
+- DeviceCatalogDraft editable;
+- DeviceCatalog inmutable;
+- resolución exacta;
+- múltiples versiones por Profile ID;
+- duplicado exacto bloqueante;
+- orden preservado;
+- Arrays independientes;
+- Draft posterior independiente;
+- sin latest fallback;
+- sin overwrite;
+- sin factories;
+- sin filesystem.
+
+### 21.6 Resolver API
 
 ```gdscript
 has_profile(
@@ -1086,32 +1164,51 @@ get_profile(
 ) -> DeviceProfile
 ```
 
-```gdscript
-get_profiles() -> Array[DeviceProfile]
+### 21.7 Identidad
+
+DeviceCatalog no tiene ID ni versión propios.
+
+La identidad pertenece a cada DeviceProfile.
+
+### 21.8 Índice
+
+```text
+Profile ID
+	│
+	└── Profile Version
+			│
+			└── DeviceProfile
 ```
 
-### 21.3 No responsabilidades
+### 21.9 Integración con SystemProfileCompiler
 
-DeviceCatalog no:
+SystemProfileCompiler recibe DeviceCatalog como `Object`.
 
-- conoce runtime factories;
-- crea Devices;
-- construye Graph;
-- guarda SystemProfile;
-- ejecuta CompositionPlan;
-- activa hardware.
+Solo utiliza:
 
-### 21.4 Persistencia
+```gdscript
+has_profile()
 
-Catalog persistence tendrá loader separado.
+get_profile()
+```
 
-No se implementa durante SystemProfile 1.0.
+No depende de la clase concreta.
+
+### 21.10 Baseline
+
+```text
+Tests: 3
+Checks: 89
+Failures: 0
+```
+
+Persistencia de catálogo permanece futura.
 
 ## 22. DeviceGraphAssembler futuro
 
 ### 22.1 Responsabilidad
 
-> Construir DeviceGraphSnapshot desde SystemProfile.
+> Construir DeviceGraphSnapshot desde SystemProfile y DeviceProfileResolver.
 
 ### 22.2 Flujo
 
@@ -1119,7 +1216,7 @@ No se implementa durante SystemProfile 1.0.
 SystemProfile
 		│
 		▼
-Resolver exacto
+DeviceProfileResolver
 		│
 		▼
 DeviceManifestBuilder
@@ -1141,8 +1238,11 @@ create_snapshot()
 
 Graph assembly validará:
 
+- SystemProfile no null;
 - Profile disponible;
+- Profile identity exacta;
 - Manifest válido;
+- Graph Node válido;
 - Port existente;
 - Topic compatible;
 - Semantic Kind;
@@ -1153,11 +1253,14 @@ Graph assembly validará:
 
 ### 22.4 No responsabilidades
 
-No crea Devices runtime.
+DeviceGraphAssembler no:
 
-No conoce factories.
-
-No guarda archivos.
+- crea Devices runtime;
+- conoce factories;
+- guarda archivos;
+- modifica SystemProfile;
+- modifica DeviceProfiles;
+- ejecuta CompositionPlan.
 
 ## 23. RuntimeFactoryRegistry futuro
 
@@ -1167,13 +1270,19 @@ Responsabilidad:
 
 > Resolver factories ejecutables para un CompositionPlan.
 
-No constituye autoridad canónica de DeviceProfile.
+```text
+DeviceCatalog:
+qué definición lógica existe.
+
+RuntimeFactoryRegistry:
+cómo construir su implementación runtime.
+```
 
 La identidad exacta de factory se definirá en diseño posterior.
 
 ## 24. CompositionPlan futuro
 
-CompositionPlan será snapshot inmutable.
+CompositionPlan será un snapshot inmutable.
 
 Podrá contener:
 
@@ -1209,7 +1318,7 @@ Responsabilidad:
 
 > Ejecutar CompositionPlan.
 
-Posee:
+Poseerá:
 
 - DeviceBus;
 - Devices activos;
@@ -1218,11 +1327,11 @@ Posee:
 - shutdown;
 - Runtime Safety observation.
 
-No recibe Drafts ni documentos persistentes.
+No recibirá Drafts ni documentos persistentes.
 
 ## 27. Persistencia futura
 
-SystemProfileSerializer convierte entre:
+SystemProfileSerializer convertirá entre:
 
 ```text
 SystemProfile
@@ -1232,78 +1341,97 @@ y
 SystemProfileDocument
 ```
 
-No forma parte del Core lógico inicial.
+DeviceCatalogLoader convertirá documentos de DeviceProfile en DeviceCatalogDraft.
 
-El formato definitivo se decidirá después de estabilizar SystemProfile.
+Persistencia no forma parte del Core lógico implementado.
 
-## 28. Estrategia de pruebas inicial
+El formato definitivo se decidirá después de estabilizar el pipeline lógico.
 
-Se crearán pruebas independientes.
+## 28. Estrategia de pruebas
 
-### SystemConnectionSpecTest
-
-Verifica:
-
-- ID determinista;
-- getters;
-- separador reservado;
-- campos obligatorios;
-- self-connection;
-- ausencia de setters.
-
-### SystemProfileDraftTest
-
-Verifica:
-
-- estado inicial;
-- identidad inválida inicial;
-- identidad válida;
-- campos editables;
-- colecciones editables;
-- contexto Simulation;
-- contexto Hardware;
-- contexto inválido.
-
-### SystemProfileCompilerTest
-
-Verifica:
-
-- Draft null;
-- resolver null;
-- resolver incompleto;
-- identidad inválida;
-- contexto inválido;
-- Configuration null;
-- Configuration inválida;
-- Device ID duplicado;
-- context mismatch;
-- dependencia faltante;
-- dependencia inválida;
-- dependency identity mismatch;
-- Connection Spec null;
-- Connection Spec inválida;
-- Connection duplicada;
-- Source desconocido;
-- Target desconocido;
-- Draft vacío válido;
-- compilación válida;
-- orden conservado;
-- Arrays independientes;
-- Draft posterior no modifica Snapshot;
-- Result sin setters.
-
-### 28.1 Baselines aceptadas
+### 28.1 SystemProfile
 
 SystemConnectionSpecTest:
 
 ```text
 Checks: 23
 Failures: 0
-RESULT: PASS```
+RESULT: PASS
+```
 
-## 29. Fixtures de prueba
+SystemProfileDraftTest:
 
-Los tests utilizarán namespace:
+```text
+Checks: 32
+Failures: 0
+RESULT: PASS
+```
+
+SystemProfileCompilerTest:
+
+```text
+Checks: 87
+Failures: 0
+RESULT: PASS
+```
+
+SystemProfile 1.0:
+
+```text
+Tests: 3
+Checks: 142
+Failures: 0
+```
+
+### 28.2 DeviceCatalog
+
+DeviceCatalogDraftTest:
+
+```text
+Checks: 14
+Failures: 0
+RESULT: PASS
+```
+
+DeviceCatalogCompilerTest:
+
+```text
+Checks: 53
+Failures: 0
+RESULT: PASS
+```
+
+SystemProfileDeviceCatalogIntegrationTest:
+
+```text
+Checks: 22
+Failures: 0
+RESULT: PASS
+```
+
+DeviceCatalog 1.0:
+
+```text
+Tests: 3
+Checks: 89
+Failures: 0
+```
+
+### 28.3 Regresión completa
+
+```text
+Tests: 46
+Checks: 1282
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+## 29. Fixtures
+
+Los tests utilizan namespace:
 
 ```text
 test.
@@ -1319,16 +1447,17 @@ test.sensor
 test.controller
 ```
 
-Resolver de prueba:
+Los resolvers de prueba:
 
-- registra DeviceProfiles en memoria;
-- resuelve ID y versión exactos;
-- no utiliza filesystem;
-- no es implementación de producción.
+- no utilizan filesystem;
+- resuelven ID y versión exactos;
+- no representan producción.
 
-## 30. Baselines existentes
+DeviceCatalog sustituye el resolver de prueba únicamente en la integración sucesora.
 
-Las siguientes baselines no se modifican:
+## 30. Baselines preservadas
+
+No se modificaron:
 
 ```text
 DeviceProfileDraftTest
@@ -1348,59 +1477,83 @@ DeviceGraphConnectionTest
 DeviceGraphValidationTest
 
 DeviceGraphSnapshotTest
+
+SystemProfileCompilerTest
 ```
 
 System Composition utiliza pruebas sucesoras nuevas.
 
-## 31. Orden de implementación inicial
+## 31. Orden de implementación
 
 ```text
-1. Aceptar este diseño.
+1. Aceptar ADR-009.
    COMPLETADO.
 
-2. Crear core/composition/.
+2. Crear System Composition Pipeline Design.
    COMPLETADO.
 
 3. Implementar SystemConnectionSpec.
    COMPLETADO.
 
-4. Ejecutar SystemConnectionSpecTest.
-   PASS — 23 checks.
-
-5. Implementar SystemProfileDraft.
+4. Implementar SystemProfileDraft.
    COMPLETADO.
 
-6. Ejecutar SystemProfileDraftTest.
-   PASS — 32 checks.
-
-7. Implementar SystemProfile.
+5. Implementar SystemProfile.
    COMPLETADO.
 
-8. Implementar SystemProfileCompileResult.
+6. Implementar SystemProfileCompileResult.
    COMPLETADO.
 
-9. Implementar SystemProfileCompiler.
+7. Implementar SystemProfileCompiler.
    COMPLETADO.
 
-10. Crear resolver de prueba.
-	COMPLETADO.
+8. Crear resolver de prueba.
+   COMPLETADO.
 
-11. Ejecutar SystemProfileCompilerTest.
-	PASS — 87 checks.
+9. Ejecutar pruebas de SystemProfile.
+   PASS — 3 tests, 142 checks.
 
-12. Ejecutar Run All.
+10. Ejecutar Run All para SystemProfile.
 	PASS — 43 tests, 1193 checks.
 
-13. Registrar baseline.
+11. Registrar SystemProfile baseline.
 	COMPLETADO.
 
-14. Actualizar Core Architecture.
-	COMPLETADO — versión 2.8.
-
-15. Cerrar SystemProfile 1.0.
+12. Cerrar SystemProfile 1.0.
 	COMPLETADO.
 
-16. Diseñar DeviceCatalog.
+13. Diseñar DeviceCatalog.
+	COMPLETADO.
+
+14. Implementar DeviceCatalogDraft.
+	COMPLETADO.
+
+15. Implementar DeviceCatalog.
+	COMPLETADO.
+
+16. Implementar DeviceCatalogCompileResult.
+	COMPLETADO.
+
+17. Implementar DeviceCatalogCompiler.
+	COMPLETADO.
+
+18. Ejecutar pruebas unitarias de Catalog.
+	PASS — 2 tests, 67 checks.
+
+19. Integrar DeviceCatalog con
+	SystemProfileCompiler.
+	PASS — 22 checks.
+
+20. Ejecutar Run All para DeviceCatalog.
+	PASS — 46 tests, 1282 checks.
+
+21. Registrar DeviceCatalog baseline.
+	EN PROCESO DOCUMENTAL.
+
+22. Cerrar DeviceCatalog 1.0.
+	EN PROCESO DOCUMENTAL.
+
+23. Diseñar DeviceGraphAssembler.
 	SIGUIENTE.
 ```
 
@@ -1460,16 +1613,70 @@ System Composition utiliza pruebas sucesoras nuevas.
 
 27. Run All termina PASS.
 
-## 33. Fuera de alcance inicial
+Estado:
 
-SystemProfile 1.0 no implementará:
+```text
+SYSTEMPROFILE 1.0
+IMPLEMENTADO Y VERIFICADO
+```
 
-- DeviceCatalog de producción;
-- persistencia;
-- `.tres`;
-- JSON;
-- SaveAsService;
+## 33. Criterios de aceptación de DeviceCatalog 1.0
+
+1. DeviceCatalogDraft es editable.
+
+2. DeviceCatalog es inmutable.
+
+3. Catalog vacío es válido.
+
+4. Profile null se rechaza.
+
+5. Profile inválido se rechaza.
+
+6. Duplicado exacto se rechaza.
+
+7. Múltiples versiones se permiten.
+
+8. Orden se conserva.
+
+9. `get_profiles()` devuelve copia.
+
+10. Resolución es exacta.
+
+11. No existe latest fallback.
+
+12. No existe overwrite.
+
+13. Catalog satisface DeviceProfileResolver.
+
+14. Catalog no conoce factories.
+
+15. Catalog no conoce filesystem.
+
+16. Compiler no modifica Draft.
+
+17. Draft posterior no modifica Catalog.
+
+18. Result es defensivo.
+
+19. Pruebas unitarias terminan PASS.
+
+20. Integración con SystemProfileCompiler termina PASS.
+
+21. Run All termina PASS.
+
+Estado:
+
+```text
+DEVICECATALOG 1.0
+IMPLEMENTADO Y VERIFICADO
+```
+
+## 34. Fuera de alcance actual
+
+El pipeline actual no implementa:
+
 - DeviceGraphAssembler;
+- DeviceGraphAssemblyResult;
 - RuntimeFactoryRegistry;
 - CompositionCompiler;
 - CompositionPlan;
@@ -1477,64 +1684,55 @@ SystemProfile 1.0 no implementará:
 - GraphEditor;
 - ConfigurationEditor;
 - GraphLayout;
+- formato persistente definitivo;
+- SaveAsService;
+- bundle portable;
+- migración automática;
+- descarga remota de Profiles;
 - Hardware Mode activo;
-- migration;
-- bundle;
-- remote profiles;
-- hot reload.
-
-## 34. Resumen de responsabilidades
-
-```text
-SystemConnectionSpec:
-endpoints persistibles.
-
-SystemProfileDraft:
-composición editable.
-
-DeviceProfileResolver:
-resolución exacta por comportamiento.
-
-SystemProfileCompiler:
-validación y compilación.
-
-SystemProfile:
-composición validada e inmutable.
-
-DeviceCatalog:
-resolver de producción futuro.
-
-DeviceGraphAssembler:
-construcción de topología futura.
-
-CompositionCompiler:
-compilación runtime futura.
-
-CompositionPlan:
-plan inmutable futuro.
-
-CompositionRuntime:
-ejecución futura.
-
-Serializer:
-persistencia externa futura.
-```
+- factories de hardware;
+- Calibration;
+- AdaptationPolicy;
+- RuntimeAllocation;
+- hot reload;
+- red;
+- telemetría;
+- UI.
 
 ## 35. Estado
 
-DISEÑO ACTIVO
-
+```text
 SYSTEMPROFILE 1.0
 IMPLEMENTADO Y VERIFICADO
 
-SystemConnectionSpec
+DEVICECATALOG 1.0
+IMPLEMENTADO Y VERIFICADO
+```
 
-SystemProfileDraft
+Baselines acumuladas de Composition:
 
-SystemProfile
+```text
+SystemProfile:
+3 tests
+142 checks
 
-SystemProfileCompileResult
+DeviceCatalog:
+3 tests
+89 checks
+```
 
-SystemProfileCompiler
+Regresión completa:
 
-DeviceProfileResolver contract
+```text
+46 tests
+1282 checks
+0 failures
+```
+
+Siguiente milestone:
+
+```text
+DEVICEGRAPHASSEMBLER
+```
+
+DeviceGraphAssembler requerirá un diseño propio antes de implementar código.

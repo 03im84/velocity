@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 23/08/2026 |
 | ADR relacionado | ADR-009 — System Composition Pipeline |
 | Alcance | Resolución exacta e inmutable de DeviceProfiles |
@@ -26,9 +26,11 @@ DeviceCatalog permite que:
 
 DeviceCatalog no representa runtime ni persistencia.
 
+DeviceCatalog 1.0 está implementado y verificado.
+
 ## 2. Problema
 
-El contrato DeviceProfileResolver ya está definido por comportamiento:
+El contrato DeviceProfileResolver está definido por comportamiento:
 
 ```gdscript
 has_profile(
@@ -44,22 +46,24 @@ get_profile(
 ) -> DeviceProfile
 ```
 
-Actualmente las pruebas utilizan un resolver controlado.
+Las primeras pruebas de SystemProfile utilizaron un resolver controlado.
 
-Producción necesita una implementación que:
+Producción necesitaba una implementación que:
 
-- valide Profiles;
-- rechace duplicados exactos;
-- permita varias versiones;
-- preserve orden;
-- no cambie durante compilación;
-- no utilice fallback;
-- no conozca factories;
-- no abra archivos.
+- validara Profiles;
+- rechazara duplicados exactos;
+- permitiera varias versiones;
+- preservara orden;
+- permaneciera estable durante compilación;
+- no utilizara fallback;
+- no conociera factories;
+- no abriera archivos.
+
+DeviceCatalog 1.0 satisface esa necesidad.
 
 ## 3. Decisión de mutabilidad
 
-DeviceCatalog 1.0 utiliza:
+DeviceCatalog utiliza:
 
 ```text
 DeviceCatalogDraft
@@ -196,7 +200,7 @@ get_profile():
 null
 ```
 
-## 8. Estructura propuesta
+## 8. Estructura implementada
 
 ### 8.1 Código
 
@@ -215,7 +219,9 @@ test/core/catalog/
 ├── DeviceCatalogDraftTest.tscn
 ├── device_catalog_draft_test.gd
 ├── DeviceCatalogCompilerTest.tscn
-└── device_catalog_compiler_test.gd
+├── device_catalog_compiler_test.gd
+├── SystemProfileDeviceCatalogIntegrationTest.tscn
+└── system_profile_device_catalog_integration_test.gd
 ```
 
 ### 8.3 Persistencia futura
@@ -267,7 +273,7 @@ hardware
 telemetría
 ```
 
-DeviceCatalog puede ser entregado a SystemProfileCompiler porque satisface el contrato DeviceProfileResolver.
+DeviceCatalog puede entregarse a SystemProfileCompiler porque satisface el contrato DeviceProfileResolver.
 
 DeviceCatalog no depende de SystemProfileCompiler.
 
@@ -310,9 +316,21 @@ La primera versión permite editar directamente:
 draft.profiles
 ```
 
-No añade register/remove hasta existir una necesidad de herramienta.
+No añade register/remove antes de existir una necesidad de herramienta.
 
-### 11.7 No responsabilidades
+### 11.7 Estado incompleto
+
+DeviceCatalogDraft puede contener:
+
+- Array vacío;
+- Profiles válidos;
+- Profile null;
+- Profiles duplicados;
+- varias versiones.
+
+El Compiler establece la frontera de validez.
+
+### 11.8 No responsabilidades
 
 DeviceCatalogDraft no:
 
@@ -352,7 +370,7 @@ var _profiles: Array[DeviceProfile] = []
 var _profiles_by_id: Dictionary = {}
 ```
 
-`_profiles_by_id` utiliza estructura anidada:
+`_profiles_by_id` utiliza una estructura anidada:
 
 ```text
 Profile ID
@@ -478,6 +496,10 @@ test.distance_sensor
 
 No se exponen Dictionaries internos.
 
+Cuando una construcción directa contiene duplicados, el índice conserva la primera entrada y el Catalog resulta inválido.
+
+No existe overwrite.
+
 ## 14. DeviceCatalog.is_valid()
 
 `is_valid()` comprueba:
@@ -488,6 +510,7 @@ No se exponen Dictionaries internos.
 - Profile Version positiva;
 - identidad exacta no duplicada;
 - índice coherente con el Array;
+- cantidad indexada coherente;
 - orden del Array no alterado.
 
 `is_valid()` no comprueba:
@@ -550,7 +573,16 @@ DeviceCatalog es neutral respecto a Activation Context.
 
 No activa Simulation o Hardware.
 
-### 15.6 Inmutabilidad
+### 15.6 Defensa
+
+Un Report válido no puede aprobar:
+
+- Catalog null;
+- Catalog con Profiles null;
+- Catalog con duplicados;
+- Catalog incoherente.
+
+### 15.7 Inmutabilidad
 
 No expone setters.
 
@@ -664,7 +696,7 @@ DeviceCatalog acepta:
 - user DeviceProfiles;
 - test DeviceProfiles.
 
-La única condición inicial es que el snapshot sea válido.
+La condición es que el snapshot sea válido.
 
 DeviceCatalog no decide precedencia mediante:
 
@@ -682,7 +714,7 @@ DeviceProfile puede conservar referencia a parent.
 
 DeviceCatalog 1.0 no resuelve herencia.
 
-La compilación de DeviceProfile debe haber ocurrido antes de entrar al catálogo.
+La compilación de DeviceProfile debe ocurrir antes de entrar al catálogo.
 
 DeviceCatalog almacena snapshots ya validados.
 
@@ -809,6 +841,8 @@ observan el mismo estado.
 
 No existe mutación concurrente mediante API pública.
 
+La integración con SystemProfileCompiler verifica esta propiedad después de modificar el Draft original.
+
 ## 25. Determinismo
 
 Para el mismo Array de DeviceProfiles:
@@ -861,9 +895,68 @@ Verifica:
 - Catalog sin factories;
 - Catalog sin filesystem.
 
+### SystemProfileDeviceCatalogIntegrationTest
+
+Verifica:
+
+- DeviceCatalog satisface DeviceProfileResolver;
+- SystemProfileCompiler acepta DeviceCatalog;
+- dependencias exactas se resuelven;
+- versión faltante no utiliza fallback;
+- varias versiones coexisten;
+- versión solicitada se conserva;
+- Catalog permanece estable;
+- SystemProfileCompiler no modifica Catalog.
+
+### 26.1 Baselines aceptadas
+
+DeviceCatalogDraftTest:
+
+```text
+Checks: 14
+Failures: 0
+RESULT: PASS
+```
+
+DeviceCatalogCompilerTest:
+
+```text
+Checks: 53
+Failures: 0
+RESULT: PASS
+```
+
+SystemProfileDeviceCatalogIntegrationTest:
+
+```text
+Checks: 22
+Failures: 0
+RESULT: PASS
+```
+
+DeviceCatalog 1.0:
+
+```text
+Tests: 3
+Checks: 89
+Failures: 0
+```
+
+Regresión completa:
+
+```text
+Tests: 46
+Checks: 1282
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
 ## 27. Fixtures
 
-Los tests utilizarán DeviceProfiles:
+Los tests utilizan DeviceProfiles:
 
 ```text
 test.sensor@1
@@ -873,20 +966,20 @@ test.sensor@2
 test.controller@1
 ```
 
-Los Profiles serán snapshots válidos.
+También se utilizan:
 
-También se crearán:
-
+- Profile canonical;
+- Profile de usuario;
 - Profile null;
 - Profile con ID vacío;
 - duplicate identity;
 - misma instancia repetida.
 
-No se utilizará filesystem.
+No se utiliza filesystem.
 
 ## 28. Baselines preservadas
 
-No se modifican:
+No se modificaron:
 
 ```text
 DeviceProfileCompilerTest
@@ -906,39 +999,56 @@ DeviceCatalog utiliza pruebas sucesoras independientes.
 
 ```text
 1. Aceptar este diseño.
+   COMPLETADO.
 
 2. Crear core/catalog/.
+   COMPLETADO.
 
 3. Implementar DeviceCatalogDraft.
+   COMPLETADO.
 
 4. Ejecutar DeviceCatalogDraftTest.
+   PASS — 14 checks.
 
 5. Implementar DeviceCatalog.
+   COMPLETADO.
 
 6. Implementar DeviceCatalogCompileResult.
+   COMPLETADO.
 
 7. Implementar DeviceCatalogCompiler.
+   COMPLETADO.
 
 8. Ejecutar DeviceCatalogCompilerTest.
+   PASS — 53 checks.
 
-9. Ejecutar SystemProfileCompilerTest
-   utilizando DeviceCatalog real
-   mediante una prueba de integración sucesora.
+9. Crear integración sucesora con
+   SystemProfileCompiler.
+   COMPLETADO.
 
-10. Ejecutar Run All.
+10. Ejecutar
+	SystemProfileDeviceCatalogIntegrationTest.
+	PASS — 22 checks.
 
-11. Registrar baseline.
+11. Ejecutar Run All.
+	PASS — 46 tests, 1282 checks.
 
-12. Actualizar Core Architecture.
+12. Registrar baseline.
+	COMPLETADO.
 
-13. Cerrar DeviceCatalog 1.0.
+13. Actualizar Core Architecture.
+	PENDIENTE EN COMMIT DOCUMENTAL.
 
-14. Diseñar DeviceGraphAssembler.
+14. Cerrar DeviceCatalog 1.0.
+	PENDIENTE EN COMMIT DOCUMENTAL.
+
+15. Diseñar DeviceGraphAssembler.
+	SIGUIENTE.
 ```
 
 ## 30. Prueba de integración sucesora
 
-Después de las pruebas unitarias se creará:
+Prueba:
 
 ```text
 SystemProfileDeviceCatalogIntegrationTest
@@ -948,11 +1058,27 @@ Responsabilidad:
 
 > Verificar que SystemProfileCompiler puede resolver dependencias utilizando DeviceCatalog sin conocer su implementación concreta.
 
-No se modificará `SystemProfileCompilerTest`.
+Baseline aceptada:
+
+```text
+Checks: 22
+Failures: 0
+RESULT: PASS
+```
+
+La integración demuestra que SystemProfileCompiler depende únicamente de:
+
+```gdscript
+has_profile()
+
+get_profile()
+```
+
+SystemProfileCompiler no depende de la clase concreta DeviceCatalog.
+
+La prueba anterior `SystemProfileCompilerTest` permanece inmutable.
 
 ## 31. Criterios de aceptación
-
-DeviceCatalog 1.0 está completo cuando:
 
 1. DeviceCatalogDraft es editable.
 
@@ -998,9 +1124,18 @@ DeviceCatalog 1.0 está completo cuando:
 
 22. Run All termina PASS.
 
+Estado de aceptación:
+
+```text
+DEVICECATALOG 1.0
+IMPLEMENTADO Y VERIFICADO
+```
+
+Todos los criterios de aceptación de DeviceCatalog 1.0 están satisfechos.
+
 ## 32. Fuera de alcance
 
-DeviceCatalog 1.0 no implementará:
+DeviceCatalog 1.0 no implementa:
 
 - persistencia;
 - Resource loading;
@@ -1042,7 +1177,7 @@ DeviceCatalog 1.0 no implementará:
 - no existe carga automática;
 - no existe latest;
 - persistencia requiere adapters futuros;
-- catálogo completo se copia por referencia de snapshots.
+- catálogo completo comparte referencias a snapshots inmutables.
 
 Estas consecuencias son aceptadas.
 
@@ -1082,15 +1217,51 @@ Estas consecuencias son aceptadas.
 
 ## 36. Estado
 
-DISEÑO ACTIVO
+```text
+DEVICECATALOG 1.0
+IMPLEMENTADO Y VERIFICADO
+```
 
-DeviceCatalog 1.0 está autorizado
-para implementación incremental.
+Componentes completados:
 
-Primer componente:
-
+```text
 DeviceCatalogDraft
 
-Los componentes posteriores permanecen
-sujetos al orden de implementación
-y a sus pruebas sucesoras.
+DeviceCatalog
+
+DeviceCatalogCompileResult
+
+DeviceCatalogCompiler
+```
+
+Integración completada:
+
+```text
+SystemProfileCompiler
++
+DeviceCatalog
+```
+
+Baselines:
+
+```text
+Tests: 3
+Checks: 89
+Failures: 0
+```
+
+Regresión:
+
+```text
+Tests: 46
+Checks: 1282
+Failures: 0
+```
+
+Siguiente milestone:
+
+```text
+DeviceGraphAssembler
+```
+
+Persistencia de catálogo permanece fuera de alcance.

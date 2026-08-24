@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.1 |
-| Última revisión | 22/08/2026 |
+| Versión | 1.2 |
+| Última revisión | 23/08/2026 |
 | Engine | Godot Engine 4.7.1 stable |
 | Alcance | Arquitectura, implementación, pruebas, documentación y Git |
 
@@ -31,6 +31,8 @@ Estas reglas se aplican a:
 - Profiles;
 - Configurations;
 - DeviceGraph;
+- System Composition;
+- DeviceCatalog;
 - herramientas;
 - pruebas;
 - documentación;
@@ -133,6 +135,14 @@ Una característica estructural no está completa si:
 - sus pruebas no están registradas;
 - Core Architecture todavía describe el estado anterior;
 - el journal no registra el milestone.
+
+### 2.7 Documento canónico completo
+
+Un documento versionado se trata como una unidad.
+
+Cuando cambia su versión, debe existir un archivo completo consolidado que represente el nuevo estado.
+
+No se considera suficiente una colección de instrucciones parciales dispersas.
 
 ## 3. Metodología obligatoria
 
@@ -287,6 +297,12 @@ DeviceBus no conoce DeviceGraph.
 DeviceGraph no conoce DeviceBus runtime.
 
 Provider no conoce consumidores.
+
+SystemProfile no conoce DeviceGraph.
+
+DeviceCatalog no conoce SystemProfileCompiler.
+
+DeviceCatalog no conoce runtime factories.
 
 DeviceGraphSnapshot no conoce CompositionRuntime.
 
@@ -663,7 +679,9 @@ Se utiliza `StringName` para identidades canónicas repetidas:
 - semantic kinds;
 - roles;
 - códigos;
-- Connection IDs cuando corresponda.
+- Connection IDs cuando corresponda;
+- Profile IDs;
+- System Profile IDs.
 
 ### 9.2 String
 
@@ -685,7 +703,7 @@ Un objeto tratado como snapshot:
 - devuelve copias de colecciones;
 - conserva identidad estable.
 
-### 9.4 References inmutables
+### 9.4 Referencias inmutables
 
 Referencias a objetos inmutables pueden compartirse.
 
@@ -706,6 +724,20 @@ porque son inmutables por contrato.
 `Variant` se utiliza cuando la abstracción requiere transportar datos heterogéneos.
 
 No se utiliza para evitar definir un contrato conocido.
+
+### 9.6 Roles por comportamiento
+
+Cuando una dependencia representa una capacidad y no una identidad común, puede definirse mediante comportamiento.
+
+Ejemplos:
+
+```text
+Provider
+
+DeviceProfileResolver
+```
+
+No se crea una clase base universal únicamente para expresar el contrato.
 
 ## 10. Draft, Compiler y Snapshot
 
@@ -907,6 +939,14 @@ Snapshot validation
 
 +
 
+Dependency resolution
+
++
+
+Graph assembly
+
++
+
 Compiler validation
 
 +
@@ -1004,7 +1044,7 @@ DeviceGraph no:
 - serializa;
 - dibuja UI.
 
-### 15.3 Collections
+### 15.3 Colecciones
 
 Dictionaries internos no se exponen.
 
@@ -1075,9 +1115,101 @@ Un Graph vacío es estructuralmente válido.
 
 CompositionCompiler puede decidir que no es ejecutable.
 
-## 16. Pruebas
+## 16. System Composition
 
-### 16.1 Ubicación
+### 16.1 Pipeline
+
+```text
+SystemProfileDraft
+		│
+		▼
+SystemProfileCompiler
+		│
+		▼
+SystemProfile
+		│
+		▼
+DeviceGraphAssembler
+		│
+		▼
+DeviceGraphSnapshot
+		│
+		▼
+CompositionCompiler
+		│
+		▼
+CompositionPlan
+		│
+		▼
+CompositionRuntime
+```
+
+### 16.2 Referencias exactas
+
+SystemProfile utiliza:
+
+```text
+Profile ID
++
+Profile Version
+```
+
+No existe fallback automático.
+
+### 16.3 DeviceCatalog
+
+DeviceCatalog satisface DeviceProfileResolver.
+
+```text
+DeviceCatalogDraft
+		│
+		▼
+DeviceCatalogCompiler
+		│
+		▼
+DeviceCatalog
+```
+
+DeviceCatalog:
+
+- es inmutable;
+- conserva múltiples versiones;
+- rechaza duplicados exactos;
+- conserva orden;
+- no tiene ID propio;
+- no tiene versión propia;
+- no conoce factories;
+- no abre archivos.
+
+### 16.4 Factories
+
+RuntimeFactoryRegistry permanece separado de DeviceCatalog.
+
+```text
+DeviceCatalog:
+qué definición existe.
+
+RuntimeFactoryRegistry:
+cómo construir runtime.
+```
+
+### 16.5 No ejecución prematura
+
+SystemProfile no construye Graph.
+
+DeviceCatalog no crea Devices.
+
+DeviceGraphAssembler no ejecutará runtime.
+
+CompositionCompiler no creará Devices.
+
+CompositionPlan no ejecutará.
+
+CompositionRuntime poseerá recursos activos.
+
+## 17. Pruebas
+
+### 17.1 Ubicación
 
 Las pruebas nuevas del Core se ubican bajo:
 
@@ -1085,7 +1217,7 @@ Las pruebas nuevas del Core se ubican bajo:
 res://test/core/
 ```
 
-### 16.2 Naming
+### 17.2 Naming
 
 Escena:
 
@@ -1099,7 +1231,7 @@ Script:
 component_name_test.gd
 ```
 
-### 16.3 Independencia
+### 17.3 Independencia
 
 Cada test crea sus propios objetos.
 
@@ -1107,7 +1239,7 @@ No depende del orden de ejecución de otros tests.
 
 No utiliza estado global compartido.
 
-### 16.4 Salida
+### 17.4 Salida
 
 Cada prueba imprime:
 
@@ -1131,7 +1263,7 @@ get_tree().quit(
 )
 ```
 
-### 16.5 Fallos
+### 17.5 Fallos
 
 Si una prueba falla:
 
@@ -1145,7 +1277,7 @@ Si una prueba falla:
 
 5. después se propone el cambio.
 
-### 16.6 Baselines inmutables
+### 17.6 Baselines inmutables
 
 Una prueba aceptada se convierte en baseline.
 
@@ -1167,7 +1299,7 @@ Antes de retirar una prueba anterior:
 
 6. conservar historia en Git.
 
-### 16.7 No corrupción privada
+### 17.7 No corrupción privada
 
 Las pruebas no modifican Dictionaries privados para fabricar estados.
 
@@ -1179,7 +1311,7 @@ Se utilizan:
 - Validators que aceptan Arrays;
 - operaciones fallidas reales.
 
-### 16.8 Ejecución autoritativa
+### 17.8 Ejecución autoritativa
 
 No se utiliza `Run Current Scene` del editor como evidencia autoritativa.
 
@@ -1199,7 +1331,7 @@ Variable de sistema:
 GODOT_CONSOLE
 ```
 
-### 16.9 Runner
+### 17.9 Runner
 
 El runner debe:
 
@@ -1222,7 +1354,7 @@ proceso no confirmado
 ENGINE_ERROR con ExitCode Godot 0
 ```
 
-### 16.10 Dashboard
+### 17.10 Dashboard
 
 Velocity Test Dashboard es interfaz del runner.
 
@@ -1237,9 +1369,9 @@ test/tools/.test_dashboard/
 
 `Pause` y `Resume` utilizan un único botón dinámico.
 
-## 17. Archivos generados y UID
+## 18. Archivos generados y UID
 
-### 17.1 UID de Godot
+### 18.1 UID de Godot
 
 Los archivos:
 
@@ -1251,7 +1383,7 @@ generados por Godot se versionan junto con su script cuando forman parte del pro
 
 No se crean manualmente.
 
-### 17.2 Caché
+### 18.2 Caché
 
 No se versionan:
 
@@ -1260,11 +1392,11 @@ __pycache__/
 *.py[cod]
 ```
 
-### 17.3 Estado local
+### 18.3 Estado local
 
 Configuraciones personales y estado de UI se excluyen mediante `.gitignore`.
 
-### 17.4 Archivos accidentales
+### 18.4 Archivos accidentales
 
 Capturas temporales como:
 
@@ -1277,9 +1409,9 @@ no se añaden al repositorio.
 
 Antes de eliminarlas se verifica su contenido.
 
-## 18. Documentación
+## 19. Documentación
 
-### 18.1 ADR
+### 19.1 ADR
 
 Ruta:
 
@@ -1307,7 +1439,7 @@ Cada ADR registra:
 - criterios de aceptación;
 - fuera de alcance.
 
-### 18.2 Diseños
+### 19.2 Diseños
 
 Los diseños se ubican en:
 
@@ -1326,7 +1458,7 @@ Un diseño incluye:
 - criterios de aceptación;
 - estado actual.
 
-### 18.3 Project Decisions
+### 19.3 Project Decisions
 
 Ruta:
 
@@ -1336,7 +1468,7 @@ res://docs/decisions/
 
 Las Project Decisions expresan reglas que atraviesan varios ADR.
 
-### 18.4 Engineering Notes
+### 19.4 Engineering Notes
 
 Ruta:
 
@@ -1354,7 +1486,7 @@ Una Engineering Note registra:
 
 No sustituye ADR o diseño.
 
-### 18.5 Project Journal
+### 19.5 Project Journal
 
 Ruta:
 
@@ -1371,7 +1503,7 @@ pjXXXX_DDMMAA.txt
 Ejemplo:
 
 ```text
-pj0021_220826.txt
+pj0025_230826.txt
 ```
 
 El journal utiliza:
@@ -1384,9 +1516,7 @@ El journal es histórico.
 
 No se reescribe para fingir que una decisión posterior ya existía.
 
-Correcciones de formato que no cambian significado pueden registrarse en un commit documental.
-
-### 18.6 Encoding
+### 19.6 Encoding
 
 Los documentos se guardan como UTF-8.
 
@@ -1400,9 +1530,78 @@ No se copian al archivo caracteres mojibake como:
 
 Si PowerShell muestra mojibake, se verifica la codificación antes de modificar el archivo.
 
-## 19. Git
+### 19.7 Entrega completa obligatoria
 
-### 19.1 Commits por responsabilidad
+Cuando un documento versionado cambia, la nueva versión se entrega como un archivo completo consolidado.
+
+Aplica a:
+
+- ADR;
+- diseños;
+- Core Architecture;
+- Engineering Standards;
+- documentos de herramientas;
+- especificaciones;
+- glosario cuando cambia de versión.
+
+La entrega debe indicar:
+
+1. ruta exacta;
+
+2. versión anterior;
+
+3. versión nueva;
+
+4. contenido completo;
+
+5. instrucción de reemplazo total;
+
+6. comando de verificación.
+
+No se utilizan como método de actualización documental:
+
+- “busca esta sección”;
+- “inserta después de”;
+- reemplazos quirúrgicos;
+- listas de fragmentos;
+- parches parciales distribuidos en mensajes.
+
+Los diffs se utilizan para auditoría, no como instrucciones de construcción.
+
+### 19.8 Journals nuevos
+
+Un journal nuevo se entrega completo.
+
+Un journal histórico no se reescribe, excepto una corrección explícita de formato que no cambie significado.
+
+### 19.9 Documento canónico
+
+Después de reemplazar un documento:
+
+- la cabecera debe mostrar versión correcta;
+- la fecha debe ser correcta;
+- todas las secciones deben estar integradas;
+- no deben quedar estados anteriores contradictorios;
+- code fences deben estar cerrados;
+- `git diff --check` debe quedar limpio.
+
+### 19.10 Una entrega por documento
+
+Cuando varios documentos extensos cambian, se entregan uno por uno como archivos completos.
+
+Después se realiza una auditoría conjunta antes del commit.
+
+Esto reduce:
+
+- omisiones;
+- cruces de versiones;
+- secciones fuera de lugar;
+- referencias a contenido inexistente;
+- errores de copia.
+
+## 20. Git
+
+### 20.1 Commits por responsabilidad
 
 Cada commit representa una responsabilidad coherente.
 
@@ -1411,12 +1610,12 @@ Ejemplos:
 ```text
 feat(device-graph): add full graph validation
 
-feat(device-graph): add immutable graph snapshots
+feat(catalog): add immutable versioned device catalog
 
-docs(device-graph): close device graph 1.0
+docs(catalog): record device catalog 1.0 baseline
 ```
 
-### 19.2 Staging explícito
+### 20.2 Staging explícito
 
 Cuando el working tree contiene varios milestones no se utiliza:
 
@@ -1426,7 +1625,7 @@ git add .
 
 Se añaden rutas explícitas.
 
-### 19.3 Auditoría previa
+### 20.3 Auditoría previa
 
 Antes del commit:
 
@@ -1436,7 +1635,7 @@ git diff --check
 git diff --cached --name-status
 ```
 
-### 19.4 Commit de implementación
+### 20.4 Commit de implementación
 
 Incluye:
 
@@ -1445,7 +1644,7 @@ Incluye:
 - pruebas sucesoras;
 - retiro de archivos reemplazados cuando corresponda.
 
-### 19.5 Commit documental
+### 20.5 Commit documental
 
 Puede incluir:
 
@@ -1456,7 +1655,7 @@ Puede incluir:
 - Engineering Standards;
 - Engineering Notes.
 
-### 19.6 Working tree
+### 20.6 Working tree
 
 Después del commit:
 
@@ -1466,7 +1665,7 @@ git status --short
 
 debe estar vacío o contener únicamente cambios explícitamente diferidos.
 
-### 19.7 Push
+### 20.7 Push
 
 Después de cerrar y verificar el milestone:
 
@@ -1486,13 +1685,13 @@ Resultado esperado:
 ## main...origin/main
 ```
 
-### 19.8 Historia
+### 20.8 Historia
 
 Git conserva la historia de archivos retirados.
 
 No se mantienen implementaciones obsoletas en el árbol activo únicamente por miedo a perderlas.
 
-## 20. Anti-patterns prohibidos
+## 21. Anti-patterns prohibidos
 
 No se acepta:
 
@@ -1512,12 +1711,16 @@ No se acepta:
 - DeviceGraph transportando mensajes;
 - DeviceBus validando topología;
 - Provider distribuyendo a consumidores;
-- Componentes nombrados como métodos nativos incompatibles;
+- DeviceCatalog conteniendo runtime factories;
+- resolución latest automática;
+- overwrite silencioso de versiones;
+- componentes nombrados como métodos nativos incompatibles;
 - parche que conserva una responsabilidad incorrecta;
 - documentación que describe un estado anterior;
+- actualización documental mediante fragmentos quirúrgicos;
 - commit con caché o estado local.
 
-## 21. Checklist de implementación
+## 22. Checklist de implementación
 
 Antes de considerar terminada una característica:
 
@@ -1553,25 +1756,34 @@ Antes de considerar terminada una característica:
 
 ### Documentación
 
+- [ ] Cada documento actualizado fue entregado completo.
+- [ ] Versión anterior identificada.
+- [ ] Versión nueva identificada.
+- [ ] Cabecera verificada.
 - [ ] Diseño actualizado.
 - [ ] Core Architecture actualizado.
 - [ ] Journal creado.
 - [ ] Engineering Note creada si corresponde.
 - [ ] Versiones y fechas correctas.
+- [ ] Code fences cerrados.
+- [ ] Sin estados contradictorios.
+- [ ] Encoding UTF-8.
+- [ ] `git diff --check` limpio.
 
 ### Git
 
-- [ ] `git diff --check` limpio.
 - [ ] Staging revisado.
 - [ ] Commit por responsabilidad.
 - [ ] Working tree limpio.
 - [ ] Remoto sincronizado.
 
-## 22. Regla final
+## 23. Regla final
 
 Cuando exista duda entre avanzar rápido y conservar una responsabilidad correcta, se conserva la responsabilidad correcta.
 
 Cuando exista duda entre ocultar un fallo y reportarlo, se reporta.
+
+Cuando un documento cambia de versión, se entrega completo y consolidado.
 
 Cuando exista duda entre permitir una simulación peligrosa y comprometer la plataforma:
 
