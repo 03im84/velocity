@@ -1,0 +1,411 @@
+PJ0026 – DeviceGraphAssembler Architecture
+
+Fecha:
+
+23/08/2026
+
+Objetivo:
+
+Definir DeviceGraphAssembler 1.0
+como frontera entre SystemProfile
+y DeviceGraphSnapshot.
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-009 — System Composition Pipeline.md
+
+docs/architecture/
+device_graph_assembler_design.md
+
+docs/architecture/
+system_composition_pipeline_design.md
+
+docs/architecture/
+core_architecture.md
+
+Versiones:
+
+ADR-009:
+
+1.0
+
+DeviceGraphAssembler Design:
+
+1.0
+
+System Composition Pipeline Design:
+
+1.2
+
+Core Architecture:
+
+2.11
+
+Estado:
+
+DEVICEGRAPHASSEMBLER DESIGN ACTIVO
+
+Decisiones aceptadas:
+
+✔ DeviceGraphAssembler será un componente separado.
+
+✔ DeviceGraphAssembler será stateless.
+
+✔ Recibirá SystemProfile.
+
+✔ Recibirá DeviceProfileResolver
+  por comportamiento.
+
+✔ DeviceCatalog podrá utilizarse
+  como resolver.
+
+✔ Assembler no dependerá
+  de la clase concreta DeviceCatalog.
+
+✔ Resolución utilizará
+  Profile ID exacto.
+
+✔ Resolución utilizará
+  Profile Version exacta.
+
+✔ No existirá fallback.
+
+✔ DeviceGraphAssembler 1.0
+  soportará únicamente Simulation.
+
+✔ Hardware será rechazado explícitamente.
+
+Hardware rejection:
+
+Severity:
+
+HARDWARE_SAFETY_ERROR
+
+Code:
+
+device_graph_assembly_hardware_not_supported
+
+Output:
+
+Snapshot null
+
+Assembly Result failure
+
+Etapas aprobadas:
+
+1. Devices
+
+2. Connections
+
+3. Snapshot
+
+Política de errores:
+
+✔ Agregar errores dentro de cada etapa.
+
+✔ Detenerse entre etapas.
+
+✔ No utilizar fail-fast por cada Issue.
+
+✔ No continuar Connections
+  cuando Devices falla.
+
+✔ No crear Snapshot
+  cuando Connections falla.
+
+✔ No producir errores derivados
+  de etapas anteriores.
+
+Etapa Devices:
+
+SystemProfile
+
+↓
+
+DeviceConfigurations en orden
+
+↓
+
+DeviceProfileResolver
+
+↓
+
+DeviceProfile exacto
+
+↓
+
+DeviceManifestBuilder
+
+↓
+
+DeviceGraphNodeBuilder
+
+↓
+
+DeviceGraphDraft.add_device()
+
+Validaciones defensivas:
+
+- SystemProfile no null;
+
+- SystemProfile identity válida;
+
+- Resolver no null;
+
+- Resolver contract completo;
+
+- Activation Context válido;
+
+- Configuration no null;
+
+- Configuration válida;
+
+- Configuration Context coherente;
+
+- dependencia disponible;
+
+- Profile válido;
+
+- Profile identity exacta.
+
+Etapa Connections:
+
+SystemConnectionSpecs en orden
+
+↓
+
+DeviceGraphDraft.connect_ports()
+
+↓
+
+OperationResult Reports
+
+Validaciones defensivas:
+
+- Spec no null;
+
+- Spec identity válida;
+
+- Connection ID determinista;
+
+- Source Device;
+
+- Target Device;
+
+- Source Port;
+
+- Target Port;
+
+- Topic;
+
+- Semantic Kind;
+
+- duplicate Connection;
+
+- fan-in;
+
+- self-connection.
+
+DeviceGraphDraft permanece autoridad
+de validación local de Connections.
+
+Etapa Snapshot:
+
+DeviceGraphDraft
+
+↓
+
+create_snapshot()
+
+↓
+
+DeviceGraphValidator
+
+↓
+
+DeviceGraphSnapshot
+
+Ciclos:
+
+DeviceGraphAssembler no detecta
+ciclos directamente.
+
+DeviceGraphValidator produce:
+
+graph_cycle_requires_temporal_analysis
+
+Severity:
+
+SIMULATION_HAZARD
+
+Simulation:
+
+permitida
+
+Hardware:
+
+bloqueado
+
+SystemProfile vacío:
+
+✔ Permitido.
+
+✔ Produce DeviceGraphSnapshot vacío.
+
+✔ CompositionCompiler decidirá
+  utilidad runtime futura.
+
+Agregación de Reports:
+
+Fuentes:
+
+- Assembler validation;
+
+- DeviceManifestBuilder;
+
+- DeviceGraphNodeBuilder;
+
+- DeviceGraphDraft.add_device();
+
+- DeviceGraphDraft.connect_ports();
+
+- DeviceGraphDraft.create_snapshot().
+
+Reglas:
+
+✔ Conservar código original.
+
+✔ Conservar severity.
+
+✔ Conservar related object.
+
+✔ Conservar related field.
+
+✔ Conservar orden.
+
+✔ No modificar Report fuente.
+
+Transaccionalidad:
+
+Una operación fallida:
+
+- no modifica SystemProfile;
+
+- no modifica DeviceCatalog;
+
+- no modifica DeviceProfiles;
+
+- no devuelve Graph Draft;
+
+- no devuelve Snapshot parcial;
+
+- no reemplaza Last Known Good externo.
+
+Componentes autorizados:
+
+res://core/composition/
+device_graph_assembly_result.gd
+
+res://core/composition/
+device_graph_assembler.gd
+
+Pruebas previstas:
+
+res://test/core/composition/
+DeviceGraphAssemblerTest.tscn
+
+res://test/core/composition/
+device_graph_assembler_test.gd
+
+res://test/core/composition/
+SystemProfileCatalogGraphAssemblyIntegrationTest.tscn
+
+res://test/core/composition/
+system_profile_catalog_graph_assembly_integration_test.gd
+
+Baselines que no se modificarán:
+
+DeviceManifestBuilderTest
+
+DeviceGraphNodeBuilderTest
+
+DeviceGraphConnectionTest
+
+DeviceGraphValidationTest
+
+DeviceGraphSnapshotTest
+
+SystemProfileCompilerTest
+
+DeviceCatalogCompilerTest
+
+SystemProfileDeviceCatalogIntegrationTest
+
+Fuera de alcance:
+
+- Hardware assembly;
+
+- RuntimeFactoryRegistry;
+
+- CompositionCompiler;
+
+- CompositionPlan;
+
+- CompositionRuntime;
+
+- Device creation;
+
+- DeviceBus ownership;
+
+- runtime subscriptions;
+
+- lifecycle runtime;
+
+- filesystem;
+
+- persistencia;
+
+- GraphEditor;
+
+- ConfigurationEditor;
+
+- GraphLayout;
+
+- Temporal Boundary metadata;
+
+- zero-delay classification final;
+
+- named slots;
+
+- configurable cardinality;
+
+- Calibration;
+
+- AdaptationPolicy;
+
+- RuntimeAllocation.
+
+Siguiente paso:
+
+Implementar DeviceGraphAssemblyResult.
+
+Después:
+
+- parser gate;
+
+- DeviceGraphAssembler;
+
+- parser gate;
+
+- DeviceGraphAssemblerTest;
+
+- integración completa;
+
+- Run All;
+
+- registrar baseline;
+
+- actualizar documentos completos;
+
+- cerrar DeviceGraphAssembler 1.0.
