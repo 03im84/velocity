@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://m1mt8p8pqo1j"]
+
+[ext_resource type="Script" uid="uid://dc5ytt8xxcjbh" path="res://test/core/catalog/device_catalog_compiler_test.gd" id="1_jc7r7"]
+
+[node name="DeviceCatalogCompilerTest" type="Node" unique_id=125220801]
+script = ExtResource("1_jc7r7")

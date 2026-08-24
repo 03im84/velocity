@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://b288uh63l82s1"]
+
+[ext_resource type="Script" uid="uid://c184fpa3valpe" path="res://test/core/catalog/system_profile_device_catalog_integration_test.gd" id="1_6jlv8"]
+
+[node name="SystemProfileDeviceCatalogIntegrationTest" type="Node" unique_id=1817816258]
+script = ExtResource("1_6jlv8")

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bxltgjrxtmbuf"]
+
+[ext_resource type="Script" uid="uid://cjaykt43j0vh0" path="res://test/core/catalog/device_catalog_draft_test.gd" id="1_8x0xp"]
+
+[node name="DeviceCatalogDraftTest" type="Node" unique_id=1185393867]
+script = ExtResource("1_8x0xp")
