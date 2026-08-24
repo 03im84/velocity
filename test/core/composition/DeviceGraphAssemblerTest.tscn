@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://mkpkd6u2u1i1"]
+
+[ext_resource type="Script" uid="uid://bhyf75flc8ph3" path="res://test/core/composition/device_graph_assembler_test.gd" id="1_syld7"]
+
+[node name="DeviceGraphAssemblerTest" type="Node" unique_id=260709205]
+script = ExtResource("1_syld7")

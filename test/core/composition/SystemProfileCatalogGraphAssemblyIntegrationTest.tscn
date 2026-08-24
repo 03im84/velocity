@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c37s3avfj138t"]
+
+[ext_resource type="Script" uid="uid://dh7t62m3kx3y1" path="res://test/core/composition/system_profile_catalog_graph_assembly_integration_test.gd" id="1_3a5t4"]
+
+[node name="SystemProfileCatalogGraphAssemblyIntegrationTest" type="Node" unique_id=2011250128]
+script = ExtResource("1_3a5t4")
