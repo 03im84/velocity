@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://yavcs41jfnk5"]
+
+[ext_resource type="Script" uid="uid://c1nf58a6we0ar" path="res://test/core/runtime/runtime_construction_contract_integration_test.gd" id="1_r58c3"]
+
+[node name="RuntimeConstructionContractIntegrationTest" type="Node" unique_id=932478202]
+script = ExtResource("1_r58c3")

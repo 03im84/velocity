@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cdouy3bprnfph"]
+
+[ext_resource type="Script" uid="uid://ds2aqnmfqsq51" path="res://test/core/runtime/runtime_device_handle_test.gd" id="1_tkkqr"]
+
+[node name="RuntimeDeviceHandleTest" type="Node" unique_id=1508302787]
+script = ExtResource("1_tkkqr")

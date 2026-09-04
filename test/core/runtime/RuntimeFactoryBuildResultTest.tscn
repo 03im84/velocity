@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://8u4erktql2o5"]
+
+[ext_resource type="Script" uid="uid://xwa4rkfnuyc0" path="res://test/core/runtime/runtime_factory_build_result_test.gd" id="1_ctqoe"]
+
+[node name="RuntimeFactoryBuildResultTest" type="Node" unique_id=1630904465]
+script = ExtResource("1_ctqoe")

@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cud4qd5t40fsi"]
+
+[ext_resource type="Script" uid="uid://ba0sbxl2bxire" path="res://test/core/runtime/runtime_factory_key_test.gd" id="1_5skep"]
+
+[node name="RuntimeFactoryKeyTest" type="Node" unique_id=884223371]
+script = ExtResource("1_5skep")
