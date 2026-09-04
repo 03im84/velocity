@@ -1,0 +1,735 @@
+PJ0028 – Runtime Construction Contract Architecture
+
+Fecha:
+
+25/08/2026
+
+Objetivo:
+
+Definir la construcción runtime
+antes de implementar:
+
+RuntimeFactoryRegistry
+
+CompositionPlan
+
+CompositionCompiler
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-010 — Runtime Construction and Factory Binding.md
+
+docs/architecture/
+runtime_construction_contract_design.md
+
+docs/architecture/
+system_composition_pipeline_design.md
+
+docs/architecture/
+core_architecture.md
+
+docs/project_state/
+velocity_handoff.md
+
+docs/project_state/
+velocity_resume_prompt.md
+
+Versiones de cierre arquitectónico:
+
+ADR-010:
+
+1.0
+
+Runtime Construction Contract Design:
+
+1.0
+
+System Composition Pipeline Design:
+
+1.4
+
+Core Architecture:
+
+2.13
+
+Velocity Project Handoff:
+
+1.1
+
+Velocity Resume Prompt:
+
+1.1
+
+Problema identificado:
+
+RuntimeFactoryRegistry no podía
+diseñarse correctamente sin definir:
+
+- qué construye una factory;
+
+- qué recibe;
+
+- qué devuelve;
+
+- quién posee recursos;
+
+- quién limpia;
+
+- cómo se realiza rollback;
+
+- cómo se administran Nodes;
+
+- quién posee DeviceBus;
+
+- qué conserva CompositionPlan.
+
+Alternativas rechazadas:
+
+Callable genérico
+
+Factory devuelve Device directamente
+
+Factory inicializa y ejecuta start
+
+Factory controla lifecycle completo
+
+Factory adjunta Nodes al SceneTree
+
+Factory consulta service locator
+
+CompositionPlan guarda factory Object
+
+CompositionPlan guarda Callable
+
+RuntimeFactoryKey usa solo Profile ID
+
+Resolución latest
+
+Fallback automático
+
+host_target como dimensión inicial
+
+Object genérico como resultado
+
+Recursos parciales conservados
+después de fallo
+
+Decisiones aceptadas:
+
+✔ Runtime factory construye solamente.
+
+✔ Factory no inicializa lifecycle.
+
+✔ Factory no ejecuta set_ready.
+
+✔ Factory no ejecuta start.
+
+✔ Factory no coordina shutdown global.
+
+✔ Factory no crea DeviceBus global.
+
+✔ Factory no adjunta host objects.
+
+✔ Factory no descubre dependencias.
+
+✔ Factory no consulta service locator.
+
+Factory behavior:
+
+build(
+	RuntimeConstructionRequest
+)
+→ RuntimeFactoryBuildResult
+
+release(
+	RuntimeDeviceHandle
+)
+→ ValidationReport
+
+Producto:
+
+RuntimeDeviceHandle
+
+El Handle representa:
+
+- Device ID;
+
+- DeviceConfiguration;
+
+- RuntimeFactoryKey;
+
+- Primary Runtime Object;
+
+- Host Objects;
+
+- Dependency Bindings;
+
+- ownership.
+
+Factory Key:
+
+Profile ID
+
++
+
+Profile Version
+
++
+
+Activation Context
+
+No contiene:
+
+host_target
+
+No existe:
+
+latest
+
+fallback
+
+nearest
+
+compatible enough
+
+RuntimeDependencyBinding:
+
+Campos conceptuales:
+
+Dependency ID
+
+Dependency Value
+
+Ownership
+
+Dependency Value:
+
+Object no null
+
+Ownership:
+
+BORROWED
+
+o
+
+TRANSFERRED
+
+BORROWED:
+
+✔ Owner original permanece.
+
+✔ Handle puede utilizar.
+
+✔ Handle no libera.
+
+✔ Factory release no libera.
+
+TRANSFERRED:
+
+✔ Caller conserva ownership
+  antes de build.
+
+✔ Transferencia comienza
+  al invocar factory.build().
+
+✔ Factory es custodio
+  durante construcción.
+
+✔ Handle asume ownership
+  en éxito.
+
+✔ Factory limpia en fallo.
+
+✔ Caller no ejecuta
+  segundo cleanup.
+
+RuntimeConstructionRequest:
+
+Contiene:
+
+- Device ID;
+
+- DeviceConfiguration;
+
+- RuntimeFactoryKey;
+
+- bindings pre-resueltos.
+
+No contiene:
+
+- service locator;
+
+- SceneTree;
+
+- autoload;
+
+- filesystem;
+
+- factory;
+
+- CompositionRuntime mutable;
+
+- DeviceGraphDraft;
+
+- SystemProfileDraft.
+
+RuntimeDeviceHandle:
+
+Primary Runtime Object:
+
+Object no null
+
+Host Objects:
+
+Array[Object]
+
+Dependency Bindings:
+
+Array[RuntimeDependencyBinding]
+
+Los Arrays se copian.
+
+Las referencias inmutables
+se comparten.
+
+RuntimeDeviceHandle no:
+
+- ejecuta;
+
+- activa;
+
+- adjunta;
+
+- guarda;
+
+- carga;
+
+- coordina otros Handles.
+
+Host Objects:
+
+✔ Factory puede construir Objects host.
+
+✔ Factory no los adjunta.
+
+✔ Handle conserva referencias.
+
+✔ RuntimeHost recibe Handle completo.
+
+✔ RuntimeHost consulta Host Objects.
+
+RuntimeHost behavior:
+
+attach(
+	RuntimeDeviceHandle
+)
+→ ValidationReport
+
+detach(
+	RuntimeDeviceHandle
+)
+→ ValidationReport
+
+RuntimeHost:
+
+- valida Handle;
+
+- adjunta en orden;
+
+- revierte attach parcial;
+
+- separa en orden inverso;
+
+- no libera BORROWED;
+
+- no sustituye factory.release().
+
+Cleanup:
+
+La misma factory que construye
+conoce cómo liberar su Handle.
+
+Razón:
+
+- conoce recursos internos;
+
+- conoce objetos privados;
+
+- conoce bindings TRANSFERRED;
+
+- CompositionRuntime no debe
+  inspeccionar internals.
+
+Construcción atómica:
+
+Éxito:
+
+Factory
+
+↓
+
+RuntimeFactoryBuildResult exitoso
+
+↓
+
+RuntimeDeviceHandle válido
+
+Fallo:
+
+Factory
+
+↓
+
+limpia recursos creados
+
+↓
+
+limpia TRANSFERRED
+
+↓
+
+Handle null
+
+↓
+
+ValidationReport
+
+Rollback global futuro:
+
+Si Factory 4 falla:
+
+release Handle 3
+
+release Handle 2
+
+release Handle 1
+
+Orden:
+
+inverso a adquisición
+
+Si attach falla:
+
+detach Handles adjuntos
+
+↓
+
+release Handles construidos
+
+Si lifecycle falla:
+
+shutdown componentes iniciados
+
+↓
+
+detach
+
+↓
+
+release
+
+Last Known Good:
+
+No se reemplaza hasta completar:
+
+- construcción;
+
+- attach;
+
+- initialize;
+
+- set_ready;
+
+- start;
+
+- commit.
+
+DeviceBus:
+
+✔ Pertenece a CompositionRuntime.
+
+✔ No es global oculto.
+
+✔ No es autoload.
+
+✔ No es creado por factory.
+
+✔ Se entrega en etapa
+  coordinada de initialize.
+
+Factory build produce estado:
+
+CREATED
+
+CompositionPlan:
+
+Conservará:
+
+- RuntimeFactoryKeys;
+
+- dependency directives;
+
+- lifecycle order;
+
+- runtime policies;
+
+- communication directives.
+
+No conservará:
+
+- RuntimeFactory;
+
+- Callable;
+
+- RuntimeDeviceHandle;
+
+- Device activo;
+
+- Node activo;
+
+- DeviceBus activo.
+
+RuntimeFactoryRegistry:
+
+Resolverá:
+
+RuntimeFactoryKey
+
+↓
+
+RuntimeFactory
+
+Permanecerá separado de:
+
+DeviceCatalog
+
+CompositionPlan
+
+DeviceCatalog:
+
+Profile ID
+
++
+
+Profile Version
+
+↓
+
+DeviceProfile
+
+RuntimeFactoryRegistry:
+
+Profile ID
+
++
+
+Profile Version
+
++
+
+Activation Context
+
+↓
+
+RuntimeFactory
+
+Orden de lifecycle:
+
+CompositionPlan deberá representar:
+
+- construcción;
+
+- attach;
+
+- initialize;
+
+- set_ready;
+
+- start;
+
+- shutdown;
+
+- rollback.
+
+No se seleccionó todavía
+topological sort como solución.
+
+Razón:
+
+DeviceGraph permite ciclos.
+
+La política de ciclos requiere:
+
+- orden estable;
+
+- grupos;
+
+- SCC;
+
+- fases;
+
+- temporal boundaries;
+
+según diseño futuro.
+
+Runtime Construction Contract 1.0:
+
+Componentes autorizados:
+
+res://core/runtime/
+runtime_factory_key.gd
+
+res://core/runtime/
+runtime_dependency_binding.gd
+
+res://core/runtime/
+runtime_construction_request.gd
+
+res://core/runtime/
+runtime_device_handle.gd
+
+res://core/runtime/
+runtime_factory_build_result.gd
+
+Behaviors autorizados:
+
+RuntimeFactory
+
+RuntimeHost
+
+Pruebas previstas:
+
+RuntimeFactoryKeyTest
+
+RuntimeDependencyBindingTest
+
+RuntimeConstructionRequestTest
+
+RuntimeDeviceHandleTest
+
+RuntimeFactoryBuildResultTest
+
+RuntimeConstructionContractIntegrationTest
+
+Borrador alternativo recuperado:
+
+Archivo conservado fuera del repositorio:
+
+recovered_runtime_factory_and_composition_plan_design_250826.md
+
+Ideas candidatas conservadas:
+
+- lifecycle order;
+
+- DispatchPolicy en Plan;
+
+- subscription directives;
+
+- host abstractions;
+
+- Last Known Good.
+
+Decisiones del borrador rechazadas:
+
+- Callable genérico;
+
+- factory dentro del Plan;
+
+- factory devuelve Device;
+
+- host_target como identidad;
+
+- Registry mutable sin diseño;
+
+- Array[Dictionary];
+
+- topological order obligatorio.
+
+El borrador no es arquitectura canónica.
+
+Paquete de recuperación vigente:
+
+docs/project_state/
+velocity_handoff.md
+
+docs/project_state/
+velocity_resume_prompt.md
+
+docs/project_state/
+velocity_collaboration_contract.md
+
+Baseline global preservada:
+
+Planned: 48
+Completed: 48
+Passed: 48
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Plan ExitCode: 0
+RESULT: PASS
+
+Total de checks:
+
+1396
+
+Último milestone implementado:
+
+DeviceGraphAssembler 1.0
+
+Último commit de paquete
+de recuperación:
+
+e21caed
+docs(project): add recovery and collaboration package
+
+Estado:
+
+ADR-010 ACEPTADO
+
+RUNTIME CONSTRUCTION CONTRACT
+DESIGN ACTIVO
+
+NO HAY IMPLEMENTACIÓN RUNTIME NUEVA
+
+BASELINE PRESERVADA
+
+Siguiente paso:
+
+Implementar RuntimeFactoryKey.
+
+Después:
+
+- RuntimeFactoryKeyTest;
+
+- RuntimeDependencyBinding;
+
+- RuntimeDependencyBindingTest;
+
+- RuntimeConstructionRequest;
+
+- RuntimeConstructionRequestTest;
+
+- RuntimeDeviceHandle;
+
+- RuntimeDeviceHandleTest;
+
+- RuntimeFactoryBuildResult;
+
+- RuntimeFactoryBuildResultTest;
+
+- test factory;
+
+- test host;
+
+- RuntimeConstructionContractIntegrationTest;
+
+- Run All;
+
+- registrar baseline;
+
+- diseñar RuntimeFactoryRegistry;
+
+- diseñar CompositionPlan.

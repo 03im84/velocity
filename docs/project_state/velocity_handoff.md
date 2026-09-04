@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha de actualización | 25/08/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -21,7 +21,7 @@ Este documento permite continuar Velocity después de:
 - cambiar de modelo;
 - cambiar de dispositivo;
 - compactar contexto;
-- interrumpir el desarrollo durante un período largo.
+- interrumpir el desarrollo.
 
 No sustituye:
 
@@ -33,33 +33,37 @@ No sustituye:
 - código;
 - Git.
 
-Resume el estado operativo vigente y dirige al lector hacia las fuentes canónicas.
+Resume el estado operativo vigente y dirige hacia las fuentes canónicas.
 
 ## 2. Regla de recuperación
 
-Antes de proponer código o arquitectura, un nuevo asistente debe:
+Antes de proponer código o arquitectura, un asistente nuevo debe:
 
-1. leer este archivo completo;
+1. leer este archivo;
 
-2. leer Engineering Standards;
+2. leer Collaboration Contract;
 
-3. leer Core Architecture;
+3. leer Resume Prompt;
 
-4. leer los ADR relacionados con el siguiente milestone;
+4. leer Engineering Standards;
 
-5. leer el diseño activo;
+5. leer Core Architecture;
 
-6. revisar el código existente;
+6. leer ADR del milestone;
 
-7. revisar las pruebas aceptadas;
+7. leer diseño activo;
 
-8. revisar `git status`;
+8. revisar código;
 
-9. resumir el estado actual;
+9. revisar tests;
 
-10. confirmar el siguiente paso antes de modificar archivos.
+10. revisar Git;
 
-No debe reconstruir el proyecto desde memoria general ni inventar APIs ausentes.
+11. resumir estado;
+
+12. esperar confirmación.
+
+No debe reconstruir APIs mediante intuición.
 
 ## 3. Visión de Velocity
 
@@ -68,7 +72,7 @@ Velocity es una plataforma y juego modular de carreras antigravitatorias inspira
 Objetivos:
 
 - simulación antigravitatoria;
-- nave basada en RigidBody3D;
+- nave RigidBody3D;
 - sistemas físicos separados;
 - arquitectura modular;
 - telemetría futura;
@@ -76,31 +80,29 @@ Objetivos:
 - cabinas físicas;
 - hardware intercambiable;
 - composición visual futura;
-- aprendizaje técnico y experimentación.
-
-La plataforma debe permitir que el usuario cometa errores dentro de la simulación sin comprometer el simulador.
+- aprendizaje técnico.
 
 Regla principal:
 
 > La simulación puede fallar. El simulador no.
 
-## 4. Filosofía de colaboración
+## 4. Forma de colaboración
 
-El trabajo se realiza como tutoría técnica.
+El asistente trabaja como tutor y colega técnico.
 
-El asistente debe:
+Debe:
 
-- explicar el problema;
-- explicar el análisis;
-- explicar la decisión;
-- explicar responsabilidades;
+- explicar problema;
+- explicar análisis;
+- explicar decisiones;
+- proponer alternativas;
 - explicar tradeoffs;
-- proponer alternativas mejores;
-- no aceptar automáticamente una idea;
+- no aceptar ideas automáticamente;
 - corregir honestamente;
-- indicar siempre la ruta exacta;
-- explicar pruebas y resultados esperados;
-- evitar saltos arquitectónicos.
+- indicar rutas exactas;
+- entregar archivos completos;
+- interpretar pruebas;
+- preservar continuidad.
 
 Idioma:
 
@@ -113,31 +115,26 @@ Tono:
 - claro;
 - didáctico;
 - directo;
-- técnico;
-- colaborativo;
+- cercano;
+- riguroso;
 - honesto.
-
-El usuario utiliza expresiones coloquiales panameñas y venezolanas.
-
-El tono puede ser cercano, pero las decisiones deben mantenerse rigurosas.
 
 ## 5. Forma de trabajo del usuario
 
 El usuario:
 
-- no descarga archivos generados por el asistente;
-- lee y reescribe manualmente cada archivo;
-- utiliza Godot y su editor;
-- aprende mediante el proceso;
-- ejecuta pruebas localmente;
-- informa errores completos;
-- administra Git manualmente.
+- no descarga entregables generados;
+- reescribe manualmente;
+- aprende durante el proceso;
+- ejecuta Godot localmente;
+- ejecuta pruebas;
+- administra Git.
 
-Por tanto, cada entrega debe minimizar ambigüedad y riesgo de omisión.
+Por tanto, no se entregan reconstrucciones parciales.
 
-## 6. Directriz universal de archivos completos
+## 6. Directriz universal
 
-Toda modificación entregada debe proporcionarse como archivo completo consolidado.
+Toda modificación se entrega como archivo completo consolidado.
 
 Aplica a:
 
@@ -150,27 +147,18 @@ Aplica a:
 - herramientas;
 - ADR;
 - diseños;
-- Core Architecture;
-- Engineering Standards;
 - journals nuevos.
 
 No se utilizan:
 
 - parches;
-- cirugía manual;
-- “busca esta línea”;
-- “inserta después de”;
-- “elimina este bloque”;
-- diffs como instrucciones;
+- cirugía;
+- diffs como construcción;
+- inserciones parciales;
+- eliminaciones parciales;
 - fragmentos como estado final.
 
-Los diffs se utilizan únicamente para auditoría.
-
-Cuando varios archivos cambian, se entregan uno por uno y completos.
-
-## 7. Metodología obligatoria
-
-Toda característica importante sigue:
+## 7. Metodología
 
 ```text
 1. Problema
@@ -179,7 +167,7 @@ Toda característica importante sigue:
 
 3. ADR
 
-4. Diseño del componente
+4. Diseño
 
 5. Implementación
 
@@ -190,13 +178,11 @@ Toda característica importante sigue:
 8. Refactorización
 ```
 
-No se modifica código durante análisis, ADR o diseño.
+No se escribe código durante problema, análisis, ADR o diseño abierto.
 
-La implementación comienza después de aceptar responsabilidad y contrato.
+## 8. Principios
 
-## 8. Reglas arquitectónicas
-
-1. Arquitectura precede al código.
+1. Arquitectura antes que código.
 
 2. Una responsabilidad por componente.
 
@@ -204,33 +190,33 @@ La implementación comienza después de aceptar responsabilidad y contrato.
 
 4. Simplicidad es una característica.
 
-5. UI nunca define el Core.
+5. UI no define Core.
 
-6. No se añaden singletons por comodidad.
+6. Dependencias explícitas.
 
 7. Pocos autoloads.
 
-8. Dependencias explícitas.
+8. Sin singleton por comodidad.
 
-9. Drafts no se utilizan por runtime.
+9. Drafts editables.
 
-10. Runtime utiliza snapshots o planes compilados.
+10. Runtime usa snapshots o planes.
 
-11. Operaciones fallidas conservan Last Known Good.
+11. Last Known Good.
 
-12. Colecciones internas no se exponen mutables.
+12. Colecciones protegidas.
 
-13. Tests aceptados son baselines inmutables.
+13. Tests aceptados son inmutables.
 
-14. Una arquitectura nueva utiliza pruebas sucesoras.
+14. Nueva arquitectura usa prueba sucesora.
 
-15. Documentación forma parte del producto.
+15. Documentación es producto.
 
-16. Responsabilidad incorrecta se rediseña; no se parchea.
+16. Responsabilidad incorrecta se rediseña.
 
-17. Algoritmos sobre datos del usuario no utilizan recursión ilimitada.
+17. Sin recursión ilimitada.
 
-18. Hardware requiere validación más estricta que Simulation.
+18. Hardware es más estricto.
 
 ## 9. Project Decisions
 
@@ -257,7 +243,7 @@ Active Simulation
 Active Hardware
 ```
 
-Categorías de validación:
+Severities:
 
 ```text
 INFO
@@ -293,17 +279,13 @@ ADR-007 — Bounded Dispatch and Runtime Safety
 ADR-008 — Device Definitions, Profiles and Configuration
 
 ADR-009 — System Composition Pipeline
-```
 
-ADR siguiente, todavía no creado:
-
-```text
 ADR-010 — Runtime Construction and Factory Binding
 ```
 
-## 11. Arquitectura implementada
+Todos están aceptados.
 
-### DeviceBus
+## 11. DeviceBus
 
 Implementado:
 
@@ -330,7 +312,7 @@ DeviceBus no conoce:
 - hardware;
 - payload semantics.
 
-### Topic y Message Contracts
+## 12. Topic y Message Contracts
 
 Implementado:
 
@@ -342,19 +324,15 @@ BusMessage
 DeviceManifest topics
 ```
 
-Topics utilizan:
-
-```gdscript
-StringName
-```
+Topics utilizan StringName.
 
 BusMessage es RefCounted e inmutable por contrato.
 
-### Provider System
+## 13. Provider System
 
 Provider es rol por comportamiento.
 
-Distance Provider contract:
+Distance Provider:
 
 ```gdscript
 get_distance() -> float
@@ -362,7 +340,7 @@ get_distance() -> float
 is_valid() -> bool
 ```
 
-Implementaciones verificadas:
+Implementaciones:
 
 ```text
 ManualDistanceProvider
@@ -370,7 +348,7 @@ ManualDistanceProvider
 PhysicsDistanceProvider
 ```
 
-### Device Core
+## 14. Device Core
 
 Implementado:
 
@@ -414,11 +392,7 @@ CRITICAL
 FAILED
 ```
 
-Lifecycle y Health permanecen separados.
-
-### Profile y Configuration
-
-Pipeline implementado:
+## 15. Profile y Configuration
 
 ```text
 DeviceProfileDraft
@@ -434,7 +408,7 @@ Snapshots
 → DeviceManifest
 ```
 
-Namespace canónico reservado:
+Namespace canónico:
 
 ```text
 velocity.
@@ -446,7 +420,7 @@ Builtin inicial:
 velocity.distance_sensor.ideal@1
 ```
 
-### DeviceGraph
+## 16. DeviceGraph
 
 Implementado:
 
@@ -476,19 +450,16 @@ DeviceGraphSnapshot
 DeviceGraphSnapshotResult
 ```
 
-DeviceGraph 1.0 permite:
+Propiedades:
 
-- Devices;
-- Connections;
-- TopicChannels;
 - fan-out;
 - protección fan-in;
 - validación global;
-- detección iterativa de ciclos;
+- ciclos iterativos;
 - Snapshot inmutable;
 - Last Known Good.
 
-Un ciclo sin evidencia temporal produce:
+Ciclo sin evidencia temporal:
 
 ```text
 SIMULATION_HAZARD
@@ -496,11 +467,7 @@ SIMULATION_HAZARD
 graph_cycle_requires_temporal_analysis
 ```
 
-Simulation puede continuar.
-
-Hardware queda bloqueado.
-
-### SystemProfile
+## 17. SystemProfile
 
 Implementado:
 
@@ -516,7 +483,7 @@ SystemProfileCompileResult
 SystemProfileCompiler
 ```
 
-SystemProfile utiliza referencias exactas:
+Utiliza:
 
 ```text
 Profile ID
@@ -528,13 +495,9 @@ Profile Version
 
 Activation Context es explícito.
 
-SystemProfile no depende de:
+No depende de Graph, filesystem o runtime.
 
-- DeviceGraph;
-- filesystem;
-- runtime.
-
-### DeviceCatalog
+## 18. DeviceCatalog
 
 Implementado:
 
@@ -550,10 +513,9 @@ DeviceCatalogCompiler
 
 Propiedades:
 
-- catálogo inmutable;
+- inmutable;
 - múltiples versiones;
 - duplicado exacto bloqueante;
-- orden preservado;
 - resolución exacta;
 - sin latest;
 - sin fallback;
@@ -561,23 +523,7 @@ Propiedades:
 - sin factories;
 - sin filesystem.
 
-DeviceCatalog satisface DeviceProfileResolver:
-
-```gdscript
-has_profile(
-	profile_id: StringName,
-	profile_version: int
-) -> bool
-```
-
-```gdscript
-get_profile(
-	profile_id: StringName,
-	profile_version: int
-) -> DeviceProfile
-```
-
-### DeviceGraphAssembler
+## 19. DeviceGraphAssembler
 
 Implementado:
 
@@ -619,17 +565,13 @@ Propiedades:
 - Simulation-only;
 - Hardware rechazado;
 - Devices antes de Connections;
-- errores agregados por etapas;
-- gate entre etapas;
+- errores por etapas;
 - no Graph parcial;
 - orden preservado;
 - no mutación;
-- no runtime;
-- no filesystem.
+- no runtime.
 
-## 12. System Composition Pipeline
-
-Estado implementado:
+## 20. Pipeline implementado
 
 ```text
 DeviceProfiles
@@ -651,29 +593,21 @@ DeviceGraphAssembler
 DeviceGraphSnapshot
 ```
 
-Estado futuro:
+## 21. Runtime Construction Contract
+
+Estado:
 
 ```text
-DeviceGraphSnapshot
+ADR-010 ACEPTADO
 
-↓
+DESIGN 1.0 ACTIVO
 
-CompositionCompiler
-
-↓
-
-CompositionPlan
-
-↓
-
-CompositionRuntime
+IMPLEMENTACIÓN PENDIENTE
 ```
 
-## 13. Componentes pendientes principales
+Componentes autorizados:
 
 ```text
-Runtime Construction Contract
-
 RuntimeFactoryKey
 
 RuntimeDependencyBinding
@@ -683,126 +617,17 @@ RuntimeConstructionRequest
 RuntimeDeviceHandle
 
 RuntimeFactoryBuildResult
-
-RuntimeHost contract
-
-RuntimeFactoryRegistry
-
-CompositionPlan
-
-CompositionCompiler
-
-CompositionRuntime
-
-SystemProfile persistence
-
-DeviceCatalog persistence
-
-Temporal Boundary metadata
-
-Measurement Identity
-
-provenance
-
-GraphEditor
-
-ConfigurationEditor
-
-GraphLayout
-
-Hardware Mode compiler
-
-Calibration
-
-AdaptationPolicy
-
-RuntimeAllocation
 ```
 
-## 14. Decisiones actuales para ADR-010
-
-Estas decisiones fueron aceptadas en conversación, pero todavía no están documentadas ni confirmadas en Git.
-
-### Factory construct-only
-
-Runtime factory:
-
-- construye;
-- no inicializa;
-- no inicia;
-- no apaga runtime global;
-- no adjunta Nodes.
-
-### Producto
-
-Factory devuelve:
+Behaviors:
 
 ```text
-RuntimeDeviceHandle
+RuntimeFactory
+
+RuntimeHost
 ```
 
-No devuelve Object genérico ni Device aislado.
-
-### Construcción atómica
-
-En fallo:
-
-- factory limpia recursos creados;
-- devuelve Handle null;
-- produce ValidationReport.
-
-### Rollback global
-
-CompositionRuntime limpia Handles previos en orden inverso.
-
-### Dependencias
-
-Factory recibe:
-
-```text
-RuntimeConstructionRequest
-```
-
-con dependencias pre-resueltas.
-
-No utiliza service locator.
-
-### Ownership
-
-Cada binding declara:
-
-```text
-BORROWED
-
-TRANSFERRED
-```
-
-BORROWED:
-
-- owner original permanece;
-- Handle no libera.
-
-TRANSFERRED:
-
-- ownership pasa a la transacción;
-- en éxito pertenece al Handle;
-- en fallo la factory limpia.
-
-### Nodes
-
-Factory devuelve Nodes sin adjuntar.
-
-CompositionRuntime utiliza RuntimeHost para attach/detach transaccional.
-
-### DeviceBus
-
-DeviceBus pertenece a CompositionRuntime.
-
-No se entrega como global oculto durante construcción.
-
-Se utiliza en inicialización posterior.
-
-### Factory Key
+## 22. RuntimeFactoryKey
 
 Identidad exacta:
 
@@ -818,56 +643,285 @@ Profile Version
 Activation Context
 ```
 
-No existe fallback.
+No contiene:
 
-### CompositionPlan
+```text
+host_target
+```
 
-Plan guarda:
+No existe:
+
+- latest;
+- fallback;
+- sustitución de versión;
+- sustitución de contexto.
+
+## 23. RuntimeDependencyBinding
+
+Estado conceptual:
+
+```text
+Dependency ID
+
+Dependency Value
+
+Ownership
+```
+
+Value:
+
+```gdscript
+Object
+```
+
+Ownership:
+
+```text
+BORROWED
+
+TRANSFERRED
+```
+
+BORROWED no se libera por Handle.
+
+TRANSFERRED pasa a factory transaction durante build.
+
+## 24. RuntimeConstructionRequest
+
+Contiene:
+
+- Device ID;
+- DeviceConfiguration;
+- RuntimeFactoryKey;
+- bindings pre-resueltos.
+
+No es service locator.
+
+No descubre SceneTree, autoload o filesystem.
+
+Crear Request no transfiere ownership.
+
+Invocar factory build inicia la transacción.
+
+## 25. RuntimeDeviceHandle
+
+Contiene:
+
+- Device ID;
+- Configuration;
+- Factory Key;
+- Primary Runtime Object;
+- Host Objects;
+- Dependency Bindings.
+
+Primary Runtime Object:
+
+```gdscript
+Object
+```
+
+Host Objects:
+
+```gdscript
+Array[Object]
+```
+
+Handle representa ownership de una unidad runtime.
+
+No coordina sistema completo.
+
+## 26. RuntimeFactory behavior
+
+```gdscript
+build(
+	request: RuntimeConstructionRequest
+) -> RuntimeFactoryBuildResult
+```
+
+```gdscript
+release(
+	handle: RuntimeDeviceHandle
+) -> ValidationReport
+```
+
+Factory:
+
+- construye;
+- no inicializa;
+- no inicia;
+- no adjunta;
+- limpia parciales;
+- libera su producto cuando Runtime coordina.
+
+## 27. RuntimeHost behavior
+
+```gdscript
+attach(
+	handle: RuntimeDeviceHandle
+) -> ValidationReport
+```
+
+```gdscript
+detach(
+	handle: RuntimeDeviceHandle
+) -> ValidationReport
+```
+
+RuntimeHost recibe Handle completo.
+
+Interpreta Host Objects.
+
+No sustituye factory release.
+
+## 28. Construcción y rollback
+
+Factory build exitoso:
+
+```text
+Handle válido
+```
+
+Factory build fallido:
+
+```text
+Handle null
+
+Report
+
+recursos parciales liberados
+```
+
+Rollback global:
+
+```text
+orden inverso
+```
+
+Last Known Good solo cambia después de commit completo.
+
+## 29. DeviceBus futuro
+
+DeviceBus pertenece a CompositionRuntime.
+
+Factory no crea Bus global.
+
+Factory no usa autoload.
+
+Factory produce estado equivalente a CREATED.
+
+DeviceBus se entrega en initialize coordinado.
+
+## 30. Pipeline futuro
+
+```text
+DeviceGraphSnapshot
+
+↓
+
+CompositionCompiler
+
+↓
+
+CompositionPlan
+
+↓
+
+CompositionRuntime
+
+↓
+
+RuntimeConstructionRequest
+
+↓
+
+RuntimeFactory
+
+↓
+
+RuntimeDeviceHandle
+```
+
+## 31. RuntimeFactoryRegistry futuro
+
+Resolverá:
+
+```text
+RuntimeFactoryKey
+
+→
+
+RuntimeFactory
+```
+
+Permanecerá separado de DeviceCatalog y CompositionPlan.
+
+Requiere diseño propio después de Runtime Construction Contract.
+
+## 32. CompositionPlan futuro
+
+Conservará:
+
+- RuntimeFactoryKeys;
+- dependency directives;
+- lifecycle order;
+- communication directives;
+- runtime policies.
+
+No conservará:
+
+- factory;
+- Callable;
+- Handle;
+- Device activo;
+- Node activo;
+- DeviceBus activo.
+
+## 33. CompositionRuntime futuro
+
+Poseerá:
+
+- DeviceBus;
+- Handles;
+- RuntimeHost;
+- attach state;
+- lifecycle;
+- rollback;
+- shutdown;
+- Runtime Safety observation.
+
+## 34. Siguiente componente
 
 ```text
 RuntimeFactoryKey
 ```
 
-No guarda:
-
-- factory Object;
-- Callable;
-- constructor ejecutable.
-
-## 15. Siguiente milestone
-
-Crear y aceptar:
+Orden posterior:
 
 ```text
-ADR-010 — Runtime Construction and Factory Binding
+RuntimeDependencyBinding
+
+RuntimeConstructionRequest
+
+RuntimeDeviceHandle
+
+RuntimeFactoryBuildResult
+
+Runtime Construction Integration
+
+RuntimeFactoryRegistry Design
+
+CompositionPlan Design
+
+CompositionCompiler
+
+CompositionRuntime
 ```
 
-Después:
+## 35. Convenciones GDScript
 
-```text
-Runtime Construction Contract Design
-```
+Nunca comenzar línea con `.`.
 
-No escribir código antes de aceptar ambos documentos.
-
-## 16. Convenciones GDScript críticas
-
-### Nunca comenzar una línea con punto
-
-Incorrecto:
-
-```gdscript
-object
-	.method()
-```
-
-Correcto:
-
-```gdscript
-object.method()
-```
-
-### Mantener acceso completo en una línea física
+Mantener en línea física:
 
 ```gdscript
 object.property
@@ -877,45 +931,33 @@ object.method()
 ClassName.CONSTANT
 ```
 
-### Tipos de colecciones completos
+Mantener completos:
 
 ```gdscript
-Array[DeviceGraphNode]
+Array[Type]
 
-Dictionary[String, DeviceGraphNode]
+Dictionary[Key, Value]
 ```
 
-No partir el tipo entre líneas.
-
-### Métodos nativos de Object
-
-Revisar conflictos con:
+Revisar conflictos con Object:
 
 ```text
-connect()
+connect
 
-disconnect()
+disconnect
 
-emit_signal()
+emit_signal
 
-call()
+call
 
-free()
+free
 
-get()
+get
 
-set()
+set
 ```
 
-DeviceGraph utiliza:
-
-```gdscript
-connect_ports()
-
-disconnect_ports()
-```
-
-### Naming
+Naming:
 
 ```text
 Escenas:
@@ -923,3 +965,257 @@ PascalCase.tscn
 
 Scripts:
 snake_case.gd
+
+Resources:
+snake_case.tres
+
+Classes:
+PascalCase
+
+Métodos:
+snake_case
+
+Constantes:
+UPPER_SNAKE_CASE
+
+Codes:
+lower_snake_case StringName
+```
+
+## 36. Pruebas
+
+No modificar baselines aceptadas.
+
+Crear pruebas sucesoras.
+
+Ante fallo:
+
+1. no cambiar código;
+
+2. copiar primer error completo;
+
+3. incluir archivo y línea;
+
+4. clasificar;
+
+5. después cambiar.
+
+Ejecución autoritativa:
+
+```text
+Godot Console
+
++
+
+headless
+
++
+
+Velocity Test Runner
+```
+
+## 37. Herramientas
+
+Godot:
+
+```text
+4.7.1 stable
+```
+
+Runner:
+
+```text
+res://test/tools/run_godot_tests.ps1
+```
+
+Dashboard:
+
+```text
+Velocity Test Dashboard 0.3.2
+```
+
+Códigos:
+
+```text
+124 TIMEOUT
+
+125 proceso no confirmado
+
+126 ENGINE_ERROR con ExitCode 0
+```
+
+## 38. Baseline vigente
+
+```text
+Planned: 48
+Completed: 48
+Passed: 48
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+Total:
+
+```text
+48 tests
+
+1396 checks
+
+0 failures
+```
+
+## 39. Documentos vigentes
+
+```text
+Core Architecture:
+2.13
+
+Engineering Standards:
+1.3
+
+System Composition Pipeline Design:
+1.4
+
+Runtime Construction Contract Design:
+1.0
+
+DeviceGraphAssembler Design:
+1.1
+
+DeviceCatalog Design:
+1.1
+
+DeviceGraph Design:
+1.3
+```
+
+## 40. Git
+
+Repositorio:
+
+```text
+https://github.com/03im84/velocity
+```
+
+Rama:
+
+```text
+main
+```
+
+Último commit publicado antes del paquete ADR-010:
+
+```text
+e21caed
+docs(project): add recovery and collaboration package
+```
+
+Último estado remoto confirmado:
+
+```text
+## main...origin/main
+```
+
+El paquete arquitectónico ADR-010 está pendiente de commit.
+
+## 41. Borrador alternativo recuperado
+
+Archivo local fuera del repositorio:
+
+```text
+recovered_runtime_factory_and_composition_plan_design_250826.md
+```
+
+No es arquitectura canónica.
+
+Ideas candidatas:
+
+- lifecycle order;
+- DispatchPolicy;
+- subscription directives;
+- host abstractions;
+- Last Known Good.
+
+Alternativas rechazadas:
+
+- Callable genérico;
+- factory en Plan;
+- factory devuelve Device;
+- host_target como Key;
+- Registry mutable sin diseño;
+- Array[Dictionary];
+- topological order obligatorio.
+
+## 42. Project State Package
+
+```text
+docs/project_state/
+velocity_handoff.md
+
+docs/project_state/
+velocity_resume_prompt.md
+
+docs/project_state/
+velocity_collaboration_contract.md
+```
+
+En un chat nuevo se adjuntan los tres.
+
+## 43. Jerarquía de autoridad
+
+1. código versionado;
+
+2. tests aceptados;
+
+3. ADR;
+
+4. diseños activos;
+
+5. Core Architecture;
+
+6. Engineering Standards;
+
+7. handoff;
+
+8. Collaboration Contract;
+
+9. journals;
+
+10. conversación anterior.
+
+## 44. Protocolo de actualización
+
+Actualizar este archivo después de cada milestone.
+
+Cada actualización se entrega completa.
+
+Actualizar:
+
+- versión;
+- fecha;
+- baseline;
+- commits;
+- componentes;
+- documentos;
+- siguiente milestone;
+- decisiones abiertas.
+
+## 45. Regla final
+
+El chat facilita colaboración.
+
+Git conserva producto.
+
+ADR conserva decisiones.
+
+Diseños conservan contratos.
+
+Tests conservan comportamiento.
+
+Handoff conserva continuidad.
+
+Si el chat desaparece, el proyecto debe continuar desde estas fuentes sin reconstruir su historia de memoria.

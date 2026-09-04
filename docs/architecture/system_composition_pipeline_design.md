@@ -3,14 +3,14 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.3 |
-| Fecha | 23/08/2026 |
-| ADR relacionado | ADR-009 — System Composition Pipeline |
-| Alcance | Definición, resolución, Graph assembly, compilación y runtime |
+| Versión | 1.4 |
+| Fecha | 25/08/2026 |
+| ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
+| Alcance | Definición, resolución, Graph assembly, construcción runtime, compilación y activación |
 
 ## 1. Propósito
 
-Este documento traduce ADR-009 a un diseño concreto e implementable.
+Este documento describe el pipeline completo de composición de Velocity.
 
 Define la relación entre:
 
@@ -20,57 +20,40 @@ Define la relación entre:
 - DeviceProfileResolver;
 - DeviceCatalog;
 - DeviceGraphAssembler;
+- DeviceGraphSnapshot;
+- RuntimeFactoryKey;
+- RuntimeDependencyBinding;
+- RuntimeConstructionRequest;
+- RuntimeDeviceHandle;
+- RuntimeFactoryBuildResult;
 - RuntimeFactoryRegistry;
+- RuntimeHost;
 - CompositionCompiler;
 - CompositionPlan;
 - CompositionRuntime;
 - persistencia externa.
 
-SystemProfile 1.0 implementa y verifica:
-
-- SystemConnectionSpec;
-- SystemProfileDraft;
-- SystemProfile;
-- SystemProfileCompileResult;
-- SystemProfileCompiler;
-- contrato de DeviceProfileResolver;
-- resolver controlado de pruebas;
-- pruebas unitarias;
-- regresión completa.
-
-DeviceCatalog 1.0 implementa y verifica:
-
-- DeviceCatalogDraft;
-- DeviceCatalog;
-- DeviceCatalogCompileResult;
-- DeviceCatalogCompiler;
-- resolución exacta;
-- múltiples versiones;
-- integración con SystemProfileCompiler.
-
-DeviceGraphAssembler 1.0 implementa y verifica:
-
-- DeviceGraphAssemblyResult;
-- DeviceGraphAssembler;
-- resolución exacta desde SystemProfile;
-- construcción de DeviceManifest;
-- construcción de DeviceGraphNode;
-- Connections desde SystemConnectionSpec;
-- DeviceGraphSnapshot;
-- agregación de Reports por etapas;
-- integración completa.
-
-Siguiente etapa:
+Estado implementado:
 
 ```text
-RuntimeFactoryRegistry
+SystemProfile 1.0
 
-+
+DeviceCatalog 1.0
 
-CompositionPlan
+DeviceGraphAssembler 1.0
 ```
 
-Estos contratos deben definirse antes de implementar CompositionCompiler.
+Estado arquitectónico activo:
+
+```text
+Runtime Construction Contract 1.0
+```
+
+Siguiente componente:
+
+```text
+RuntimeFactoryKey
+```
 
 ## 2. Pipeline completo
 
@@ -103,33 +86,78 @@ CompositionPlan
 		│
 		▼
 CompositionRuntime
+		│
+		├── RuntimeFactoryRegistry
+		├── RuntimeHost
+		├── RuntimeDependencyBindings
+		└── DeviceBus
+				│
+				▼
+RuntimeConstructionRequest
+				│
+				▼
+RuntimeFactory
+				│
+				▼
+RuntimeFactoryBuildResult
+				│
+				▼
+RuntimeDeviceHandle
 ```
 
-Dependencias laterales:
+## 3. Estado del pipeline
+
+### 3.1 Implementado
 
 ```text
-DeviceProfileResolver
+DeviceProfiles
 		│
-		├──► SystemProfileCompiler
-		└──► DeviceGraphAssembler
+		▼
+DeviceCatalog
+		│
+		▼
+SystemProfile
+		│
+		▼
+DeviceGraphAssembler
+		│
+		▼
+DeviceGraphSnapshot
+```
 
+### 3.2 Diseñado y autorizado
+
+```text
+RuntimeFactoryKey
+
+RuntimeDependencyBinding
+
+RuntimeConstructionRequest
+
+RuntimeDeviceHandle
+
+RuntimeFactoryBuildResult
+
+RuntimeFactory behavior
+
+RuntimeHost behavior
+```
+
+### 3.3 Pendiente de diseño
+
+```text
 RuntimeFactoryRegistry
-		│
-		└──► CompositionCompiler
+
+CompositionPlan
+
+CompositionCompiler
+
+CompositionRuntime
 ```
 
-Persistencia:
+## 4. Estructura implementada
 
-```text
-SystemProfileSerializer
-		│
-		├── load
-		└── save
-```
-
-## 3. Estructura implementada
-
-### 3.1 SystemProfile
+### 4.1 SystemProfile
 
 ```text
 core/composition/
@@ -140,7 +168,7 @@ core/composition/
 └── system_profile_compiler.gd
 ```
 
-### 3.2 DeviceCatalog
+### 4.2 DeviceCatalog
 
 ```text
 core/catalog/
@@ -150,7 +178,7 @@ core/catalog/
 └── device_catalog_compiler.gd
 ```
 
-### 3.3 DeviceGraphAssembler
+### 4.3 DeviceGraphAssembler
 
 ```text
 core/composition/
@@ -158,58 +186,41 @@ core/composition/
 └── device_graph_assembler.gd
 ```
 
-### 3.4 Pruebas de SystemProfile
+## 5. Estructura autorizada para Runtime Construction
 
 ```text
-test/core/composition/
-├── SystemConnectionSpecTest.tscn
-├── system_connection_spec_test.gd
-├── SystemProfileDraftTest.tscn
-├── system_profile_draft_test.gd
-├── SystemProfileCompilerTest.tscn
-├── system_profile_compiler_test.gd
-└── system_profile_test_resolver.gd
+core/runtime/
+├── runtime_factory_key.gd
+├── runtime_dependency_binding.gd
+├── runtime_construction_request.gd
+├── runtime_device_handle.gd
+└── runtime_factory_build_result.gd
 ```
 
-### 3.5 Pruebas de DeviceCatalog
+Pruebas:
 
 ```text
-test/core/catalog/
-├── DeviceCatalogDraftTest.tscn
-├── device_catalog_draft_test.gd
-├── DeviceCatalogCompilerTest.tscn
-├── device_catalog_compiler_test.gd
-├── SystemProfileDeviceCatalogIntegrationTest.tscn
-└── system_profile_device_catalog_integration_test.gd
+test/core/runtime/
+├── RuntimeFactoryKeyTest.tscn
+├── runtime_factory_key_test.gd
+├── RuntimeDependencyBindingTest.tscn
+├── runtime_dependency_binding_test.gd
+├── RuntimeConstructionRequestTest.tscn
+├── runtime_construction_request_test.gd
+├── RuntimeDeviceHandleTest.tscn
+├── runtime_device_handle_test.gd
+├── RuntimeFactoryBuildResultTest.tscn
+├── runtime_factory_build_result_test.gd
+├── RuntimeConstructionContractIntegrationTest.tscn
+├── runtime_construction_contract_integration_test.gd
+├── runtime_test_factory.gd
+├── runtime_test_host.gd
+└── runtime_test_object.gd
 ```
 
-### 3.6 Pruebas de DeviceGraphAssembler
+## 6. Dependencias permitidas
 
-```text
-test/core/composition/
-├── DeviceGraphAssemblerTest.tscn
-├── device_graph_assembler_test.gd
-├── SystemProfileCatalogGraphAssemblyIntegrationTest.tscn
-└── system_profile_catalog_graph_assembly_integration_test.gd
-```
-
-### 3.7 Componentes futuros
-
-```text
-core/composition/
-├── runtime_factory_registry.gd
-├── composition_plan.gd
-├── composition_compile_result.gd
-├── composition_compiler.gd
-├── composition_runtime.gd
-└── composition_activation_result.gd
-```
-
-Las rutas futuras deberán confirmarse en sus diseños correspondientes.
-
-## 4. Dependencias permitidas
-
-El pipeline lógico implementado puede depender de:
+El pipeline lógico puede depender de:
 
 ```text
 DeviceProfile
@@ -227,275 +238,129 @@ DeviceGraphSnapshot
 ValidationIssue
 
 ValidationReport
+
+Object
 ```
 
-SystemProfileCompiler y DeviceGraphAssembler dependen del comportamiento de DeviceProfileResolver.
+SystemProfileCompiler y DeviceGraphAssembler dependen del comportamiento DeviceProfileResolver.
 
-DeviceCatalog satisface ese contrato.
+Runtime contracts utilizan `Object` sin invocar APIs específicas de Node.
 
-## 5. Dependencias no permitidas
+## 7. Dependencias prohibidas
 
-SystemProfile, DeviceCatalog y DeviceGraphAssembler no dependen de:
+Los componentes lógicos no descubren dependencias mediante:
 
 ```text
-DeviceBus runtime
-
-Device runtime
-
-RuntimeFactoryRegistry
-
-CompositionRuntime
-
 SceneTree
 
-GraphEditor
+Node paths
+
+autoloads
+
+singletons globales
 
 filesystem
 
-Resource persistence
-
 JSON
 
-hardware adapters
+GraphEditor
+
+hardware adapters concretos
 
 telemetría
 ```
 
-El pipeline implementado representa definición, resolución y topología.
+RuntimeHost concreto podrá adaptar Objects a un host.
 
-No representa ejecución.
+Los contratos base no conocen ese host.
 
-## 6. Terminología
-
-### SystemConnectionSpec
-
-Especificación persistible de endpoints antes de construir DeviceGraph.
-
-### SystemProfileDraft
-
-Composición editable todavía no validada como snapshot.
-
-### SystemProfileCompiler
-
-Componente que valida Draft y produce SystemProfile.
-
-### SystemProfile
-
-Snapshot validado e inmutable de una composición.
-
-### DeviceProfileResolver
-
-Rol por comportamiento que resuelve DeviceProfile mediante ID y versión exactos.
-
-### DeviceCatalogDraft
-
-Colección editable de DeviceProfile snapshots.
-
-### DeviceCatalogCompiler
-
-Componente que valida Draft y produce DeviceCatalog.
-
-### DeviceCatalog
-
-Snapshot inmutable que implementa DeviceProfileResolver.
-
-### DeviceGraphAssemblyResult
-
-Resultado transaccional de Graph assembly.
-
-### DeviceGraphAssembler
-
-Componente que convierte SystemProfile en DeviceGraphSnapshot.
-
-### RuntimeFactoryRegistry
-
-Componente futuro que resolverá factories ejecutables.
-
-### CompositionCompiler
-
-Componente futuro que convertirá DeviceGraphSnapshot en CompositionPlan.
-
-### CompositionPlan
-
-Plan runtime validado e inmutable.
-
-### CompositionRuntime
-
-Componente futuro que ejecutará CompositionPlan y poseerá recursos activos.
-
-## 7. Identidad de SystemProfile
-
-SystemProfile utiliza:
-
-```text
-System Profile ID
-
-System Profile Version
-```
-
-Tipos:
-
-```gdscript
-system_profile_id: StringName
-
-system_profile_version: int
-```
-
-Reglas:
-
-```text
-ID no vacío;
-
-versión mayor que cero.
-```
-
-System Profile ID no depende de:
-
-- nombre de archivo;
-- ruta;
-- Display Name;
-- SceneTree;
-- instance ID de Godot.
-
-## 8. Activation Context
-
-SystemProfile declara un Activation Context explícito.
-
-Valores iniciales:
-
-```text
-SIMULATION
-
-HARDWARE
-```
-
-Se utilizan los valores canónicos de:
-
-```gdscript
-DeviceConfiguration.ActivationContext
-```
-
-Todas las DeviceConfigurations deben coincidir con el contexto de SystemProfile.
-
-Mismatch:
-
-```text
-STRUCTURAL_ERROR
-
-code:
-system_profile_activation_context_mismatch
-```
-
-DeviceGraphAssembler 1.0 soporta solamente Simulation.
-
-Hardware assembly produce:
-
-```text
-HARDWARE_SAFETY_ERROR
-
-code:
-device_graph_assembly_hardware_not_supported
-```
-
-Hardware Mode activo permanece fuera de alcance.
-
-## 9. SystemConnectionSpec
-
-### 9.1 Responsabilidad
-
-> Representar endpoints persistibles de una Connection antes de construir DeviceGraph.
-
-### 9.2 Estado
-
-```gdscript
-var _connection_id: StringName
-
-var _source_device_id: String
-
-var _source_port_id: StringName
-
-var _target_device_id: String
-
-var _target_port_id: StringName
-```
-
-### 9.3 Construcción
-
-```gdscript
-SystemConnectionSpec.new(
-	source_device_id,
-	source_port_id,
-	target_device_id,
-	target_port_id
-)
-```
-
-Connection ID se genera de forma determinista.
-
-### 9.4 Formato
-
-```text
-source_device_id
-|
-source_port_id
-|
-target_device_id
-|
-target_port_id
-```
-
-### 9.5 No responsabilidades
-
-SystemConnectionSpec no contiene:
-
-- Topic;
-- Semantic Kind;
-- DeviceGraphNode;
-- DeviceGraphConnection;
-- DeviceBus;
-- Callable;
-- runtime factory;
-- posición visual.
-
-## 10. SystemProfileDraft
+## 8. SystemConnectionSpec
 
 Responsabilidad:
 
-> Representar una composición editable que todavía no puede utilizarse por Graph assembly o runtime.
+> Representar endpoints persistibles antes de construir DeviceGraph.
 
-Estado:
+Contiene:
 
-```gdscript
-var system_profile_id: StringName = &""
+- Connection ID determinista;
+- Source Device ID;
+- Source Port ID;
+- Target Device ID;
+- Target Port ID.
 
-var system_profile_version: int = 1
+No contiene:
 
-var display_name: String = ""
+- Topic;
+- Semantic Kind;
+- DeviceGraphConnection;
+- factory;
+- runtime object.
 
-var description: String = ""
+## 9. SystemProfileDraft
 
-var activation_context: int = (
-	DeviceConfiguration.ActivationContext.SIMULATION
-)
+Representa composición editable.
 
-var device_configurations: Array[DeviceConfiguration] = []
+Contiene:
 
-var connection_specs: Array[SystemConnectionSpec] = []
+- System Profile ID;
+- versión;
+- Display Name;
+- descripción;
+- Activation Context;
+- DeviceConfiguration snapshots;
+- SystemConnectionSpecs.
+
+Puede estar incompleto.
+
+No ejecuta.
+
+## 10. SystemProfileCompiler
+
+Responsabilidad:
+
+> Validar SystemProfileDraft y producir SystemProfile.
+
+Valida:
+
+- identidad;
+- contexto;
+- Configurations;
+- Device IDs;
+- dependencias exactas;
+- Connection Specs;
+- endpoints conocidos.
+
+No valida Ports, Topics, fan-in o ciclos.
+
+## 11. SystemProfile
+
+SystemProfile es:
+
+```text
+RefCounted
+
+inmutable
+
+independiente de filesystem
+
+independiente de DeviceGraph
+
+no ejecutable
 ```
 
-Draft puede estar:
+Utiliza referencias exactas:
 
-- vacío;
-- incompleto;
-- con null;
-- con dependencias faltantes;
-- con Specs inválidas.
+```text
+Profile ID
 
-SystemProfileCompiler establece la frontera de validez.
++
 
-## 11. DeviceProfileResolver
+Profile Version
+```
 
-Contrato:
+## 12. DeviceProfileResolver
+
+Contrato por comportamiento:
 
 ```gdscript
 has_profile(
@@ -511,150 +376,9 @@ get_profile(
 ) -> DeviceProfile
 ```
 
-Reglas:
+No existe fallback.
 
-- coincidencia exacta;
-- sin latest;
-- sin fallback;
-- sin sustitución;
-- resolución estable durante operación.
-
-DeviceCatalog implementa este contrato.
-
-## 12. SystemProfile
-
-Responsabilidad:
-
-> Representar una composición validada e inmutable mediante referencias versionadas.
-
-SystemProfile contiene:
-
-- identidad;
-- versión;
-- Display Name;
-- descripción;
-- Activation Context;
-- DeviceConfiguration snapshots;
-- SystemConnectionSpecs.
-
-SystemProfile no contiene:
-
-- DeviceProfile completo;
-- DeviceGraph;
-- DeviceBus;
-- runtime factory;
-- filesystem;
-- UI.
-
-Los Arrays se copian.
-
-Los getters devuelven copias.
-
-No expone setters ni ejecución.
-
-## 13. SystemProfileCompileResult
-
-Contiene:
-
-```text
-SystemProfile
-
-ValidationReport
-```
-
-Success requiere:
-
-- Profile no null;
-- Report no null;
-- identity válida;
-- Report válido para Activation Context.
-
-No expone setters.
-
-## 14. SystemProfileCompiler
-
-Responsabilidad:
-
-> Validar SystemProfileDraft y producir SystemProfile.
-
-Valida:
-
-- Draft;
-- resolver;
-- identidad;
-- contexto;
-- Configurations;
-- Device IDs;
-- dependencias;
-- Connection Specs;
-- endpoints conocidos.
-
-No valida:
-
-- existencia de Ports;
-- Topic;
-- Semantic Kind;
-- fan-in;
-- ciclos;
-- Graph Snapshot.
-
-Estas responsabilidades pertenecen a DeviceGraphAssembler y DeviceGraph.
-
-## 15. Códigos de SystemProfile
-
-```text
-system_profile_draft_missing
-
-device_profile_resolver_missing
-
-device_profile_resolver_contract_invalid
-
-system_profile_id_missing
-
-system_profile_version_invalid
-
-system_profile_display_name_missing
-
-system_profile_activation_context_invalid
-
-system_profile_configuration_missing
-
-system_profile_configuration_invalid
-
-duplicate_system_device_id
-
-system_profile_activation_context_mismatch
-
-system_profile_dependency_missing
-
-system_profile_dependency_invalid
-
-system_profile_dependency_identity_mismatch
-
-system_connection_spec_missing
-
-system_connection_spec_invalid
-
-duplicate_system_connection
-
-system_connection_source_device_not_found
-
-system_connection_target_device_not_found
-```
-
-## 16. SystemProfile transaccional
-
-SystemProfileCompiler produce un snapshot nuevo.
-
-Draft permanece editable.
-
-Cambiar Draft no modifica SystemProfile.
-
-Compilación fallida no produce Profile.
-
-SystemProfile vacío es válido.
-
-## 17. DeviceCatalog
+## 13. DeviceCatalog
 
 Pipeline:
 
@@ -668,95 +392,27 @@ DeviceCatalogCompiler
 DeviceCatalog
 ```
 
-Propiedades:
+DeviceCatalog:
 
-- Draft editable;
-- Catalog inmutable;
-- resolución exacta;
-- múltiples versiones;
-- duplicado exacto bloqueante;
-- orden preservado;
-- Arrays independientes;
-- sin latest;
-- sin overwrite;
-- sin factories;
-- sin filesystem.
+- es inmutable;
+- permite múltiples versiones;
+- rechaza duplicado exacto;
+- conserva orden;
+- no implementa latest;
+- no contiene factories;
+- no abre archivos;
+- satisface DeviceProfileResolver.
 
-DeviceCatalog no tiene ID ni versión propios.
-
-La identidad pertenece a DeviceProfile.
-
-## 18. Códigos de DeviceCatalog
-
-```text
-device_catalog_draft_missing
-
-device_catalog_profile_missing
-
-device_catalog_profile_invalid
-
-duplicate_device_profile_identity
-
-device_catalog_snapshot_invalid
-```
-
-## 19. DeviceCatalog transaccional
-
-Compilación fallida:
-
-- no modifica Draft;
-- no produce Catalog;
-- no sobrescribe referencia anterior.
-
-Draft posterior no modifica Catalog.
-
-Catalog vacío es válido.
-
-## 20. DeviceGraphAssemblyResult
-
-Contiene:
-
-```text
-DeviceGraphSnapshot
-
-ValidationReport
-```
-
-Success requiere:
-
-- Snapshot no null;
-- Report no null;
-- Report válido para Simulation;
-- Snapshot válido.
-
-No expone setters.
-
-## 21. DeviceGraphAssembler
+## 14. DeviceGraphAssembler
 
 Responsabilidad:
 
 > Construir DeviceGraphSnapshot desde SystemProfile y DeviceProfileResolver.
 
-API:
-
-```gdscript
-assemble(
-	system_profile: SystemProfile,
-	profile_resolver: Object
-) -> DeviceGraphAssemblyResult
-```
-
-Assembler es stateless.
-
-No conserva última operación.
-
-## 22. Pipeline interno de Graph assembly
+Pipeline:
 
 ```text
 SystemProfile
-		│
-		▼
-DeviceConfigurations
 		│
 		▼
 DeviceProfileResolver
@@ -768,88 +424,45 @@ DeviceManifestBuilder
 DeviceGraphNodeBuilder
 		│
 		▼
-DeviceGraphDraft.add_device()
+DeviceGraphDraft
 		│
 		▼
-SystemConnectionSpecs
+connect_ports()
 		│
 		▼
-DeviceGraphDraft.connect_ports()
-		│
-		▼
-DeviceGraphDraft.create_snapshot()
+create_snapshot()
 		│
 		▼
 DeviceGraphSnapshot
 ```
 
-## 23. Etapas de Graph assembly
+Propiedades:
 
-```text
-1. Devices
+- stateless;
+- Simulation-only;
+- Hardware rechazado;
+- Devices antes de Connections;
+- errores agregados por etapas;
+- gate entre etapas;
+- no Graph parcial;
+- orden preservado;
+- no mutación;
+- no runtime;
+- no filesystem.
 
-2. Connections
+## 15. DeviceGraphSnapshot
 
-3. Snapshot
-```
+Representa topología validada e inmutable.
 
-Errores se agregan dentro de etapa.
+No contiene:
 
-Una etapa fallida bloquea la siguiente.
+- RuntimeFactory;
+- RuntimeDeviceHandle;
+- DeviceBus activo;
+- Device activo;
+- CompositionRuntime.
 
-No se devuelve Graph parcial.
-
-## 24. Device stage
-
-Por cada Configuration:
-
-1. Configuration no null;
-
-2. Configuration válida;
-
-3. Context coincide;
-
-4. Profile exacto disponible;
-
-5. Profile válido;
-
-6. Profile identity coincide;
-
-7. Manifest válido;
-
-8. Graph Node válido;
-
-9. add Device exitoso.
-
-El orden de Nodes sigue Configurations.
-
-## 25. Connection stage
-
-Por cada Spec:
-
-1. Spec no null;
-
-2. Spec identity válida;
-
-3. connect_ports();
-
-4. merge OperationResult Report;
-
-5. verificar Connection ID.
-
-El orden de Connections sigue Specs.
-
-DeviceGraphDraft permanece autoridad de validación local.
-
-## 26. Snapshot stage
-
-```gdscript
-DeviceGraphDraft.create_snapshot()
-```
-
-DeviceGraphValidator permanece autoridad de validación global.
-
-Ciclos producen:
+Un ciclo sin evidencia temporal produce:
 
 ```text
 SIMULATION_HAZARD
@@ -857,400 +470,466 @@ SIMULATION_HAZARD
 graph_cycle_requires_temporal_analysis
 ```
 
-Simulation puede producir Snapshot.
+Simulation puede continuar.
 
 Hardware queda bloqueado.
 
-SystemProfile vacío produce Snapshot vacío.
+## 16. Runtime Construction Contract
 
-## 27. Agregación de Reports
+Runtime Construction define cómo transformar una directiva de plan en una unidad runtime construida.
 
-Fuentes:
-
-```text
-Assembler validation
-
-DeviceManifestBuilder
-
-DeviceGraphNodeBuilder
-
-DeviceGraphDraft.add_device()
-
-DeviceGraphDraft.connect_ports()
-
-DeviceGraphDraft.create_snapshot()
-```
-
-Merge conserva:
-
-- código;
-- severity;
-- message;
-- related object;
-- related field;
-- orden.
-
-Report fuente no se modifica.
-
-Report null produce:
+Pipeline:
 
 ```text
-PLATFORM_SAFETY_ERROR
-
-device_graph_assembly_report_missing
+RuntimeFactoryKey
+		│
+		▼
+RuntimeFactoryRegistry
+		│
+		▼
+RuntimeFactory
+		│
+		▲
+RuntimeConstructionRequest
+		│
+		▼
+RuntimeFactoryBuildResult
+		│
+		▼
+RuntimeDeviceHandle
 ```
 
-## 28. Códigos de DeviceGraphAssembler
+## 17. Factory construct-only
+
+RuntimeFactory:
+
+- construye;
+- valida Request;
+- produce Handle;
+- limpia parciales;
+- libera Handles propios cuando se solicita.
+
+RuntimeFactory no:
+
+- inicializa;
+- ejecuta set_ready;
+- ejecuta start;
+- coordina shutdown global;
+- adjunta host objects;
+- crea DeviceBus global;
+- descubre dependencias;
+- consulta service locator.
+
+## 18. RuntimeFactory behavior
+
+Contrato:
+
+```gdscript
+build(
+	request: RuntimeConstructionRequest
+) -> RuntimeFactoryBuildResult
+```
+
+```gdscript
+release(
+	handle: RuntimeDeviceHandle
+) -> ValidationReport
+```
+
+No requiere clase base universal.
+
+La misma factory que construye conoce cómo liberar.
+
+## 19. RuntimeFactoryKey
+
+Identidad exacta:
 
 ```text
-device_graph_assembly_system_profile_missing
+Profile ID
 
-device_graph_assembly_system_profile_invalid
++
 
-device_graph_assembly_activation_context_invalid
+Profile Version
 
-device_graph_assembly_hardware_not_supported
++
 
-device_graph_assembly_configuration_missing
-
-device_graph_assembly_configuration_invalid
-
-device_graph_assembly_configuration_context_mismatch
-
-device_graph_assembly_dependency_missing
-
-device_graph_assembly_dependency_invalid
-
-device_graph_assembly_dependency_identity_mismatch
-
-device_graph_assembly_manifest_missing
-
-device_graph_assembly_node_missing
-
-device_graph_assembly_add_device_failed
-
-device_graph_assembly_connection_spec_missing
-
-device_graph_assembly_connection_spec_invalid
-
-device_graph_assembly_connect_failed
-
-device_graph_assembly_connection_id_mismatch
-
-device_graph_assembly_snapshot_missing
-
-device_graph_assembly_report_missing
+Activation Context
 ```
 
-También conserva códigos delegados de Builders y DeviceGraph.
+No contiene `host_target` en 1.0.
 
-## 29. No mutación
+No existe:
 
-DeviceGraphAssembler no modifica:
+- latest;
+- fallback;
+- sustitución de contexto;
+- sustitución de versión.
 
-- SystemProfile;
-- DeviceConfigurations;
-- Connection Specs;
-- DeviceProfiles;
-- DeviceCatalog;
-- Reports fuente.
+CompositionPlan almacenará RuntimeFactoryKey.
 
-No expone DeviceGraphDraft temporal.
+No almacenará factory Object.
 
-No devuelve Snapshot parcial.
+## 20. RuntimeDependencyBinding
 
-## 30. No runtime
+Contiene:
 
-El pipeline implementado no:
+```text
+Dependency ID
 
-- crea Devices runtime;
+Dependency Value
+
+Ownership
+```
+
+Dependency Value:
+
+```gdscript
+Object
+```
+
+Ownership:
+
+```text
+BORROWED
+
+TRANSFERRED
+```
+
+## 21. BORROWED
+
+BORROWED conserva owner original.
+
+Factory y Handle pueden utilizar la dependencia.
+
+Factory release no la libera.
+
+Ejemplo:
+
+```text
+DeviceBus compartido
+```
+
+El binding continúa siendo explícito.
+
+## 22. TRANSFERRED
+
+TRANSFERRED cambia ownership al invocar `factory.build()`.
+
+En éxito:
+
+```text
+RuntimeDeviceHandle asume ownership.
+```
+
+En fallo:
+
+```text
+RuntimeFactory limpia.
+```
+
+Caller no ejecuta un segundo cleanup.
+
+## 23. RuntimeConstructionRequest
+
+Contiene:
+
+- Device ID;
+- DeviceConfiguration;
+- RuntimeFactoryKey;
+- RuntimeDependencyBindings pre-resueltos.
+
+No contiene:
+
+- service locator;
+- SceneTree;
+- autoload;
+- filesystem;
+- factory;
+- Draft;
+- CompositionRuntime mutable.
+
+Crear Request no transfiere ownership.
+
+La transferencia comienza al invocar factory.
+
+## 24. RuntimeDeviceHandle
+
+Contiene:
+
+- Device ID;
+- DeviceConfiguration;
+- RuntimeFactoryKey;
+- Primary Runtime Object;
+- Host Objects;
+- Dependency Bindings.
+
+Primary Runtime Object:
+
+```gdscript
+Object
+```
+
+Host Objects:
+
+```gdscript
+Array[Object]
+```
+
+Handle representa una unidad runtime.
+
+No coordina el sistema completo.
+
+## 25. Host Objects
+
+Factories pueden construir Objects host.
+
+No pueden adjuntarlos.
+
+RuntimeDeviceHandle conserva las referencias.
+
+RuntimeHost recibe Handle completo.
+
+Esto permite:
+
+- agrupación;
+- Device ID;
+- Factory Key;
+- rollback;
+- provenance.
+
+## 26. RuntimeHost behavior
+
+Contrato conceptual:
+
+```gdscript
+attach(
+	handle: RuntimeDeviceHandle
+) -> ValidationReport
+```
+
+```gdscript
+detach(
+	handle: RuntimeDeviceHandle
+) -> ValidationReport
+```
+
+RuntimeHost:
+
+- valida Handle;
+- adjunta objetos en orden;
+- revierte attach parcial;
+- separa en orden inverso;
+- no libera BORROWED;
+- no sustituye factory.release().
+
+## 27. RuntimeFactoryBuildResult
+
+Contiene:
+
+```text
+RuntimeDeviceHandle
+
+ValidationReport
+```
+
+Success requiere:
+
+- Handle no null;
+- Report no null;
+- Handle válido;
+- Report válido para contexto.
+
+No expone setters.
+
+## 28. Construcción atómica
+
+Éxito:
+
+```text
+Factory build
+
+↓
+
+Handle válido
+
+↓
+
+CompositionRuntime adquiere Handle
+```
+
+Fallo:
+
+```text
+Factory build
+
+↓
+
+limpieza local
+
+↓
+
+Handle null
+
+↓
+
+ValidationReport
+```
+
+No se conservan parciales vivos.
+
+## 29. Rollback global
+
+Si una construcción posterior falla:
+
+```text
+release Handles anteriores
+en orden inverso.
+```
+
+Si attach falla:
+
+```text
+detach Handles adjuntos
+
+↓
+
+release Handles construidos
+```
+
+Si lifecycle falla:
+
+```text
+shutdown iniciados
+
+↓
+
+detach
+
+↓
+
+release
+```
+
+Last Known Good permanece hasta commit.
+
+## 30. DeviceBus ownership
+
+DeviceBus pertenece a CompositionRuntime o Composition Root.
+
+RuntimeFactory no crea DeviceBus global.
+
+RuntimeFactory no obtiene Bus desde autoload.
+
+Factory build produce estado equivalente a:
+
+```text
+CREATED
+```
+
+DeviceBus se entrega durante initialize coordinado.
+
+## 31. RuntimeFactoryRegistry futuro
+
+Resolverá:
+
+```text
+RuntimeFactoryKey
+
+→
+
+RuntimeFactory
+```
+
+Contendrá comportamiento ejecutable.
+
+Permanecerá separado de DeviceCatalog y CompositionPlan.
+
+Su mutabilidad requiere diseño propio.
+
+## 32. CompositionPlan futuro
+
+CompositionPlan conservará:
+
+- RuntimeFactoryKeys;
+- dependency directives;
+- lifecycle order;
+- runtime policies;
+- communication directives.
+
+No conservará:
+
+- RuntimeFactory;
+- Callable;
+- RuntimeDeviceHandle;
+- Device activo;
+- Node activo;
+- DeviceBus activo.
+
+## 33. Lifecycle order
+
+CompositionPlan deberá describir:
+
+- construction;
+- attach;
+- initialize;
+- set_ready;
+- start;
+- shutdown;
+- rollback.
+
+No se asume topological sort completo.
+
+DeviceGraph permite ciclos.
+
+La política debe considerar:
+
+- orden estable;
+- strongly connected components;
+- grupos;
+- fases;
+- temporal boundaries.
+
+## 34. CompositionCompiler futuro
+
+CompositionCompiler recibirá:
+
+- DeviceGraphSnapshot;
+- RuntimeFactoryRegistry;
+- runtime policies;
+- contexto.
+
+Producirá CompositionPlan.
+
+No:
+
+- crea Devices;
+- ejecuta factories;
+- adjunta Nodes;
 - posee DeviceBus;
-- registra suscripciones;
-- controla Lifecycle;
-- resuelve factories;
-- produce CompositionPlan;
-- ejecuta;
-- abre archivos.
+- activa runtime.
 
-## 31. Baselines de SystemProfile
+## 35. CompositionRuntime futuro
 
-SystemConnectionSpecTest:
+CompositionRuntime recibirá:
 
-```text
-Checks: 23
-Failures: 0
-RESULT: PASS
-```
+- CompositionPlan;
+- RuntimeFactoryRegistry;
+- dependencies;
+- RuntimeHost.
 
-SystemProfileDraftTest:
+Poseerá:
 
-```text
-Checks: 32
-Failures: 0
-RESULT: PASS
-```
+- DeviceBus;
+- RuntimeDeviceHandles;
+- lifecycle;
+- attach state;
+- rollback;
+- shutdown;
+- Runtime Safety observation.
 
-SystemProfileCompilerTest:
+## 36. Persistencia futura
 
-```text
-Checks: 87
-Failures: 0
-RESULT: PASS
-```
-
-SystemProfile 1.0:
-
-```text
-Tests: 3
-Checks: 142
-Failures: 0
-```
-
-## 32. Baselines de DeviceCatalog
-
-DeviceCatalogDraftTest:
-
-```text
-Checks: 14
-Failures: 0
-RESULT: PASS
-```
-
-DeviceCatalogCompilerTest:
-
-```text
-Checks: 53
-Failures: 0
-RESULT: PASS
-```
-
-SystemProfileDeviceCatalogIntegrationTest:
-
-```text
-Checks: 22
-Failures: 0
-RESULT: PASS
-```
-
-DeviceCatalog 1.0:
-
-```text
-Tests: 3
-Checks: 89
-Failures: 0
-```
-
-## 33. Baselines de DeviceGraphAssembler
-
-DeviceGraphAssemblerTest:
-
-```text
-Checks: 87
-Failures: 0
-RESULT: PASS
-```
-
-SystemProfileCatalogGraphAssemblyIntegrationTest:
-
-```text
-Checks: 27
-Failures: 0
-RESULT: PASS
-```
-
-DeviceGraphAssembler 1.0:
-
-```text
-Tests: 2
-Checks: 114
-Failures: 0
-```
-
-## 34. Regresión completa
-
-```text
-Tests: 48
-Checks: 1396
-Failures: 0
-Timeout: 0
-Engine Error: 0
-Plan ExitCode: 0
-RESULT: PASS
-```
-
-## 35. Baselines preservadas
-
-No se modificaron:
-
-```text
-DeviceProfileCompilerTest
-
-DeviceConfigurationCompilerTest
-
-DeviceManifestBuilderTest
-
-DeviceGraphNodeBuilderTest
-
-DeviceGraphConnectionTest
-
-DeviceGraphValidationTest
-
-DeviceGraphSnapshotTest
-
-SystemProfileCompilerTest
-
-DeviceCatalogCompilerTest
-
-SystemProfileDeviceCatalogIntegrationTest
-```
-
-Cada etapa utiliza pruebas sucesoras.
-
-## 36. Orden de implementación
-
-```text
-1. Aceptar ADR-009.
-   COMPLETADO.
-
-2. Implementar SystemProfile 1.0.
-   COMPLETADO.
-
-3. Ejecutar pruebas de SystemProfile.
-   PASS — 3 tests, 142 checks.
-
-4. Implementar DeviceCatalog 1.0.
-   COMPLETADO.
-
-5. Integrar Catalog con SystemProfile.
-   PASS — 22 checks.
-
-6. Ejecutar pruebas de DeviceCatalog.
-   PASS — 3 tests, 89 checks.
-
-7. Implementar DeviceGraphAssemblyResult.
-   COMPLETADO.
-
-8. Implementar DeviceGraphAssembler.
-   COMPLETADO.
-
-9. Ejecutar DeviceGraphAssemblerTest.
-   PASS — 87 checks.
-
-10. Ejecutar integración completa.
-	PASS — 27 checks.
-
-11. Ejecutar Run All.
-	PASS — 48 tests, 1396 checks.
-
-12. Registrar baseline.
-	COMPLETADO.
-
-13. Cerrar DeviceGraphAssembler 1.0.
-	EN PROCESO DOCUMENTAL.
-
-14. Diseñar RuntimeFactoryRegistry.
-	SIGUIENTE.
-
-15. Diseñar CompositionPlan.
-	SIGUIENTE.
-
-16. Implementar CompositionCompiler.
-	POSTERIOR A AMBOS DISEÑOS.
-```
-
-## 37. Criterios de aceptación de SystemProfile
-
-```text
-SYSTEMPROFILE 1.0
-IMPLEMENTADO Y VERIFICADO
-```
-
-Cumple:
-
-- Draft editable;
-- Snapshot inmutable;
-- contexto explícito;
-- referencias exactas;
-- resolver por comportamiento;
-- dependencia faltante bloqueante;
-- Specs deterministas;
-- no Graph prematuro;
-- no filesystem;
-- no runtime.
-
-## 38. Criterios de aceptación de DeviceCatalog
-
-```text
-DEVICECATALOG 1.0
-IMPLEMENTADO Y VERIFICADO
-```
-
-Cumple:
-
-- Draft editable;
-- Catalog inmutable;
-- múltiples versiones;
-- duplicado exacto bloqueante;
-- resolución exacta;
-- sin latest;
-- sin overwrite;
-- sin factories;
-- sin filesystem;
-- integración por comportamiento.
-
-## 39. Criterios de aceptación de DeviceGraphAssembler
-
-```text
-DEVICEGRAPHASSEMBLER 1.0
-IMPLEMENTADO Y VERIFICADO
-```
-
-Cumple:
-
-- SystemProfile como entrada;
-- resolver por comportamiento;
-- Simulation soportada;
-- Hardware rechazado;
-- etapas ordenadas;
-- Reports agregados;
-- Builders reutilizados;
-- Graph Draft reutilizado;
-- Snapshot transaccional;
-- ciclos preservados;
-- no mutación;
-- no Graph parcial;
-- no runtime;
-- prueba unitaria PASS;
-- integración PASS;
-- Run All PASS.
-
-## 40. Componentes futuros
-
-### RuntimeFactoryRegistry
-
-Resolverá factories ejecutables.
-
-Permanecerá separado de DeviceCatalog.
-
-### CompositionPlan
-
-Representará instrucciones runtime inmutables.
-
-No ejecutará.
-
-### CompositionCompiler
-
-Convertirá DeviceGraphSnapshot en CompositionPlan.
-
-No creará Devices.
-
-### CompositionRuntime
-
-Ejecutará CompositionPlan.
-
-Poseerá DeviceBus y Devices activos.
-
-## 41. Persistencia futura
+Persistencia permanece externa.
 
 Componentes futuros:
 
@@ -1270,69 +949,249 @@ DeviceCatalogSerializer
 SaveAsService
 ```
 
-Persistencia permanece externa al Core lógico.
+Runtime objects no se serializan como parte de SystemProfile.
 
-## 42. Fuera de alcance actual
+## 37. No service locator
+
+Las dependencies llegan pre-resueltas.
+
+Factory no puede buscar arbitrariamente:
+
+- Nodes;
+- Devices;
+- servicios;
+- filesystem;
+- hardware;
+- singletons.
+
+RuntimeConstructionRequest contiene únicamente bindings declarados.
+
+## 38. No host target inicial
+
+`host_target` se descarta como dimensión inicial de RuntimeFactoryKey.
+
+No existen contratos estables para:
+
+- pure;
+- mock;
+- godot_node;
+- hardware_bridge.
+
+Si aparece una necesidad concreta, se diseñará explícitamente.
+
+## 39. Baseline de SystemProfile
+
+```text
+Tests: 3
+Checks: 142
+Failures: 0
+```
+
+## 40. Baseline de DeviceCatalog
+
+```text
+Tests: 3
+Checks: 89
+Failures: 0
+```
+
+## 41. Baseline de DeviceGraphAssembler
+
+```text
+Tests: 2
+Checks: 114
+Failures: 0
+```
+
+## 42. Baseline global
+
+```text
+Tests: 48
+Checks: 1396
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+## 43. Baselines preservadas
+
+No se modifican:
+
+```text
+DeviceLifecycleTest
+
+DeviceCoreContractTest
+
+DeviceManifestBuilderTest
+
+DeviceGraphSnapshotTest
+
+SystemProfileCompilerTest
+
+DeviceCatalogCompilerTest
+
+DeviceGraphAssemblerTest
+
+SystemProfileCatalogGraphAssemblyIntegrationTest
+```
+
+Runtime Construction utiliza pruebas sucesoras.
+
+## 44. Orden de implementación
+
+```text
+1. SystemProfile 1.0.
+   COMPLETADO.
+
+2. DeviceCatalog 1.0.
+   COMPLETADO.
+
+3. DeviceGraphAssembler 1.0.
+   COMPLETADO.
+
+4. ADR-010.
+   ACEPTADO.
+
+5. Runtime Construction Contract Design.
+   ACTIVO.
+
+6. RuntimeFactoryKey.
+   SIGUIENTE.
+
+7. RuntimeDependencyBinding.
+   PENDIENTE.
+
+8. RuntimeConstructionRequest.
+   PENDIENTE.
+
+9. RuntimeDeviceHandle.
+   PENDIENTE.
+
+10. RuntimeFactoryBuildResult.
+	PENDIENTE.
+
+11. Test RuntimeFactory.
+	PENDIENTE.
+
+12. Test RuntimeHost.
+	PENDIENTE.
+
+13. Runtime Construction Integration.
+	PENDIENTE.
+
+14. Run All.
+	OBLIGATORIO.
+
+15. RuntimeFactoryRegistry Design.
+	POSTERIOR.
+
+16. CompositionPlan Design.
+	POSTERIOR.
+
+17. CompositionCompiler.
+	POSTERIOR A AMBOS DISEÑOS.
+
+18. CompositionRuntime.
+	FUTURO.
+```
+
+## 45. Criterios de aceptación del pipeline implementado
+
+### SystemProfile
+
+```text
+IMPLEMENTADO Y VERIFICADO
+```
+
+### DeviceCatalog
+
+```text
+IMPLEMENTADO Y VERIFICADO
+```
+
+### DeviceGraphAssembler
+
+```text
+IMPLEMENTADO Y VERIFICADO
+```
+
+### Runtime Construction Contract
+
+Pendiente de implementación.
+
+Requiere:
+
+- Key exacta;
+- bindings con ownership;
+- Request inmutable;
+- Handle inmutable;
+- Factory Build Result;
+- Factory behavior;
+- Host behavior;
+- pruebas;
+- integración;
+- Run All.
+
+## 46. Fuera de alcance actual
 
 - RuntimeFactoryRegistry;
 - CompositionPlan;
 - CompositionCompiler;
 - CompositionRuntime;
-- Hardware assembly;
-- Hardware Mode activo;
-- Device creation;
-- DeviceBus ownership runtime;
+- factories de producción;
+- RuntimeHost concreto;
+- Hardware runtime;
+- DeviceBus activation;
 - lifecycle runtime;
-- persistencia;
+- persistence;
 - UI;
 - GraphEditor;
-- ConfigurationEditor;
-- GraphLayout;
 - Temporal Boundary metadata;
-- zero-delay classification final;
-- named slots;
-- configurable cardinality;
 - Calibration;
 - AdaptationPolicy;
 - RuntimeAllocation.
 
-## 43. Invariantes
+## 47. Invariantes
 
-1. SystemProfileDraft es editable.
+1. SystemProfile representa composición.
 
-2. SystemProfile es inmutable.
+2. DeviceCatalog resuelve Profiles.
 
-3. DeviceCatalog es inmutable.
+3. DeviceGraphAssembler construye topología.
 
-4. Resolución es exacta.
+4. DeviceGraphSnapshot no ejecuta.
 
-5. DeviceGraphAssembler es stateless.
+5. RuntimeFactory construye solamente.
 
-6. Devices se procesan antes de Connections.
+6. Factory recibe Request.
 
-7. Etapa fallida bloquea la siguiente.
+7. Dependencies llegan pre-resueltas.
 
-8. No se devuelve Graph parcial.
+8. Ownership es explícito.
 
-9. Reports fuente no se modifican.
+9. Build es atómico.
 
-10. Orden se conserva.
+10. Handle representa ownership.
 
-11. DeviceGraphDraft valida Connections.
+11. RuntimeHost controla attach/detach.
 
-12. DeviceGraphValidator valida topología global.
+12. DeviceBus pertenece a CompositionRuntime.
 
-13. Simulation es contexto soportado.
+13. Plan guarda Factory Key.
 
-14. Hardware assembly está bloqueado.
+14. Plan no guarda factory.
 
-15. RuntimeFactoryRegistry permanece separado.
+15. Registry permanece separado de Catalog.
 
-16. CompositionCompiler no ejecutará.
+16. Rollback es inverso.
 
-17. CompositionRuntime poseerá recursos activos.
+17. Last Known Good solo cambia en commit.
 
-## 44. Estado
+18. Hardware requiere contratos adicionales.
+
+## 48. Estado
 
 ```text
 SYSTEMPROFILE 1.0
@@ -1343,40 +1202,13 @@ IMPLEMENTADO Y VERIFICADO
 
 DEVICEGRAPHASSEMBLER 1.0
 IMPLEMENTADO Y VERIFICADO
+
+RUNTIME CONSTRUCTION CONTRACT 1.0
+DISEÑO ACTIVO
 ```
 
-Baselines acumuladas:
+Siguiente componente:
 
 ```text
-SystemProfile:
-3 tests
-142 checks
-
-DeviceCatalog:
-3 tests
-89 checks
-
-DeviceGraphAssembler:
-2 tests
-114 checks
+RuntimeFactoryKey
 ```
-
-Regresión completa:
-
-```text
-48 tests
-1396 checks
-0 failures
-```
-
-Siguiente milestone arquitectónico:
-
-```text
-RuntimeFactoryRegistry
-
-+
-
-CompositionPlan
-```
-
-Ambos deben diseñarse antes de implementar CompositionCompiler.
