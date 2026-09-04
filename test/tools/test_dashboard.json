@@ -14,28 +14,31 @@
   ],
   "default_timeout_seconds": 10,
   "default_repeat": 1,
-  "suites": {
-    "All": [
-      "test/core"
-    ],
-    "DeviceBus": [
-      "test/core/device_bus"
-    ],
-    "DeviceCore": [
-      "test/core/device_core",
-      "test/core/device"
-    ],
-    "Providers": [
-      "test/core/provider"
-    ],
-    "Profiles": [
-      "test/core/profile"
-    ],
-    "Message Contracts": [
-      "test/core/message_contract"
-    ],
-    "Debug": [
-      "test/core/debug"
-    ]
-  }
+  "automatic_suites": true,
+  "suite_aliases": {
+    "device_bus": "DeviceBus",
+    "device_core": "DeviceCore",
+    "device": "DeviceCore",
+    "provider": "Providers",
+    "profile": "Profiles",
+    "message_contract": "Message Contracts",
+    "device_graph": "DeviceGraph",
+    "composition": "Composition",
+    "catalog": "DeviceCatalog",
+    "runtime": "Runtime",
+    "debug": "Debug"
+  },
+  "suite_order": [
+    "DeviceBus",
+    "DeviceCore",
+    "Providers",
+    "Profiles",
+    "Message Contracts",
+    "DeviceGraph",
+    "Composition",
+    "DeviceCatalog",
+    "Runtime",
+    "Debug"
+  ],
+  "suite_overrides": {}
 }

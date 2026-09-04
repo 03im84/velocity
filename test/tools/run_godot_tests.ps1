@@ -1,86 +1,89 @@
 [CmdletBinding()]
 param(
-	[string]$Scene = "",
+    [string]$Scene = "",
 
-	[switch]$All,
+    [switch]$All,
 
-	[string]$GodotPath = $env:GODOT_CONSOLE,
+    [string]$GodotPath = $env:GODOT_CONSOLE,
 
-	[ValidateRange(1, 100)]
-	[int]$Repeat = 1,
+    [ValidateRange(1, 100)]
+    [int]$Repeat = 1,
 
-	[ValidateRange(1, 3600)]
-	[int]$TimeoutSeconds = 15
+    [ValidateRange(1, 3600)]
+    [int]$TimeoutSeconds = 15
 )
 
 
 $ErrorActionPreference = "Stop"
 
+$MetricsPrefix = "VELOCITY_TEST_METRICS_JSON:"
+$MetricsProtocolVersion = 1
+
 
 function Resolve-GodotExecutable {
-	param(
-		[string]$RequestedPath
-	)
+    param(
+        [string]$RequestedPath
+    )
 
-	if (-not [string]::IsNullOrWhiteSpace($RequestedPath)) {
-		if (Test-Path -LiteralPath $RequestedPath) {
-			$resolvedPath = Resolve-Path -LiteralPath $RequestedPath
+    if (-not [string]::IsNullOrWhiteSpace($RequestedPath)) {
+        if (Test-Path -LiteralPath $RequestedPath) {
+            $resolvedPath = Resolve-Path -LiteralPath $RequestedPath
 
-			return $resolvedPath.Path
-		}
+            return $resolvedPath.Path
+        }
 
-		$requestedCommand = Get-Command $RequestedPath -ErrorAction SilentlyContinue
+        $requestedCommand = Get-Command $RequestedPath -ErrorAction SilentlyContinue
 
-		if ($null -ne $requestedCommand) {
-			if ($requestedCommand.CommandType -eq "Application") {
-				return $requestedCommand.Source
-			}
+        if ($null -ne $requestedCommand) {
+            if ($requestedCommand.CommandType -eq "Application") {
+                return $requestedCommand.Source
+            }
 
-			return $requestedCommand.Definition
-		}
+            return $requestedCommand.Definition
+        }
 
-		throw "Godot executable not found: $RequestedPath"
-	}
+        throw "Godot executable not found: $RequestedPath"
+    }
 
-	$commandNames = @(
-		"godot_console",
+    $commandNames = @(
+        "godot_console",
         "godot"
-	)
+    )
 
-	foreach ($commandName in $commandNames) {
-		$command = Get-Command $commandName -ErrorAction SilentlyContinue
+    foreach ($commandName in $commandNames) {
+        $command = Get-Command $commandName -ErrorAction SilentlyContinue
 
-		if ($null -ne $command) {
-			if ($command.CommandType -eq "Application") {
-				return $command.Source
-			}
+        if ($null -ne $command) {
+            if ($command.CommandType -eq "Application") {
+                return $command.Source
+            }
 
-			return $command.Definition
-		}
-	}
+            return $command.Definition
+        }
+    }
 
-	throw "Godot Console was not found. Use -GodotPath or define GODOT_CONSOLE."
+    throw "Godot Console was not found. Use -GodotPath or define GODOT_CONSOLE."
 }
 
 
 function Convert-ToResourcePath {
-	param(
-		[string]$PathValue
-	)
+    param(
+        [string]$PathValue
+    )
 
-	$normalizedPath = $PathValue.Replace("\", "/")
+    $normalizedPath = $PathValue.Replace("\", "/")
 
-	if ($normalizedPath.StartsWith("res://")) {
+    if ($normalizedPath.StartsWith("res://")) {
         return $normalizedPath
     }
 
-	while ($normalizedPath.StartsWith("./")) {
+    while ($normalizedPath.StartsWith("./")) {
         $normalizedPath = $normalizedPath.Substring(2)
     }
 
-	$normalizedPath = $normalizedPath.TrimStart("/")
+    $normalizedPath = $normalizedPath.TrimStart("/")
 
-	return "res://" + $normalizedPath
+    return "res://" + $normalizedPath
 }
 
 
@@ -91,11 +94,11 @@ function Convert-ToFileSystemPath {
         [string]$ProjectRoot
     )
 
-	$relativePath = $ResourcePath.Substring("res://".Length)
+    $relativePath = $ResourcePath.Substring("res://".Length)
 
     $separator = [System.IO.Path]::DirectorySeparatorChar.ToString()
 
-	$relativePath = $relativePath.Replace("/", $separator)
+    $relativePath = $relativePath.Replace("/", $separator)
 
     return Join-Path $ProjectRoot $relativePath
 }
@@ -106,17 +109,17 @@ function Get-ProjectTestScenes {
         [string]$ProjectRoot
     )
 
-	$testRoot = Join-Path $ProjectRoot "test"
+    $testRoot = Join-Path $ProjectRoot "test"
 
     if (-not (Test-Path -LiteralPath $testRoot)) {
-		throw "Test directory not found: $testRoot"
+        throw "Test directory not found: $testRoot"
     }
 
-	$sceneFiles = Get-ChildItem -LiteralPath $testRoot -Recurse -File -Filter "*.tscn" |
+    $sceneFiles = Get-ChildItem -LiteralPath $testRoot -Recurse -File -Filter "*.tscn" |
         Where-Object {
-			$isTestScene = $_.Name -match "(?i)test\.tscn$"
-			$isFailureIsolation = $_.Name -match "(?i)failure_isolation"
-			$isInfrastructure = $_.FullName -match "[\\/]infrastructure[\\/]"
+            $isTestScene = $_.Name -match "(?i)test\.tscn$"
+            $isFailureIsolation = $_.Name -match "(?i)failure_isolation"
+            $isInfrastructure = $_.FullName -match "[\\/]infrastructure[\\/]"
 
             return $isTestScene -and (-not $isFailureIsolation) -and (-not $isInfrastructure)
         } |
@@ -127,14 +130,76 @@ function Get-ProjectTestScenes {
     foreach ($sceneFile in $sceneFiles) {
         $relativePath = $sceneFile.FullName.Substring($ProjectRoot.Length)
 
-		$relativePath = $relativePath -replace "^[\\/]+", ""
+        $relativePath = $relativePath -replace "^[\\/]+", ""
 
-		$relativePath = $relativePath.Replace("\", "/")
+        $relativePath = $relativePath.Replace("\", "/")
 
-		$resourcePaths += "res://" + $relativePath
+        $resourcePaths += "res://" + $relativePath
     }
 
     return $resourcePaths
+}
+
+
+function Get-TestMetrics {
+    param(
+        [string[]]$OutputLines
+    )
+
+    $checks = $null
+    $checkFailures = $null
+
+    foreach ($outputLine in $OutputLines) {
+        $lineText = [string]$outputLine
+
+        if ($lineText -match "^\s*Checks:\s*(\d+)\s*$") {
+            $checks = [int]$Matches[1]
+        }
+
+        if ($lineText -match "^\s*Failures:\s*(\d+)\s*$") {
+            $checkFailures = [int]$Matches[1]
+        }
+    }
+
+    $available = (
+        $null -ne $checks -and
+        $null -ne $checkFailures
+    )
+
+    if (-not $available) {
+        $checks = $null
+        $checkFailures = $null
+    }
+
+    return [PSCustomObject]@{
+        Available = $available
+        Checks = $checks
+        CheckFailures = $checkFailures
+    }
+}
+
+
+function Write-TestMetricsMarker {
+    param(
+        [string]$ScenePath,
+
+        [int]$Attempt,
+
+        [PSCustomObject]$Metrics
+    )
+
+    $payload = [ordered]@{
+        version = $MetricsProtocolVersion
+        scene = $ScenePath
+        attempt = $Attempt
+        available = [bool]$Metrics.Available
+        checks = $Metrics.Checks
+        check_failures = $Metrics.CheckFailures
+    }
+
+    $payloadJson = $payload | ConvertTo-Json -Compress
+
+    Write-Host ($MetricsPrefix + $payloadJson)
 }
 
 
@@ -151,23 +216,25 @@ function Invoke-GodotTest {
         [int]$TimeoutSeconds
     )
 
-	Write-Host ""
-	Write-Host "============================================================" -ForegroundColor DarkGray
-	Write-Host "TEST: $ScenePath" -ForegroundColor Cyan
-	Write-Host "ATTEMPT: $Attempt" -ForegroundColor Cyan
-	Write-Host "============================================================" -ForegroundColor DarkGray
+    Write-Host ""
+    Write-Host "============================================================" -ForegroundColor DarkGray
+    Write-Host "TEST: $ScenePath" -ForegroundColor Cyan
+    Write-Host "ATTEMPT: $Attempt" -ForegroundColor Cyan
+    Write-Host "============================================================" -ForegroundColor DarkGray
 
     $standardOutputFile = [System.IO.Path]::GetTempFileName()
-
     $standardErrorFile = [System.IO.Path]::GetTempFileName()
 
-	$processArguments = '--headless --path "{0}" "{1}"' -f $ProjectRoot, $ScenePath
+    $processArguments = '--headless --path "{0}" "{1}"' -f $ProjectRoot, $ScenePath
 
     $testExitCode = 125
-
     $timedOut = $false
-	
-	$engineErrorPattern = "(?i)(SCRIPT ERROR:|^ERROR:|Parse Error:|Invalid call\.)"
+    $engineErrorDetected = $false
+
+    $standardOutput = @()
+    $standardError = @()
+
+    $engineErrorPattern = "(?i)(SCRIPT ERROR:|^ERROR:|Parse Error:|Invalid call\.)"
 
     try {
         $startProcessParameters = @{
@@ -186,7 +253,7 @@ function Invoke-GodotTest {
         if (-not $completed) {
             $timedOut = $true
 
-			Write-Host "TIMEOUT after $TimeoutSeconds seconds." -ForegroundColor Yellow
+            Write-Host "TIMEOUT after $TimeoutSeconds seconds." -ForegroundColor Yellow
 
             Stop-Process -Id $godotProcess.Id -Force -ErrorAction SilentlyContinue
 
@@ -196,68 +263,93 @@ function Invoke-GodotTest {
             $godotProcess.WaitForExit()
         }
 
-        $standardOutput = Get-Content -LiteralPath $standardOutputFile -ErrorAction SilentlyContinue
-
-        foreach ($outputLine in $standardOutput) {
-            Write-Host $outputLine
-			
-			if ([string]$outputLine -match $engineErrorPattern) {
-		        $engineErrorDetected = $true
-		    }
-        }
-
-        $standardError = Get-Content -LiteralPath $standardErrorFile -ErrorAction SilentlyContinue
-
-        foreach ($errorLine in $standardError) {
-            Write-Host $errorLine -ForegroundColor Red
-			
-			if ([string]$errorLine -match $engineErrorPattern) {
-		        $engineErrorDetected = $true
-		    }
-        }
-
         if ($timedOut) {
-			$testExitCode = 124
-		}
-		else {
-		    $godotProcess.Refresh()
+            $testExitCode = 124
+        }
+        else {
+            $godotProcess.Refresh()
 
-		    if ($godotProcess.HasExited) {
-		        $testExitCode = [int]$godotProcess.ExitCode
-		    }
-		    else {
-		        $testExitCode = 125
-		    }
-			
-			if ($testExitCode -eq 0 -and $engineErrorDetected) {
-		        $testExitCode = 126
-		    }
-		}
+            if ($godotProcess.HasExited) {
+                $testExitCode = [int]$godotProcess.ExitCode
+            }
+            else {
+                $testExitCode = 125
+            }
+        }
+    }
+    catch {
+        Write-Host "RUNNER PROCESS ERROR: $($_.Exception.Message)" -ForegroundColor Red
+
+        $testExitCode = 125
     }
     finally {
-        Remove-Item -LiteralPath $standardOutputFile -Force -ErrorAction SilentlyContinue
+        $standardOutput = @(
+            Get-Content -LiteralPath $standardOutputFile -ErrorAction SilentlyContinue
+        )
 
+        $standardError = @(
+            Get-Content -LiteralPath $standardErrorFile -ErrorAction SilentlyContinue
+        )
+
+        Remove-Item -LiteralPath $standardOutputFile -Force -ErrorAction SilentlyContinue
         Remove-Item -LiteralPath $standardErrorFile -Force -ErrorAction SilentlyContinue
     }
 
-	$status = "PASS"
+    foreach ($outputLine in $standardOutput) {
+        Write-Host $outputLine
+
+        if ([string]$outputLine -match $engineErrorPattern) {
+            $engineErrorDetected = $true
+        }
+    }
+
+    foreach ($errorLine in $standardError) {
+        Write-Host $errorLine -ForegroundColor Red
+
+        if ([string]$errorLine -match $engineErrorPattern) {
+            $engineErrorDetected = $true
+        }
+    }
+
+    $metrics = Get-TestMetrics -OutputLines $standardOutput
+
+    if ($testExitCode -eq 0 -and $engineErrorDetected) {
+        $testExitCode = 126
+    }
+
+    if (
+        $testExitCode -eq 0 -and
+        $metrics.Available -and
+        $metrics.CheckFailures -gt 0
+    ) {
+        Write-Host "TEST CONTRACT ERROR: Check failures were reported with ExitCode 0." -ForegroundColor Red
+
+        $testExitCode = 1
+    }
+
+    $status = "PASS"
 
     if ($testExitCode -eq 124) {
-		$status = "TIMEOUT"
+        $status = "TIMEOUT"
     }
-	elseif ($testExitCode -eq 126) {
-		$status = "ENGINE_ERROR"
-	}
+    elseif ($testExitCode -eq 126) {
+        $status = "ENGINE_ERROR"
+    }
     elseif ($testExitCode -ne 0) {
-		$status = "FAIL"
+        $status = "FAIL"
     }
+
+    Write-TestMetricsMarker -ScenePath $ScenePath -Attempt $Attempt -Metrics $metrics
 
     return [PSCustomObject]@{
         Scene = $ScenePath
         Attempt = $Attempt
         ExitCode = $testExitCode
         Status = $status
-		EngineError = $engineErrorDetected
+        EngineError = $engineErrorDetected
+        Checks = $metrics.Checks
+        CheckFailures = $metrics.CheckFailures
+        MetricsAvailable = $metrics.Available
     }
 }
 
@@ -267,11 +359,11 @@ function Invoke-GodotTest {
 # =====================================================================
 
 if ($All -and (-not [string]::IsNullOrWhiteSpace($Scene))) {
-	throw "Use -All or -Scene, not both."
+    throw "Use -All or -Scene, not both."
 }
 
 if ((-not $All) -and [string]::IsNullOrWhiteSpace($Scene)) {
-	throw "No test was selected. Use -Scene or -All."
+    throw "No test was selected. Use -Scene or -All."
 }
 
 
@@ -283,7 +375,7 @@ $projectFile = Join-Path $projectRoot "project.godot"
 
 
 if (-not (Test-Path -LiteralPath $projectFile)) {
-	throw "project.godot was not found at: $projectFile"
+    throw "project.godot was not found at: $projectFile"
 }
 
 
@@ -292,6 +384,7 @@ $godotExecutable = Resolve-GodotExecutable -RequestedPath $GodotPath
 
 Write-Host ""
 Write-Host "Velocity Test Runner" -ForegroundColor Green
+Write-Host "Metrics Protocol: $MetricsProtocolVersion"
 Write-Host "Project: $projectRoot"
 Write-Host "Godot:  $godotExecutable"
 Write-Host "Repeat: $Repeat"
@@ -302,7 +395,9 @@ $testScenes = @()
 
 
 if ($All) {
-    $testScenes = @(Get-ProjectTestScenes -ProjectRoot $projectRoot)
+    $testScenes = @(
+        Get-ProjectTestScenes -ProjectRoot $projectRoot
+    )
 }
 else {
     $resourcePath = Convert-ToResourcePath -PathValue $Scene
@@ -310,7 +405,7 @@ else {
     $fileSystemPath = Convert-ToFileSystemPath -ResourcePath $resourcePath -ProjectRoot $projectRoot
 
     if (-not (Test-Path -LiteralPath $fileSystemPath)) {
-		throw "Test scene not found: $fileSystemPath"
+        throw "Test scene not found: $fileSystemPath"
     }
 
     $testScenes = @(
@@ -320,7 +415,7 @@ else {
 
 
 if ($testScenes.Count -eq 0) {
-	throw "No test scenes were found."
+    throw "No test scenes were found."
 }
 
 
@@ -354,7 +449,7 @@ Write-Host "============================================================" -Foreg
 
 
 $results |
-    Format-Table Scene, Attempt, ExitCode, Status, EngineError -AutoSize |
+    Format-Table Scene, Attempt, ExitCode, Status, EngineError, Checks, CheckFailures, MetricsAvailable -AutoSize |
     Out-Host
 
 
@@ -366,17 +461,49 @@ $failedResults = @(
 )
 
 
+$metricsResults = @(
+    $results |
+        Where-Object {
+            $_.MetricsAvailable
+        }
+)
+
+
 $passedCount = $results.Count - $failedResults.Count
 
+$missingMetricsCount = $results.Count - $metricsResults.Count
 
-Write-Host "Total runs: $($results.Count)"
-Write-Host "Passed:     $passedCount"
-Write-Host "Failed:     $($failedResults.Count)"
+$totalChecks = 0
+$totalCheckFailures = 0
+
+if ($metricsResults.Count -gt 0) {
+    $checksMeasure = $metricsResults |
+        Measure-Object -Property Checks -Sum
+
+    $checkFailuresMeasure = $metricsResults |
+        Measure-Object -Property CheckFailures -Sum
+
+    if ($null -ne $checksMeasure.Sum) {
+        $totalChecks = [int]$checksMeasure.Sum
+    }
+
+    if ($null -ne $checkFailuresMeasure.Sum) {
+        $totalCheckFailures = [int]$checkFailuresMeasure.Sum
+    }
+}
+
+
+Write-Host "Total runs:      $($results.Count)"
+Write-Host "Passed:          $passedCount"
+Write-Host "Failed:          $($failedResults.Count)"
+Write-Host "Total checks:    $totalChecks"
+Write-Host "Check failures:  $totalCheckFailures"
+Write-Host "Missing metrics: $missingMetricsCount"
 
 
 if ($failedResults.Count -gt 0) {
-	Write-Host ""
-	Write-Host "RESULT: FAIL" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "RESULT: FAIL" -ForegroundColor Red
 
     exit 1
 }
