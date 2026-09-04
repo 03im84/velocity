@@ -1,0 +1,611 @@
+PJ0029 – Velocity Test Dashboard 0.4.0 Architecture
+
+Fecha:
+
+04/09/2026
+
+Objetivo:
+
+Diseñar Velocity Test Dashboard 0.4.0
+para agregar métricas de checks
+y clasificar suites automáticamente.
+
+Estado anterior:
+
+Velocity Test Dashboard:
+
+0.3.2
+
+Velocity Test Dashboard Design:
+
+1.2
+
+Estado objetivo:
+
+Velocity Test Dashboard:
+
+0.4.0
+
+Velocity Test Dashboard Design:
+
+1.3
+
+Componentes auditados:
+
+res://test/tools/
+run_godot_tests.ps1
+
+res://test/tools/
+velocity_test_dashboard.py
+
+res://test/tools/
+test_dashboard.json
+
+res://test/tools/
+test_dashboard.local.json
+
+Documento auditado:
+
+res://docs/tools/
+velocity_test_dashboard_design.md
+
+Problema 1:
+
+Dashboard cuenta escenas y runs,
+pero no agrega:
+
+Checks
+
+Check Failures
+
+Missing Metrics
+
+La salida actual de cada test contiene:
+
+Checks: N
+
+Failures: N
+
+Pero PowerShell Runner no transforma
+esos valores en un contrato estructurado.
+
+Dashboard solo interpreta:
+
+Total runs
+
+Passed
+
+Failed
+
+Problema 2:
+
+Las suites se configuran manualmente.
+
+Suites existentes:
+
+DeviceBus
+
+DeviceCore
+
+Providers
+
+Profiles
+
+Message Contracts
+
+Debug
+
+Categorías nuevas ausentes:
+
+DeviceGraph
+
+Composition
+
+DeviceCatalog
+
+Runtime
+
+Los tests nuevos pueden terminar como:
+
+Other
+
+Problema 3:
+
+velocity_test_dashboard.py contiene
+dos definiciones de:
+
+copy_command()
+
+La segunda reemplaza silenciosamente
+a la primera.
+
+Dashboard 0.4.0 conservará
+una sola implementación.
+
+Problema 4:
+
+run_godot_tests.ps1 no inicializa
+explícitamente por ejecución:
+
+engineErrorDetected
+
+Runner 0.4.0 inicializará:
+
+$engineErrorDetected = $false
+
+antes de procesar output.
+
+Decisión de métricas:
+
+PowerShell Runner permanece
+como autoridad.
+
+Runner extraerá:
+
+Checks
+
+Failures
+
+desde el summary del test.
+
+Runner emitirá por attempt:
+
+VELOCITY_TEST_METRICS_JSON
+
+Formato conceptual:
+
+{
+  "version": 1,
+  "scene": "res://...",
+  "attempt": 1,
+  "available": true,
+  "checks": 24,
+  "check_failures": 0
+}
+
+Métrica ausente:
+
+{
+  "version": 1,
+  "scene": "res://...",
+  "attempt": 1,
+  "available": false,
+  "checks": null,
+  "check_failures": null
+}
+
+Política de métrica ausente:
+
+✔ PASS del Runner se conserva.
+
+✔ Dashboard no redefine PASS.
+
+✔ Metrics se marca MISSING.
+
+✔ Missing Metrics se agrega
+  al resumen.
+
+✔ Cero checks no se confunde
+  con métrica ausente.
+
+Check Failures:
+
+Si el test emite:
+
+Failures mayor que cero
+
+y ExitCode es cero:
+
+Runner debe devolver FAIL.
+
+Esto aplica defensa contra
+un test que reporte fallos
+pero no propague ExitCode.
+
+Dashboard model:
+
+PlanResult incorporará:
+
+checks
+
+check_failures
+
+metrics_runs
+
+missing_metrics
+
+Results Table:
+
+Test
+
+Status
+
+Exit
+
+Runs
+
+Checks
+
+Check Failures
+
+Metrics
+
+Seconds
+
+Resumen:
+
+Planned
+
+Completed
+
+Passed
+
+Failed
+
+Timeout
+
+Engine Error
+
+Not Run
+
+Total Runs
+
+Checks
+
+Check Failures
+
+Missing Metrics
+
+Plan ExitCode
+
+RESULT
+
+Repeat:
+
+Cada attempt emite un marker.
+
+Dashboard suma:
+
+Checks de attempts disponibles.
+
+Check Failures de attempts disponibles.
+
+Missing Metrics por attempt ausente.
+
+Pause y Resume:
+
+✔ PASS anteriores conservan métricas.
+
+✔ STOPPED se reinicia al reanudar.
+
+✔ Metrics del test reiniciado se limpian.
+
+✔ No se duplican checks anteriores.
+
+Clasificación automática:
+
+La suite no dependerá de
+actualizar manualmente Python
+cada vez que aparece un directorio.
+
+Clasificación principal:
+
+test/core/device_bus/
+→ DeviceBus
+
+test/core/device_core/
+→ DeviceCore
+
+test/core/device/
+→ DeviceCore
+
+test/core/provider/
+→ Providers
+
+test/core/profile/
+→ Profiles
+
+test/core/message_contract/
+→ Message Contracts
+
+test/core/device_graph/
+→ DeviceGraph
+
+test/core/composition/
+→ Composition
+
+test/core/catalog/
+→ DeviceCatalog
+
+test/core/runtime/
+→ Runtime
+
+test/core/debug/
+→ Debug
+
+Directorio desconocido:
+
+test/core/measurement_contract/
+
+se convierte automáticamente en:
+
+Measurement Contract
+
+Prioridad:
+
+1. override explícito;
+
+2. alias por directorio;
+
+3. nombre humanizado del directorio;
+
+4. nombre de escena como fallback;
+
+5. Other solo cuando no existe
+   información suficiente.
+
+La extensión:
+
+.tscn
+
+continúa siendo necesaria
+para ejecutar escenas Godot.
+
+La categoría depende de:
+
+nombre
+
+y
+
+ruta
+
+no de la extensión.
+
+Configuración compartida:
+
+Añadirá:
+
+automatic_suites
+
+suite_aliases
+
+suite_order
+
+suite_overrides
+
+La suite All será implícita.
+
+Configuración local:
+
+test_dashboard.local.json
+
+No será modificada ni versionada.
+
+Separación de responsabilidades:
+
+Nuevo módulo:
+
+res://test/tools/
+velocity_test_dashboard_logic.py
+
+Responsabilidad:
+
+- parsear Metrics Contract;
+
+- agregar metrics;
+
+- inferir suite;
+
+- humanizar nombres;
+
+- no depender de Tkinter;
+
+- no ejecutar subprocess.
+
+Dashboard UI:
+
+res://test/tools/
+velocity_test_dashboard.py
+
+Responsabilidad:
+
+- UI;
+
+- ejecución;
+
+- event queue;
+
+- rendering;
+
+- control de plan;
+
+- consumo del módulo lógico.
+
+Runner:
+
+res://test/tools/
+run_godot_tests.ps1
+
+Responsabilidad:
+
+- ejecutar Godot;
+
+- aplicar timeout;
+
+- detectar Engine Errors;
+
+- extraer métricas;
+
+- emitir contrato estructurado;
+
+- decidir ExitCode.
+
+Prueba Python futura:
+
+res://test/tools/
+test_velocity_test_dashboard_logic.py
+
+Utilizará:
+
+unittest
+
+sin paquetes externos.
+
+Cobertura prevista:
+
+- marker válido;
+
+- marker ausente;
+
+- marker malformado;
+
+- varios attempts;
+
+- suma de checks;
+
+- suma de failures;
+
+- missing metrics;
+
+- alias de suite;
+
+- directorio desconocido;
+
+- humanización;
+
+- override;
+
+- path normalization.
+
+Decisión de estructura:
+
+✔ No seguir aumentando
+  el archivo monolítico.
+
+✔ Extraer lógica pura.
+
+✔ Tkinter no entra
+  en pruebas de parsing.
+
+✔ No utilizar archivos JSON
+  por ejecución.
+
+✔ No utilizar red.
+
+✔ No añadir dependencias externas.
+
+Versión:
+
+Dashboard cambia:
+
+0.3.2
+
+a
+
+0.4.0
+
+Razón:
+
+- nuevo Runner contract;
+
+- nuevo modelo de resultado;
+
+- nuevas columnas;
+
+- nuevo summary;
+
+- automatic suites;
+
+- módulo lógico separado;
+
+- pruebas Python.
+
+Baseline de proyecto
+antes de la mejora:
+
+Tests:
+
+54
+
+Passed:
+
+54
+
+Failed:
+
+0
+
+El total esperado por suma
+de baselines individuales es:
+
+1569 checks
+
+Ese total permanece provisional
+hasta que Dashboard 0.4.0
+lo agregue automáticamente.
+
+Runtime Construction Contract:
+
+Commit:
+
+4147ec4
+
+feat(runtime):
+add runtime construction contracts
+
+Pruebas nuevas:
+
+RuntimeFactoryKeyTest
+
+RuntimeDependencyBindingTest
+
+RuntimeConstructionRequestTest
+
+RuntimeDeviceHandleTest
+
+RuntimeFactoryBuildResultTest
+
+RuntimeConstructionContractIntegrationTest
+
+Estado:
+
+RUNTIME CONSTRUCTION TESTS PASS
+
+DASHBOARD 0.4.0 DESIGN APROBADO
+
+IMPLEMENTACIÓN DASHBOARD PENDIENTE
+
+Siguiente paso:
+
+Reemplazar completamente:
+
+res://docs/tools/
+velocity_test_dashboard_design.md
+
+por:
+
+Velocity Test Dashboard Design 1.3
+
+Después:
+
+- commit de diseño;
+
+- implementar módulo lógico;
+
+- ejecutar unittest;
+
+- reemplazar Runner completo;
+
+- probar Runner;
+
+- reemplazar Dashboard completo;
+
+- reemplazar configuración compartida;
+
+- verificar UI;
+
+- ejecutar Run All;
+
+- confirmar checks reales;
+
+- registrar baseline.

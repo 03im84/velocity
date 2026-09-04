@@ -3,10 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Estado | APROBADO |
-| Versión | 1.2 |
-| Fecha | 17/08/2026 |
-| Estado de implementación | COMPLETO |
-| Última verificación | 18/08/2026 |
+| Versión del documento | 1.3 |
+| Versión objetivo del Dashboard | 0.4.0 |
+| Fecha | 04/09/2026 |
+| Estado de implementación | PENDIENTE |
+| Última versión verificada | 0.3.2 |
 | Lenguaje | Python 3.13 |
 | UI | Tkinter 8.6 |
 | Backend | run_godot_tests.ps1 |
@@ -14,67 +15,212 @@
 
 ## 1. Propósito
 
-Velocity Test Dashboard proporciona una interfaz visual para descubrir, seleccionar, ejecutar y observar las pruebas de Velocity.
+Velocity Test Dashboard proporciona una interfaz visual para descubrir, clasificar, seleccionar, ejecutar y observar las pruebas de Velocity.
 
-La herramienta evita escribir manualmente comandos PowerShell repetitivos.
+Dashboard 0.4.0 añade:
 
-El Dashboard permanece abierto durante la sesión de desarrollo.
+- métricas de checks;
+- métricas de check failures;
+- detección de métricas ausentes;
+- contrato estructurado Runner–Dashboard;
+- suites automáticas;
+- categorías derivadas de nombres y rutas;
+- módulo lógico Python independiente de Tkinter;
+- pruebas unitarias de parsing y clasificación.
 
-Cada prueba continúa ejecutándose en un proceso Godot Console independiente.
+Cada prueba continúa ejecutándose mediante PowerShell Runner y un proceso Godot Console independiente.
 
-## 2. Alcance del MVP
+PowerShell Runner permanece como autoridad.
 
-La primera versión permitirá:
+## 2. Problemas que resuelve 0.4.0
 
-- cargar configuración JSON;
-- localizar la raíz del proyecto;
-- localizar PowerShell runner;
-- localizar Godot Console;
-- descubrir escenas de prueba;
-- filtrar por nombre;
-- agrupar por suites;
-- ejecutar una escena;
-- ejecutar una suite;
-- ejecutar todas;
-- configurar Repeat;
-- configurar Timeout;
-- mostrar output;
-- mostrar estado;
-- detener procesos;
-- refrescar tests;
-- conservar configuración local;
-- copiar comando equivalente;
-- cerrar de forma segura.
+### 2.1 Checks no agregados
 
-## 3. Fuera de alcance inicial
+Cada test emite:
 
-La primera versión no incluirá:
+```text
+Checks: N
 
-- gráficas;
-- historial avanzado;
-- comparación de runs;
-- exportación PDF;
-- actualización automática;
-- instalación de dependencias;
-- empaquetado `.exe`;
-- integración como plugin de Godot;
-- ejecución remota;
-- CI externo;
-- edición de tests.
+Failures: N
+```
+
+Runner 0.3.2 muestra esas líneas, pero no las convierte en datos estructurados.
+
+Dashboard 0.3.2 solo interpreta:
+
+```text
+Total runs
+
+Passed
+
+Failed
+```
+
+No puede calcular automáticamente:
+
+- total de checks;
+- check failures;
+- tests sin métricas;
+- checks por test;
+- checks por Repeat.
+
+### 2.2 Suites manuales desactualizadas
+
+La configuración compartida declara manualmente:
+
+```text
+DeviceBus
+
+DeviceCore
+
+Providers
+
+Profiles
+
+Message Contracts
+
+Debug
+```
+
+No contiene:
+
+```text
+DeviceGraph
+
+Composition
+
+DeviceCatalog
+
+Runtime
+```
+
+Cada nuevo directorio exige editar configuración.
+
+### 2.3 Lógica mezclada con UI
+
+`velocity_test_dashboard.py` contiene:
+
+- UI;
+- discovery;
+- suite inference;
+- parsing;
+- plan execution;
+- process control;
+- persistence;
+- summary.
+
+Añadir más parsing dentro del mismo archivo aumentaría el acoplamiento.
+
+### 2.4 Método duplicado
+
+Dashboard 0.3.2 define dos veces:
+
+```python
+def copy_command(self) -> None:
+```
+
+Python conserva únicamente la última definición.
+
+Dashboard 0.4.0 tendrá una sola implementación.
+
+### 2.5 Variable defensiva del Runner
+
+`Invoke-GodotTest` debe inicializar en cada attempt:
+
+```powershell
+$engineErrorDetected = $false
+```
+
+No dependerá de estado implícito.
+
+## 3. Responsabilidades
+
+### PowerShell Runner
+
+Responsabilidad:
+
+> Ejecutar tests, aplicar límites, detectar errores y emitir resultado estructurado.
+
+### Dashboard Logic
+
+Responsabilidad:
+
+> Interpretar métricas y clasificar suites sin depender de Tkinter o subprocess.
+
+### Dashboard UI
+
+Responsabilidad:
+
+> Presentar tests, ejecutar planes y renderizar resultados.
+
+### Configuración compartida
+
+Responsabilidad:
+
+> Definir paths, aliases, orden y overrides.
+
+### Configuración local
+
+Responsabilidad:
+
+> Conservar preferencias de una máquina.
 
 ## 4. Archivos
 
 ```text
 test/tools/
 ├── run_godot_tests.ps1
+├── velocity_test_dashboard_logic.py
 ├── velocity_test_dashboard.py
+├── test_velocity_test_dashboard_logic.py
 ├── test_dashboard.json
-└── test_dashboard.local.json
+├── test_dashboard.local.json
+└── start_velocity_test_dashboard.bat
 ```
 
-El archivo local no será versionado.
+Archivos versionados:
 
-## 5. Configuración compartida
+```text
+run_godot_tests.ps1
+
+velocity_test_dashboard_logic.py
+
+velocity_test_dashboard.py
+
+test_velocity_test_dashboard_logic.py
+
+test_dashboard.json
+
+start_velocity_test_dashboard.bat
+```
+
+Archivo no versionado:
+
+```text
+test_dashboard.local.json
+```
+
+## 5. Fuera de alcance
+
+Dashboard 0.4.0 no incluye:
+
+- gráficas;
+- historial persistente de ejecuciones;
+- comparación entre commits;
+- exportación PDF;
+- base de datos;
+- actualización automática;
+- instalación de dependencias;
+- empaquetado `.exe`;
+- plugin de Godot;
+- ejecución remota;
+- CI externo;
+- edición de tests;
+- red;
+- archivos JSON por run;
+- telemetría.
+
+## 6. Configuración compartida
 
 Archivo:
 
@@ -82,20 +228,23 @@ Archivo:
 test/tools/test_dashboard.json
 ```
 
-Contendrá:
+Contiene:
 
-- raíz relativa del proyecto;
-- ruta relativa del runner;
-- carpetas de tests;
+- project root;
+- runner;
+- test roots;
 - patrones de inclusión;
 - patrones de exclusión;
-- timeout por defecto;
-- repeat por defecto;
-- suites.
+- timeout;
+- repeat;
+- automatic suites;
+- suite aliases;
+- suite order;
+- suite overrides.
 
-Será versionado en Git.
+Es versionado.
 
-## 6. Configuración local
+## 7. Configuración local
 
 Archivo:
 
@@ -103,21 +252,21 @@ Archivo:
 test/tools/test_dashboard.local.json
 ```
 
-Contendrá:
+Contiene:
 
-- ruta local de Godot Console;
-- tamaño de ventana;
-- última escena seleccionada;
+- Godot Console local;
+- window geometry;
+- última selección;
 - última suite;
-- timeout utilizado;
-- repeat utilizado;
+- repeat;
+- timeout;
 - auto-scroll.
 
-No será versionado.
+No se modifica para 0.4.0.
 
-La variable de entorno `GODOT_CONSOLE` tiene prioridad sobre la ruta guardada.
+No se versiona.
 
-Orden:
+Prioridad de Godot executable:
 
 ```text
 1. GODOT_CONSOLE
@@ -127,15 +276,15 @@ Orden:
 3. file picker
 ```
 
-## 7. Project Root
+## 8. Project Root
 
-La aplicación se encuentra en:
+Dashboard se encuentra en:
 
 ```text
 test/tools/
 ```
 
-La raíz se calcula mediante:
+Project root:
 
 ```text
 ../..
@@ -147,19 +296,25 @@ Debe existir:
 project.godot
 ```
 
-Si no existe, la aplicación muestra error y no permite ejecutar.
+Si falta, ejecución queda deshabilitada.
 
-## 8. Descubrimiento de tests
+## 9. Descubrimiento
 
-La aplicación escanea las carpetas configuradas.
+Dashboard escanea `test_roots`.
 
-Busca:
+Descubre escenas:
 
 ```text
 *.tscn
 ```
 
-que coincidan con patrones de test.
+que coincidan con:
+
+```text
+*Test.tscn
+
+*_test.tscn
+```
 
 Excluye:
 
@@ -169,47 +324,154 @@ test/infrastructure/
 device_bus_failure_isolation_test.tscn
 ```
 
-Cada test conserva:
+Cada TestScene conserva:
 
 ```text
-display name;
+name
 
-resource path;
+resource_path
 
-filesystem path;
+filesystem_path
 
-suite;
+relative_path
 
-folder.
+suite
 ```
 
-Si dos escenas tienen el mismo nombre, la UI muestra también su ruta relativa.
+La extensión `.tscn` define ejecutabilidad como escena Godot.
 
-## 9. Refresh
+No define categoría.
 
-El Dashboard tendrá:
+## 10. Clasificación automática de suites
+
+Suite se infiere por:
 
 ```text
-Refresh Tests
+nombre
+
+y
+
+ruta
 ```
 
-La operación:
+No por extensión.
 
-- vuelve a leer configuración compartida;
-- escanea carpetas;
-- actualiza suites;
-- conserva selección cuando sea posible;
-- informa cantidad de tests.
+Prioridad:
 
-También se ejecuta automáticamente:
+```text
+1. suite override exacto;
 
-- al iniciar;
-- antes de Run Suite;
-- antes de Run All.
+2. alias del primer directorio bajo test root;
 
-## 10. Suites
+3. nombre humanizado del directorio;
 
-Suites iniciales:
+4. nombre humanizado de escena;
+
+5. Other.
+```
+
+## 11. Aliases iniciales
+
+```text
+device_bus
+→ DeviceBus
+
+device_core
+→ DeviceCore
+
+device
+→ DeviceCore
+
+provider
+→ Providers
+
+profile
+→ Profiles
+
+message_contract
+→ Message Contracts
+
+device_graph
+→ DeviceGraph
+
+composition
+→ Composition
+
+catalog
+→ DeviceCatalog
+
+runtime
+→ Runtime
+
+debug
+→ Debug
+```
+
+## 12. Directorios desconocidos
+
+Ejemplo:
+
+```text
+test/core/measurement_contract/
+```
+
+Suite automática:
+
+```text
+Measurement Contract
+```
+
+Transformación:
+
+```text
+measurement_contract
+→ measurement contract
+→ Measurement Contract
+```
+
+Otro ejemplo:
+
+```text
+runtime-safety
+→ Runtime Safety
+```
+
+## 13. Escenas directamente bajo test root
+
+Si una escena se encuentra directamente bajo:
+
+```text
+test/core/
+```
+
+se utiliza su nombre sin sufijo Test.
+
+Ejemplo:
+
+```text
+MeasurementIdentityTest.tscn
+→ Measurement Identity
+```
+
+Si no puede inferirse un nombre:
+
+```text
+Other
+```
+
+## 14. Suite All
+
+`All` es implícita.
+
+No necesita declararse como root manual.
+
+Incluye todos los tests descubiertos después de aplicar exclusiones.
+
+No duplica escenas.
+
+## 15. Orden de suites
+
+Orden inicial:
 
 ```text
 All
@@ -224,148 +486,427 @@ Profiles
 
 Message Contracts
 
+DeviceGraph
+
+Composition
+
+DeviceCatalog
+
+Runtime
+
 Debug
 ```
 
-Una suite puede contener una o más carpetas.
+Suites desconocidas aparecen después en orden alfabético.
 
-Las suites no duplican escenas.
+## 16. Overrides
 
-## 11. Ejecución
+Configuración puede forzar una suite por resource path o relative path.
 
-La UI no invoca Godot directamente.
+Ejemplo conceptual:
 
-Invoca:
+```json
+{
+  "test/core/special/LegacyTest.tscn": "Legacy"
+}
+```
+
+Overrides tienen prioridad sobre aliases.
+
+No se utilizan para mantener categorías normales.
+
+## 17. Dashboard Logic Module
+
+Archivo:
 
 ```text
-run_godot_tests.ps1
+test/tools/velocity_test_dashboard_logic.py
 ```
+
+No importa:
+
+- tkinter;
+- subprocess;
+- threading;
+- filesystem de ejecución;
+- Godot.
+
+Puede importar:
+
+- dataclasses;
+- json;
+- pathlib;
+- re;
+- typing.
+
+## 18. Responsabilidades de Dashboard Logic
+
+Funciones o clases puras para:
+
+- humanizar suite names;
+- normalizar paths;
+- inferir suite;
+- interpretar metrics marker;
+- agregar markers;
+- calcular missing metrics.
+
+Modelos previstos:
+
+```text
+RunnerAttemptMetrics
+
+RunnerMetricsSummary
+```
+
+No modifica UI.
+
+No inicia procesos.
+
+## 19. Runner Metrics Protocol
+
+Versión:
+
+```text
+1
+```
+
+Prefix:
+
+```text
+VELOCITY_TEST_METRICS_JSON:
+```
+
+Marker disponible:
+
+```text
+VELOCITY_TEST_METRICS_JSON:{"version":1,"scene":"res://test/core/runtime/RuntimeFactoryKeyTest.tscn","attempt":1,"available":true,"checks":24,"check_failures":0}
+```
+
+Marker no disponible:
+
+```text
+VELOCITY_TEST_METRICS_JSON:{"version":1,"scene":"res://test/core/runtime/RuntimeFactoryKeyTest.tscn","attempt":1,"available":false,"checks":null,"check_failures":null}
+```
+
+## 20. Campos del marker
+
+```text
+version:
+versión del protocolo.
+
+scene:
+resource path.
+
+attempt:
+número de intento.
+
+available:
+si Checks y Failures fueron encontrados.
+
+checks:
+cantidad de checks o null.
+
+check_failures:
+cantidad de failures o null.
+```
+
+## 21. Extracción en PowerShell
+
+Runner analiza stdout del proceso Godot.
+
+Patrones:
+
+```regex
+^\s*Checks:\s*(\d+)\s*$
+
+^\s*Failures:\s*(\d+)\s*$
+```
+
+Si existen varias coincidencias, utiliza la última de cada campo dentro del attempt.
+
+Metrics available es true únicamente cuando ambos campos existen.
+
+## 22. Marker obligatorio por attempt
+
+Runner emite exactamente un marker por attempt, incluso cuando:
+
+- PASS;
+- FAIL;
+- TIMEOUT;
+- ENGINE_ERROR;
+- proceso no confirmado;
+- summary ausente.
+
+Esto permite distinguir:
+
+```text
+marker ausente por error de protocolo
+
+de
+
+metrics available false
+```
+
+## 23. Test failures y ExitCode
+
+Si:
+
+```text
+check_failures > 0
+```
+
+y Godot devuelve ExitCode cero, Runner convierte el attempt en FAIL.
+
+ExitCode agregado del Runner será distinto de cero.
+
+Esto evita que un test con assertions fallidas sea declarado PASS por error de propagación.
+
+## 24. Missing Metrics
+
+Si un attempt termina PASS pero no emite summary:
+
+```text
+Status:
+PASS
+
+Metrics:
+MISSING
+```
+
+Dashboard no redefine el estado autoritativo.
+
+Plan summary incrementa:
+
+```text
+Missing Metrics
+```
+
+No asume checks cero.
+
+## 25. Repeat
+
+Con:
+
+```text
+Repeat: 3
+```
+
+Runner emite tres markers.
+
+Dashboard agrega:
+
+```text
+Checks:
+suma de attempts disponibles.
+
+Check Failures:
+suma de attempts disponibles.
+
+Metrics Runs:
+cantidad de markers available true.
+
+Missing Metrics:
+cantidad de markers available false
+o markers esperados ausentes.
+```
+
+## 26. Runner Result
+
+Cada resultado PowerShell añade:
+
+```text
+Checks
+
+CheckFailures
+
+MetricsAvailable
+```
+
+La tabla humana muestra:
+
+```text
+Scene
+
+Attempt
+
+ExitCode
+
+Status
+
+EngineError
+
+Checks
+
+CheckFailures
+
+MetricsAvailable
+```
+
+## 27. Runner Summary
+
+Runner imprime:
+
+```text
+Total runs
+
+Passed
+
+Failed
+
+Total checks
+
+Check failures
+
+Missing metrics
+
+RESULT
+```
+
+Estos valores son humanos.
+
+El Dashboard utiliza markers estructurados para métricas por attempt.
+
+## 28. PlanResult
+
+Dashboard 0.4.0 añade:
+
+```python
+checks: int = 0
+
+check_failures: int = 0
+
+metrics_runs: int = 0
+
+missing_metrics: int = 0
+```
+
+`reset_for_resume()` reinicia esos campos cuando un test STOPPED o NOT_RUN se vuelve a ejecutar.
+
+Resultados PASS ya completados conservan métricas.
+
+## 29. Results Table
+
+Columnas:
+
+```text
+Test
+
+Status
+
+Exit
+
+Runs
+
+Checks
+
+Check Failures
+
+Metrics
+
+Seconds
+```
+
+### Checks
+
+```text
+número agregado
+
+o
+
+vacío mientras PENDING
+```
+
+### Check Failures
+
+```text
+número agregado
+```
+
+### Metrics
+
+```text
+OK
+
+Missing N
+
+—
+```
+
+## 30. Summary live
+
+Durante ejecución:
+
+```text
+All Tests
+Completed: 20 / 54
+Passed: 20
+Failed: 0
+Checks: 640
+Check Failures: 0
+Missing Metrics: 0
+```
+
+Solo suma resultados completados.
+
+## 31. Summary final
+
+```text
+All Tests
+Planned: 54
+Completed: 54
+Passed: 54
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Total Runs: 54
+Checks: 1569
+Check Failures: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+`1569` es expectativa inicial.
+
+El valor real será determinado por Runner Metrics Protocol.
+
+## 32. Estado de un test con métricas faltantes
 
 Ejemplo:
 
 ```text
-powershell.exe
+Status:
+PASS
 
--NoProfile
+Checks:
+0 mostrado como vacío o —
 
--ExecutionPolicy Bypass
+Check Failures:
+—
 
--File run_godot_tests.ps1
-
--Scene res://...
-
--Repeat 1
-
--TimeoutSeconds 10
+Metrics:
+Missing 1
 ```
 
-Para todas:
+El summary muestra:
 
 ```text
--All
+Passed: 1
+
+Missing Metrics: 1
 ```
 
-El runner continúa siendo la autoridad.
-
-## 12. GODOT_CONSOLE
-
-El Dashboard pasa la ruta al runner mediante:
-
-```text
--GodotPath
-```
-
-o conserva la variable de entorno.
-
-La ruta debe:
-
-- existir;
-- ser archivo;
-- terminar en `.exe`;
-- preferiblemente incluir `_console`.
-
-Si la variable de sistema ya existe, se utiliza automáticamente.
-
-## 13. Proceso
-
-Python utilizará:
-
-```python
-subprocess.Popen
-```
-
-con:
-
-```python
-shell=False
-```
-
-y argumentos como lista.
-
-Se utilizará:
-
-```text
-CREATE_NEW_PROCESS_GROUP
-```
-
-en Windows.
-
-Esto permite terminar el árbol específico iniciado por el Dashboard.
-
-## 14. Threading
-
-Tkinter permanece en el main thread.
-
-El runner se ejecuta en un worker thread.
-
-Modelo:
-
-```text
-Tkinter Main Thread
-		│
-		├── UI
-		├── event loop
-		└── output rendering
-
-Worker Thread
-		│
-		└── subprocess PowerShell
-
-queue.Queue
-		│
-		└── output hacia UI
-```
-
-El worker no modifica widgets directamente.
-
-La UI consulta la queue mediante:
-
-```python
-root.after()
-```
-
-## 15. Output
-
-stdout y stderr serán combinados para mostrar orden de ejecución.
-
-La vista tendrá:
-
-- fuente monoespaciada;
-- scroll vertical;
-- auto-scroll opcional;
-- botón Clear;
-- botón Copy Output.
-
-La primera versión puede aplicar un color general por estado final.
-
-No necesita interpretar colores ANSI.
-
-## 16. Estados visuales
+## 33. Status visuales
 
 ```text
 IDLE
 
 RUNNING
+
+PAUSE_REQUESTED
+
+PAUSED
 
 PASS
 
@@ -380,181 +921,11 @@ STOPPED
 CONFIG_ERROR
 ```
 
-Colores recomendados:
+Métrica faltante no añade un nuevo status de test.
 
-```text
-IDLE:
-gris
+Se muestra en columna Metrics.
 
-RUNNING:
-azul
-
-PASS:
-verde
-
-FAIL:
-rojo
-
-TIMEOUT:
-amarillo
-
-ENGINE_ERROR:
-rojo oscuro
-
-STOPPED:
-naranja
-
-CONFIG_ERROR:
-rojo
-```
-
-## 17. Parsing de resultado
-
-La autoridad principal es el ExitCode del runner.
-
-Además se analizará output para mostrar:
-
-```text
-Tests
-
-Total runs
-
-Passed
-
-Failed
-
-RESULT
-
-TIMEOUT
-
-ENGINE_ERROR
-```
-
-Reglas:
-
-```text
-Exit 0:
-PASS
-
-Exit distinto de 0:
-FAIL o estado más específico
-
-Output contiene TIMEOUT:
-TIMEOUT
-
-Output contiene ENGINE_ERROR:
-ENGINE_ERROR
-```
-
-El parser visual no cambia la semántica del runner.
-
-## 18. Controles
-
-Controles MVP:
-
-```text
-Search
-
-Suite selector
-
-Test list
-
-Repeat
-
-Timeout
-
-Run Selected
-
-Run Suite
-
-Run All
-
-Stop
-
-Refresh Tests
-
-Clear Output
-
-Copy Command
-
-Copy Output
-```
-
-## 19. Estado de controles
-
-Mientras ejecuta:
-
-```text
-Run Selected:
-disabled
-
-Run Suite:
-disabled
-
-Run All:
-disabled
-
-Refresh:
-disabled
-
-Test selection:
-disabled
-
-Stop:
-enabled
-```
-
-Al terminar se invierten.
-
-No se permiten dos runners simultáneos.
-
-## 20. Stop
-
-Stop termina el árbol iniciado por el Dashboard.
-
-En Windows podrá utilizar:
-
-```text
-taskkill /PID <pid> /T /F
-```
-
-solo para el PID de PowerShell creado por Python.
-
-No debe detener:
-
-- Godot Editor;
-- otro Dashboard;
-- procesos ajenos.
-
-Después muestra:
-
-```text
-STOPPED
-```
-
-## 21. Cierre seguro
-
-Si la ventana se cierra durante ejecución:
-
-```text
-A test is currently running.
-
-Stop the test and exit?
-```
-
-Opciones:
-
-```text
-Cancel
-
-Stop and Exit
-```
-
-La aplicación no se cierra dejando procesos hijos.
-
-## 22. UI Layout
-
-Estructura:
+## 34. UI Layout
 
 ```text
 Main Window
@@ -564,99 +935,199 @@ Main Window
 │   ├── Run Selected
 │   ├── Run Suite
 │   ├── Run All
-│   └── Stop
+│   ├── Pause / Resume
+│   ├── Stop
+│   ├── Select Godot
+│   ├── Copy Command
+│   ├── Copy Output
+│   └── Clear Output
 │
 ├── Horizontal Paned Window
 │   │
-│   ├── Left Panel
+│   ├── Test Browser
 │   │   ├── Search
 │   │   ├── Suite selector
 │   │   └── Test list
 │   │
-│   └── Right Panel
+│   └── Execution Panel
 │       ├── Selected test
 │       ├── Repeat
 │       ├── Timeout
 │       ├── Status
 │       ├── Summary
+│       ├── Results Table
+│       ├── Configuration
 │       └── Output
 │
 └── Status Bar
 ```
 
-## 23. Búsqueda
+## 35. Pause y Resume
 
-La búsqueda no distingue mayúsculas.
-
-Busca dentro de:
-
-- nombre de escena;
-- ruta;
-- suite.
-
-La lista se actualiza mientras se escribe.
-
-## 24. Test seleccionado
-
-El panel muestra:
+Se conserva un único botón dinámico:
 
 ```text
-Display Name
+Pause
 
-Resource Path
+Pausing...
 
-Filesystem Path
-
-Suite
+Resume
 ```
 
-Run Selected permanece desactivado si no hay selección válida.
+No se crean botones separados.
 
-## 25. Persistencia local
+Pause ocurre después del test actual.
 
-Al cerrar se guardarán:
+PASS anteriores no se repiten.
 
-- geometry;
-- última selección;
-- suite;
-- repeat;
-- timeout;
-- auto-scroll.
+STOPPED y NOT_RUN se reinician al Resume.
 
-Un archivo local inválido se ignora y se reemplaza con defaults seguros.
+Sus métricas se reinician antes de volver a ejecutar.
 
-## 26. Errores de configuración
+## 36. Stop
 
-El Dashboard debe detectar:
+Stop termina únicamente el árbol iniciado por Dashboard.
 
-- project.godot ausente;
-- runner ausente;
-- Godot Console ausente;
-- JSON inválido;
-- carpeta de tests ausente;
-- escena eliminada;
-- Repeat inválido;
-- Timeout inválido.
+Windows:
 
-La interfaz permanece abierta y muestra el error.
+```text
+taskkill /PID <pid> /T /F
+```
 
-## 27. Seguridad
+No detiene:
 
-No se utiliza:
+- Godot Editor;
+- otro Dashboard;
+- procesos ajenos.
+
+## 37. Process creation
+
+Python utiliza:
 
 ```python
-shell=True
+subprocess.Popen
 ```
 
-No se ejecuta texto escrito libremente como comando.
+con:
 
-La escena siempre proviene del catálogo descubierto.
+```python
+shell=False
+```
 
-Repeat y Timeout se convierten a enteros y se validan.
+En Windows:
 
-Los paths se resuelven antes de ejecutar.
+```text
+CREATE_NO_WINDOW
 
-## 28. Configuración compartida inicial
+STARTF_USESHOWWINDOW
+
+SW_HIDE
+```
+
+No aparecen ventanas PowerShell o Godot Console.
+
+## 38. Threading
+
+Tkinter permanece en main thread.
+
+Worker ejecuta subprocess.
+
+`queue.Queue` transporta eventos.
+
+`root.after()` procesa eventos.
+
+Worker no modifica widgets.
+
+## 39. Output
+
+stdout y stderr se combinan.
+
+La vista mantiene:
+
+- fuente monoespaciada;
+- scroll vertical;
+- scroll horizontal;
+- auto-scroll;
+- Clear Output;
+- Copy Output.
+
+Metrics marker permanece visible en output para auditoría.
+
+## 40. Status y ExitCode
+
+Runner decide ExitCode.
+
+Dashboard determina representación:
+
+```text
+Exit 0:
+PASS
+
+Output TIMEOUT
+o Exit 124:
+TIMEOUT
+
+Output ENGINE_ERROR
+o Exit 126:
+ENGINE_ERROR
+
+Otro Exit:
+FAIL
+```
+
+Metrics no convierte PASS en FAIL dentro del Dashboard.
+
+Runner realiza cualquier cross-check.
+
+## 41. Engine Error
+
+Runner inicializa por attempt:
+
+```powershell
+$engineErrorDetected = $false
+```
+
+Detecta:
+
+```text
+SCRIPT ERROR:
+
+ERROR:
+
+Parse Error:
+
+Invalid call.
+```
+
+Godot ExitCode cero con Engine Error se convierte en:
+
+```text
+126
+
+ENGINE_ERROR
+```
+
+## 42. Runner timeout
+
+Timeout configurable:
+
+```text
+1 a 3600 segundos
+```
+
+Timeout produce:
+
+```text
+ExitCode 124
+
+TIMEOUT
+
+Metrics available false
+```
+
+salvo que el test haya emitido summary antes del timeout.
+
+## 43. Configuración compartida 0.4.0
 
 ```json
 {
@@ -675,39 +1146,46 @@ Los paths se resuelven antes de ejecutar.
   ],
   "default_timeout_seconds": 10,
   "default_repeat": 1,
-  "suites": {
-	"All": [
-      "test/core"
-	],
-	"DeviceBus": [
-      "test/core/device_bus"
-	],
-	"DeviceCore": [
-	  "test/core/device_core",
-      "test/core/device"
-	],
-	"Providers": [
-      "test/core/provider"
-	],
-	"Profiles": [
-      "test/core/profile"
-	],
-	"Message Contracts": [
-      "test/core/message_contract"
-	],
-	"Debug": [
-      "test/core/debug"
-	]
-  }
+  "automatic_suites": true,
+  "suite_aliases": {
+	"device_bus": "DeviceBus",
+	"device_core": "DeviceCore",
+	"device": "DeviceCore",
+	"provider": "Providers",
+	"profile": "Profiles",
+	"message_contract": "Message Contracts",
+	"device_graph": "DeviceGraph",
+	"composition": "Composition",
+	"catalog": "DeviceCatalog",
+	"runtime": "Runtime",
+	"debug": "Debug"
+  },
+  "suite_order": [
+	"DeviceBus",
+	"DeviceCore",
+	"Providers",
+	"Profiles",
+	"Message Contracts",
+	"DeviceGraph",
+	"Composition",
+	"DeviceCatalog",
+	"Runtime",
+    "Debug"
+  ],
+  "suite_overrides": {}
 }
 ```
 
-## 29. Configuración local inicial
+`All` es implícita.
+
+## 44. Configuración local
+
+Sin cambios:
 
 ```json
 {
   "godot_console": "",
-  "window_geometry": "1280x800",
+  "window_geometry": "1440x900",
   "last_selected_test": "",
   "last_suite": "All",
   "repeat": 1,
@@ -716,159 +1194,438 @@ Los paths se resuelven antes de ejecutar.
 }
 ```
 
-## 30. Git Ignore
+No se modifica el archivo local del usuario.
 
-Debe añadirse:
+## 45. Refresh
 
-```text
-test/tools/test_dashboard.local.json
+Refresh:
 
-test/tools/.test_dashboard/
-```
+- relee configuración compartida;
+- descubre tests;
+- infiere suites;
+- actualiza Combo;
+- conserva selección;
+- conserva suite cuando existe;
+- vuelve a All si suite desaparece;
+- informa cantidad.
 
-La configuración compartida sí se versiona.
+Se ejecuta:
 
-## 31. Fases de implementación
+- al iniciar;
+- manualmente;
+- antes de Run Suite;
+- antes de Run All.
 
-### Fase 1
+## 46. Suite selector
 
-```text
-Configuración.
-
-Descubrimiento.
-
-Lista.
-
-Búsqueda.
-
-Selección.
-```
-
-### Fase 2
+Valores se construyen desde:
 
 ```text
-Run Selected.
+All
 
-Worker thread.
++
 
-Output live.
+suite_order presente
 
-Status.
++
 
-Stop.
+suites descubiertas adicionales
 ```
 
-### Fase 3
+No muestra suites configuradas sin tests, salvo decisión futura.
+
+## 47. Search
+
+Busca sin distinguir mayúsculas dentro de:
+
+- nombre;
+- resource path;
+- suite.
+
+Actualiza mientras se escribe.
+
+## 48. Duplicated names
+
+Si dos escenas comparten stem, Dashboard muestra ruta relativa junto al nombre.
+
+La identidad interna sigue siendo resource path.
+
+## 49. Seguridad
+
+No se utiliza:
+
+```python
+shell=True
+```
+
+No se ejecuta texto libre.
+
+Escenas provienen de discovery.
+
+Repeat y Timeout se validan.
+
+Paths se resuelven.
+
+Metrics JSON se interpreta con `json.loads`.
+
+No se evalúa código desde marker.
+
+## 50. Duplicación de copy_command
+
+Dashboard 0.4.0 conserva exactamente una implementación:
+
+```python
+def copy_command(self) -> None:
+```
+
+La definición duplicada se elimina en el archivo completo consolidado.
+
+## 51. Pruebas del módulo lógico
+
+Archivo:
 
 ```text
-Suites.
-
-Run All.
-
-Repeat.
-
-Timeout.
-
-Summary.
+test/tools/test_velocity_test_dashboard_logic.py
 ```
 
-### Fase 4
+Framework:
 
 ```text
-Persistencia local.
-
-Copy Command.
-
-Copy Output.
-
-Cierre seguro.
+unittest
 ```
 
-## 32. Pruebas de la herramienta
+Sin dependencias externas.
 
-La herramienta se verificará mediante:
+Casos:
 
-- carga de JSON válido;
-- rechazo de JSON inválido;
-- descubrimiento de tests;
-- filtros;
-- selección;
-- ejecución PASS;
-- ejecución FAIL;
-- timeout;
+- humanize snake_case;
+- humanize kebab-case;
+- suite alias;
+- suite override;
+- unknown folder;
+- root-level test;
+- Windows path;
+- POSIX path;
+- marker válido;
+- marker unavailable;
+- marker malformado;
+- protocol version inválida;
+- markers repetidos;
+- suma de checks;
+- suma de failures;
+- missing metrics;
+- marker ausente.
+
+## 52. Ejecución de unittest
+
+Desde project root:
+
+```powershell
+python `
+	-m unittest `
+	test.tools.test_velocity_test_dashboard_logic
+```
+
+Resultado esperado:
+
+```text
+OK
+```
+
+No requiere Tkinter display ni Godot.
+
+## 53. Pruebas del Runner
+
+### Positive
+
+Ejecutar una escena PASS.
+
+Verificar:
+
+- marker version 1;
+- available true;
+- Checks correcto;
+- CheckFailures cero;
+- ExitCode cero.
+
+### Repeat
+
+Ejecutar Repeat mayor que uno.
+
+Verificar un marker por attempt.
+
+### Failure
+
+Ejecutar test controlado con failure.
+
+Verificar:
+
+- CheckFailures mayor que cero cuando summary existe;
+- ExitCode no cero;
+- Status FAIL.
+
+### Timeout
+
+Verificar:
+
+- Exit 124;
+- marker emitido;
+- Missing Metrics contabilizable.
+
+### Engine Error
+
+Verificar:
+
+- Exit 126;
+- ENGINE_ERROR;
+- marker emitido.
+
+## 54. Pruebas del Dashboard
+
+Verificación manual:
+
+- discovery de 54 tests;
+- suites automáticas;
+- Runtime visible;
+- DeviceCatalog visible;
+- Composition visible;
+- DeviceGraph visible;
+- no categorías nuevas en Other;
+- Run Selected;
+- Run Suite;
+- Run All;
+- columnas de metrics;
+- summary live;
+- summary final;
+- Pause;
+- Resume;
 - Stop;
-- cierre durante ejecución;
-- ruta GODOT_CONSOLE;
-- ausencia de GODOT_CONSOLE.
+- output;
+- safe close.
 
-No se utilizarán tests de Godot para probar la UI Python.
+## 55. Baseline objetivo
 
-Podrán utilizarse pruebas unitarias Python futuras.
-
-## 33. Criterios de aceptación del MVP
-
-1. Inicia con Python 3.13.
-
-2. Utiliza Tkinter 8.6.
-
-3. Detecta GODOT_CONSOLE.
-
-4. Descubre tests.
-
-5. Filtra por nombre.
-
-6. Ejecuta una escena.
-
-7. Ejecuta una suite.
-
-8. Ejecuta todas.
-
-9. Muestra output.
-
-10. Muestra estado.
-
-11. Captura ExitCode.
-
-12. Stop termina el árbol.
-
-13. UI no se congela.
-
-14. Configuración local se guarda.
-
-15. No requiere paquetes externos.
-
-16. Runner PowerShell permanece autoritativo.
-
-## 34. Regla de evolución
-
-Una función nueva no debe:
-
-- duplicar el runner;
-- ejecutar comandos arbitrarios;
-- bloquear Tkinter;
-- modificar tests;
-- modificar Core;
-- ocultar ExitCodes;
-- dejar procesos huérfanos.
-
-La herramienta debe continuar siendo un adaptador visual de infraestructura de pruebas.
-
-## 35. Estado de implementación
-
-Velocity Test Dashboard fue implementado mediante:
+Run All esperado:
 
 ```text
-Python 3.13
+Planned: 54
+Completed: 54
+Passed: 54
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Total Runs: 54
+Checks: 1569
+Check Failures: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
 
-Tkinter 8.6
+El número real de checks se aceptará únicamente después de ejecución con Metrics Protocol.
 
-PowerShell runner
+## 56. Compatibilidad
 
-Godot Console headless```
+Se conserva:
 
-## 36. Pause y Resume
+- test scene discovery;
+- shared config path;
+- local config path;
+- GODOT_CONSOLE;
+- Run Selected;
+- Run Suite;
+- Run All;
+- Repeat;
+- Timeout;
+- Pause/Resume;
+- Stop;
+- Copy Command;
+- Copy Output;
+- safe close;
+- no console windows.
 
-Velocity Test Dashboard utiliza un único botón dinámico:
+## 57. Migración desde suites manuales
+
+La configuración `suites` de 0.3.2 deja de ser fuente principal.
+
+Dashboard 0.4.0 utiliza:
 
 ```text
-Pause / Resume```
+automatic_suites
+
+suite_aliases
+
+suite_order
+
+suite_overrides
+```
+
+No se necesita migrar `test_dashboard.local.json`.
+
+Si `last_suite` no existe después de discovery:
+
+```text
+All
+```
+
+## 58. Orden de implementación
+
+```text
+1. Crear journal de diseño.
+   COMPLETADO.
+
+2. Reemplazar este diseño.
+   COMPLETADO.
+
+3. Commit de diseño.
+   SIGUIENTE.
+
+4. Implementar
+   velocity_test_dashboard_logic.py.
+
+5. Implementar unittest.
+
+6. Ejecutar unittest.
+
+7. Reemplazar Runner completo.
+
+8. Probar Runner aislado.
+
+9. Reemplazar test_dashboard.json completo.
+
+10. Reemplazar Dashboard completo.
+
+11. Verificar UI.
+
+12. Ejecutar Run Selected.
+
+13. Ejecutar Run Suite.
+
+14. Ejecutar Pause/Resume.
+
+15. Ejecutar Stop.
+
+16. Ejecutar Run All.
+
+17. Confirmar checks reales.
+
+18. Registrar baseline.
+
+19. Actualizar Project Handoff.
+
+20. Cerrar Dashboard 0.4.0.
+```
+
+## 59. Criterios de aceptación
+
+1. Runner emite marker por attempt.
+
+2. Marker utiliza JSON seguro.
+
+3. Protocol version es uno.
+
+4. Checks se extraen correctamente.
+
+5. Check Failures se extraen correctamente.
+
+6. Missing Metrics no se confunde con cero.
+
+7. Check Failures positivos no permiten PASS silencioso.
+
+8. Dashboard consume marker.
+
+9. PlanResult conserva métricas.
+
+10. Results muestra Checks.
+
+11. Results muestra Check Failures.
+
+12. Results muestra Metrics.
+
+13. Summary live agrega checks.
+
+14. Summary final agrega checks.
+
+15. Repeat agrega attempts.
+
+16. Resume no duplica métricas.
+
+17. Suites se infieren automáticamente.
+
+18. Aliases agrupan device y device_core.
+
+19. Directorio desconocido se humaniza.
+
+20. Overrides tienen prioridad.
+
+21. `All` es implícita.
+
+22. Módulo lógico no depende de Tkinter.
+
+23. unittest termina OK.
+
+24. Existe una sola definición de copy_command.
+
+25. engineErrorDetected se inicializa por attempt.
+
+26. Local config no se modifica.
+
+27. No aparecen consolas.
+
+28. Pause/Resume conserva un botón.
+
+29. Stop termina únicamente proceso propio.
+
+30. Run All termina PASS.
+
+31. Missing Metrics es cero para baseline actual.
+
+32. Total de checks queda registrado.
+
+## 60. Consecuencias positivas
+
+- checks visibles;
+- baseline cuantificada;
+- suites sin mantenimiento manual;
+- nuevas carpetas se clasifican solas;
+- parsing testeable;
+- UI menos acoplada;
+- Runner mantiene autoridad;
+- métricas faltantes explícitas;
+- Repeat auditable;
+- mejor diagnóstico.
+
+## 61. Consecuencias negativas
+
+- nuevo módulo Python;
+- nuevo unittest;
+- Runner contract adicional;
+- más columnas;
+- configuración compartida cambia;
+- output incluye marker JSON;
+- implementación completa del Dashboard debe reemplazarse.
+
+Estas consecuencias son aceptadas.
+
+## 62. Estado
+
+```text
+VELOCITY TEST DASHBOARD 0.4.0
+
+DISEÑO APROBADO
+
+IMPLEMENTACIÓN PENDIENTE
+```
+
+Siguiente paso:
+
+```text
+Commit de diseño
+```
+
+Después:
+
+```text
+velocity_test_dashboard_logic.py
+```
