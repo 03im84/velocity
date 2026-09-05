@@ -3,39 +3,44 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
-| Fecha | 25/08/2026 |
+| Versión | 1.1 |
+| Fecha | 04/09/2026 |
 | ADR relacionado | ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Identidad de factory, dependencias, request, handle, build result, factory behavior y host behavior |
+| Estado de implementación | COMPLETO Y VERIFICADO |
 
 ## 1. Propósito
 
-Este documento traduce ADR-010 a contratos concretos e implementables.
+Runtime Construction Contract define cómo se construye una unidad runtime antes de implementar:
 
-Define:
+- RuntimeFactoryRegistry;
+- CompositionPlan;
+- CompositionCompiler;
+- CompositionRuntime.
+
+Componentes implementados:
 
 - RuntimeFactoryKey;
 - RuntimeDependencyBinding;
 - RuntimeConstructionRequest;
 - RuntimeDeviceHandle;
-- RuntimeFactoryBuildResult;
-- RuntimeFactory behavior;
-- RuntimeHost behavior;
-- ownership;
-- construcción atómica;
-- cleanup;
-- límites frente a CompositionRuntime.
+- RuntimeFactoryBuildResult.
 
-La primera implementación se limita a contratos y pruebas.
+Behaviors verificados mediante integración:
 
-No implementa todavía:
+- RuntimeFactory;
+- RuntimeHost.
 
-- RuntimeFactoryRegistry;
-- CompositionPlan;
-- CompositionCompiler;
-- CompositionRuntime;
-- RuntimeHost concreto;
-- factories concretas de producción.
+La construcción es:
+
+- explícita;
+- atómica;
+- transaccional;
+- sin service locator;
+- sin dependencias globales ocultas;
+- sin host attach prematuro;
+- separada de lifecycle;
+- separada de activación.
 
 ## 2. Pipeline conceptual
 
@@ -66,7 +71,7 @@ RuntimeFactoryBuildResult
 RuntimeDeviceHandle
 ```
 
-Después de construir todos los Handles:
+Después de construir Handles:
 
 ```text
 RuntimeHost.attach()
@@ -84,9 +89,9 @@ start
 commit Active Simulation
 ```
 
-## 3. Estructura propuesta
+## 3. Estructura implementada
 
-### 3.1 Código
+### Código
 
 ```text
 core/runtime/
@@ -97,7 +102,7 @@ core/runtime/
 └── runtime_factory_build_result.gd
 ```
 
-### 3.2 Pruebas
+### Pruebas
 
 ```text
 test/core/runtime/
@@ -115,7 +120,7 @@ test/core/runtime/
 └── runtime_construction_contract_integration_test.gd
 ```
 
-### 3.3 Soporte de prueba
+### Soporte controlado
 
 ```text
 test/core/runtime/
@@ -124,13 +129,11 @@ test/core/runtime/
 └── runtime_test_object.gd
 ```
 
-Los helpers de prueba no representan implementaciones de producción.
+Los helpers no representan producción.
 
 ## 4. Dependencias permitidas
 
 ```text
-DeviceProfile
-
 DeviceConfiguration
 
 ValidationIssue
@@ -140,11 +143,11 @@ ValidationReport
 Object
 ```
 
-Runtime contracts pueden referenciar objetos host mediante `Object`.
+Runtime contracts pueden conservar Objects.
 
 No invocan APIs específicas de Node.
 
-## 5. Dependencias no permitidas
+## 5. Dependencias prohibidas
 
 ```text
 SceneTree
@@ -170,50 +173,23 @@ hardware adapters concretos
 telemetría
 ```
 
-Factories concretas futuras podrán depender de adapters explícitos mediante bindings.
-
-Los contratos base no descubren esas dependencias.
-
 ## 6. RuntimeFactoryKey
 
-### 6.1 Archivo
-
-```text
-core/runtime/runtime_factory_key.gd
-```
-
-### 6.2 Forma
-
-```gdscript
-extends RefCounted
-class_name RuntimeFactoryKey
-```
-
-### 6.3 Responsabilidad
+### Responsabilidad
 
 > Identificar de forma exacta una RuntimeFactory.
 
-### 6.4 Estado
+### Estado
 
 ```gdscript
-var _profile_id: StringName
+profile_id: StringName
 
-var _profile_version: int
+profile_version: int
 
-var _activation_context: int
+activation_context: int
 ```
 
-### 6.5 Construcción
-
-```gdscript
-RuntimeFactoryKey.new(
-	profile_id,
-	profile_version,
-	activation_context
-)
-```
-
-### 6.6 API
+### API
 
 ```gdscript
 get_profile_id() -> StringName
@@ -229,62 +205,54 @@ equals(
 ) -> bool
 ```
 
-### 6.7 Validación
+### Validación
 
-Debe cumplirse:
+- Profile ID no vacío;
+- Profile Version positiva;
+- Activation Context válido.
 
-```text
-Profile ID no vacío;
+### Igualdad
 
-Profile Version positiva;
+Compara contenido.
 
-Activation Context es SIMULATION
-o HARDWARE.
-```
+No requiere misma referencia.
 
-### 6.8 Igualdad
+### Inmutabilidad
 
-Dos Keys son iguales cuando coinciden:
+No expone setters.
+
+## 7. Factory Key exacta
+
+Identidad:
 
 ```text
 Profile ID
 
-AND
++
 
 Profile Version
 
-AND
++
 
 Activation Context
 ```
 
-No se utiliza identidad de referencia para igualdad lógica.
-
-### 6.9 Inmutabilidad
-
-No expone setters.
-
-## 7. RuntimeFactoryKey y contexto
-
-Estas Keys son diferentes:
+Diferentes:
 
 ```text
-test.sensor@1 + SIMULATION
+sensor@1 + Simulation
 
-test.sensor@1 + HARDWARE
+sensor@2 + Simulation
+
+sensor@1 + Hardware
 ```
 
-No existe sustitución entre contextos.
+No existe:
 
-Estas Keys también son diferentes:
-
-```text
-test.sensor@1 + SIMULATION
-
-test.sensor@2 + SIMULATION
-```
-
-No existe sustitución entre versiones.
+- latest;
+- fallback;
+- sustitución;
+- host target.
 
 ## 8. RuntimeFactoryKey sin host target
 
@@ -294,37 +262,22 @@ RuntimeFactoryKey 1.0 no contiene:
 host_target
 ```
 
-No existen todavía contratos canónicos para:
+No existen contratos canónicos para:
 
 - pure;
 - mock;
 - godot_node;
 - hardware_bridge.
 
-Si el proyecto necesita varias implementaciones para la misma Key, se diseñará una dimensión adicional explícita.
-
-No se utiliza string libre como solución anticipada.
+Una dimensión adicional requerirá una necesidad concreta y diseño propio.
 
 ## 9. RuntimeDependencyBinding
 
-### 9.1 Archivo
+### Responsabilidad
 
-```text
-core/runtime/runtime_dependency_binding.gd
-```
+> Representar una dependencia pre-resuelta con ownership explícito.
 
-### 9.2 Forma
-
-```gdscript
-extends RefCounted
-class_name RuntimeDependencyBinding
-```
-
-### 9.3 Responsabilidad
-
-> Representar una dependencia runtime pre-resuelta con ownership explícito.
-
-### 9.4 Ownership enum
+### Ownership
 
 ```gdscript
 enum Ownership {
@@ -333,53 +286,17 @@ enum Ownership {
 }
 ```
 
-### 9.5 Estado
+### Estado
 
 ```gdscript
-var _dependency_id: StringName
+dependency_id: StringName
 
-var _value: Object
+value: Object
 
-var _ownership: int
+ownership: int
 ```
 
-### 9.6 Tipo de Value
-
-RuntimeDependencyBinding 1.0 acepta:
-
-```gdscript
-Object
-```
-
-Esto cubre:
-
-- RefCounted;
-- Resource;
-- Node;
-- adapters;
-- Providers;
-- servicios tipados.
-
-No acepta scalar Variant como dependency value.
-
-Valores escalares pertenecen a:
-
-- DeviceConfiguration;
-- Profile;
-- request metadata;
-- contratos tipados futuros.
-
-### 9.7 Construcción
-
-```gdscript
-RuntimeDependencyBinding.new(
-	dependency_id,
-	value,
-	ownership
-)
-```
-
-### 9.8 API
+### API
 
 ```gdscript
 get_dependency_id() -> StringName
@@ -395,78 +312,54 @@ is_transferred() -> bool
 is_valid() -> bool
 ```
 
-### 9.9 Validación
+### Validación
 
-Debe cumplirse:
+- Dependency ID no vacío;
+- Value no null;
+- Ownership canónico.
 
-```text
-Dependency ID no vacío;
-
-Value no null;
-
-Ownership es BORROWED
-o TRANSFERRED.
-```
-
-### 9.10 Inmutabilidad
+### Inmutabilidad
 
 No expone setters.
 
-## 10. BORROWED
+No ejecuta cleanup.
 
-Una dependencia BORROWED:
+## 10. Dependency Value
 
-- conserva su owner original;
-- puede ser utilizada por factory y Handle;
-- no se libera durante cleanup del Handle;
-- no se transfiere a otro componente;
-- debe permanecer viva durante el uso del Handle.
+RuntimeDependencyBinding acepta:
 
-Ejemplos:
+```gdscript
+Object
+```
 
-- DeviceBus compartido;
-- servicio global poseído por CompositionRuntime;
-- RuntimeHost compartido;
-- world adapter compartido.
+Cubre:
 
-BORROWED no significa global oculto.
+- RefCounted;
+- Resource;
+- Node;
+- Provider;
+- adapter;
+- servicio tipado.
+
+Valores escalares pertenecen a Configuration o contratos tipados.
+
+## 11. BORROWED
+
+BORROWED:
+
+- conserva owner original;
+- factory puede utilizar;
+- Handle puede conservar referencia;
+- factory release no libera;
+- Handle no asume ownership.
 
 El binding continúa siendo explícito.
 
-## 11. TRANSFERRED
+## 12. TRANSFERRED
 
-Una dependencia TRANSFERRED cambia ownership al comenzar la llamada de factory.
+Crear Binding o Request no transfiere ownership.
 
-### Antes de `build()`
-
-El caller es owner.
-
-### Durante `build()`
-
-La factory es responsable de la transacción.
-
-### En éxito
-
-RuntimeDeviceHandle asume ownership.
-
-### En fallo
-
-La factory libera la dependencia antes de devolver.
-
-El caller no realiza un segundo cleanup.
-
-Ejemplos futuros:
-
-- Provider privado del Device;
-- adapter privado;
-- buffer exclusivo;
-- recurso host creado para una instancia.
-
-## 12. Request creado pero no ejecutado
-
-Crear RuntimeConstructionRequest no transfiere ownership.
-
-La transferencia comienza cuando CompositionRuntime invoca:
+La transferencia comienza al invocar:
 
 ```gdscript
 factory.build(
@@ -474,79 +367,45 @@ factory.build(
 )
 ```
 
-Si un Request nunca se entrega a una factory, el caller conserva ownership de todos los bindings.
-
-## 13. IDs de dependencia
-
-Dependency ID utiliza:
-
-```gdscript
-StringName
-```
-
-Ejemplos conceptuales:
+Durante build:
 
 ```text
-distance_provider
-
-runtime_clock
-
-world_query
-
-telemetry_transport
+factory es custodio
 ```
 
-No se definen todavía IDs canónicos de producción.
-
-Cada familia de factory deberá documentar sus dependencies.
-
-No se infieren mediante nombre de clase.
-
-## 14. RuntimeConstructionRequest
-
-### 14.1 Archivo
+En éxito:
 
 ```text
-core/runtime/runtime_construction_request.gd
+Handle asume ownership
 ```
 
-### 14.2 Forma
+En fallo:
+
+```text
+factory limpia
+```
+
+Caller no ejecuta segundo cleanup.
+
+## 13. RuntimeConstructionRequest
+
+### Responsabilidad
+
+> Transportar información pre-resuelta para construcción.
+
+### Estado
 
 ```gdscript
-extends RefCounted
-class_name RuntimeConstructionRequest
+device_id: String
+
+configuration: DeviceConfiguration
+
+factory_key: RuntimeFactoryKey
+
+dependency_bindings: Array[RuntimeDependencyBinding]
 ```
 
-### 14.3 Responsabilidad
-
-> Transportar toda la información pre-resuelta necesaria para construir un runtime object.
-
-### 14.4 Estado
-
-```gdscript
-var _device_id: String
-
-var _configuration: DeviceConfiguration
-
-var _factory_key: RuntimeFactoryKey
-
-var _dependency_bindings: Array[RuntimeDependencyBinding]
-```
-
-### 14.5 Construcción
-
-```gdscript
-RuntimeConstructionRequest.new(
-	device_id,
-	configuration,
-	factory_key,
-	dependency_bindings
-)
-```
-
-El Array se duplica durante construcción.
-
-### 14.6 API
+### API
 
 ```gdscript
 get_device_id() -> String
@@ -557,141 +416,74 @@ get_factory_key() -> RuntimeFactoryKey
 
 get_dependency_bindings() -> Array[RuntimeDependencyBinding]
 
-get_dependency_binding(
-	dependency_id: StringName
-) -> RuntimeDependencyBinding
-
 has_dependency(
 	dependency_id: StringName
 ) -> bool
 
+get_dependency_binding(
+	dependency_id: StringName
+) -> RuntimeDependencyBinding
+
 is_valid() -> bool
 ```
 
-### 14.7 No service locator
+### Validación
 
-El Request permite consultar únicamente bindings incluidos explícitamente.
+- Device ID requerido;
+- Configuration requerida;
+- Configuration válida;
+- Factory Key requerida;
+- Factory Key válida;
+- Device ID coincide;
+- Profile ID coincide;
+- Profile Version coincide;
+- Activation Context coincide;
+- Bindings no null;
+- Bindings válidos;
+- Dependency IDs únicos.
+
+### Colecciones
+
+Constructor copia Array.
+
+Getter devuelve copia.
+
+## 14. Request no es service locator
+
+Request permite consultar solamente bindings incluidos.
 
 No puede:
 
-- descubrir cualquier servicio;
+- descubrir servicios;
 - buscar Nodes;
 - consultar autoloads;
 - recorrer SceneTree;
 - cargar archivos;
-- descargar dependencias;
 - crear bindings adicionales.
 
-## 15. Validación del Request
+## 15. RuntimeDeviceHandle
 
-Debe comprobar:
+### Responsabilidad
 
-- Device ID no vacío;
-- Configuration no null;
-- Configuration válida;
-- Factory Key no null;
-- Factory Key válida;
-- Configuration Device ID coincide;
-- Configuration Profile ID coincide con Key;
-- Configuration Profile Version coincide con Key;
-- Configuration Activation Context coincide con Key;
-- Binding no null;
-- Binding válido;
-- Dependency IDs únicos.
+> Representar producto exitoso y ownership de una unidad runtime.
 
-## 16. Códigos del Request
-
-Códigos conceptuales:
-
-```text
-runtime_construction_device_id_missing
-
-runtime_construction_configuration_missing
-
-runtime_construction_configuration_invalid
-
-runtime_construction_factory_key_missing
-
-runtime_construction_factory_key_invalid
-
-runtime_construction_device_id_mismatch
-
-runtime_construction_profile_identity_mismatch
-
-runtime_construction_activation_context_mismatch
-
-runtime_construction_dependency_missing
-
-runtime_construction_dependency_invalid
-
-runtime_construction_duplicate_dependency
-```
-
-La implementación concreta decidirá si `is_valid()` devuelve bool solamente o si un Compiler externo produce ValidationReport.
-
-La primera versión puede utilizar `is_valid()` en primitivas y pruebas específicas para códigos en componentes posteriores.
-
-## 17. Colecciones del Request
-
-`get_dependency_bindings()` devuelve Array nuevo.
-
-RuntimeDependencyBinding es inmutable y puede compartirse por referencia.
-
-Modificar el Array recibido por el constructor no cambia el Request.
-
-Modificar el Array retornado no cambia el Request.
-
-## 18. RuntimeDeviceHandle
-
-### 18.1 Archivo
-
-```text
-core/runtime/runtime_device_handle.gd
-```
-
-### 18.2 Forma
+### Estado
 
 ```gdscript
-extends RefCounted
-class_name RuntimeDeviceHandle
+device_id: String
+
+configuration: DeviceConfiguration
+
+factory_key: RuntimeFactoryKey
+
+primary_runtime_object: Object
+
+host_objects: Array[Object]
+
+dependency_bindings: Array[RuntimeDependencyBinding]
 ```
 
-### 18.3 Responsabilidad
-
-> Representar el producto exitoso y el ownership resultante de una RuntimeFactory.
-
-### 18.4 Estado
-
-```gdscript
-var _device_id: String
-
-var _configuration: DeviceConfiguration
-
-var _factory_key: RuntimeFactoryKey
-
-var _primary_runtime_object: Object
-
-var _host_objects: Array[Object]
-
-var _dependency_bindings: Array[RuntimeDependencyBinding]
-```
-
-### 18.5 Construcción
-
-```gdscript
-RuntimeDeviceHandle.new(
-	device_id,
-	configuration,
-	factory_key,
-	primary_runtime_object,
-	host_objects,
-	dependency_bindings
-)
-```
-
-Los Arrays se duplican.
-
-### 18.6 API
+### API
 
 ```gdscript
 get_device_id() -> String
@@ -706,6 +498,10 @@ get_host_objects() -> Array[Object]
 
 get_dependency_bindings() -> Array[RuntimeDependencyBinding]
 
+has_dependency(
+	dependency_id: StringName
+) -> bool
+
 get_dependency_binding(
 	dependency_id: StringName
 ) -> RuntimeDependencyBinding
@@ -713,131 +509,71 @@ get_dependency_binding(
 is_valid() -> bool
 ```
 
-### 18.7 Primary Runtime Object
+## 16. Handle validation
 
-Debe ser no null.
+Debe comprobar:
 
-Representa el objeto principal construido para el Device.
+- Device ID;
+- Configuration;
+- Factory Key;
+- Primary Runtime Object;
+- identidad coherente;
+- Host Objects válidos;
+- Host Objects sin duplicados;
+- Bindings válidos;
+- Dependency IDs únicos.
 
-Puede ser:
+Primary Runtime Object debe ser una instancia válida.
 
-- Device;
-- adapter;
-- controller;
-- bridge;
-- wrapper runtime;
-- host object.
+## 17. Host Objects
 
-No se obliga a una clase base universal.
-
-## 19. Host Objects en Handle
-
-Host Objects se representan como:
+Tipo:
 
 ```gdscript
 Array[Object]
 ```
 
-Esto permite contener Nodes sin que el contrato base invoque APIs de Node.
-
 Reglas:
 
-- ningún elemento null;
-- referencias duplicadas rechazadas;
+- no null;
+- instance valid;
+- sin duplicados;
 - orden preservado;
 - Array copiado;
-- pueden incluir Primary Runtime Object si también requiere attach;
-- la misma referencia no aparece dos veces dentro de Host Objects.
+- getter devuelve copia.
 
-RuntimeHost interpreta host objects.
+Primary Runtime Object puede aparecer una vez en Host Objects si requiere attach.
 
-## 20. Dependency Bindings en Handle
+## 18. Handle no ejecutable
 
-Handle conserva los bindings utilizados por la factory.
+No expone:
 
-Reglas:
+- execute;
+- activate;
+- start_all;
+- shutdown_all;
+- attach;
+- detach;
+- release;
+- dispose;
+- save;
+- load.
 
-- Binding no null;
-- Binding válido;
-- Dependency IDs únicos;
-- orden preservado.
+Factory conoce cleanup.
 
-Para cleanup:
+Runtime coordina sistema.
 
-```text
-BORROWED:
-no liberar.
+## 19. RuntimeFactoryBuildResult
 
-TRANSFERRED:
-factory.release() debe liberar
-cuando corresponda.
-```
-
-## 21. Validación del Handle
-
-Debe comprobar:
-
-- Device ID no vacío;
-- Configuration válida;
-- Factory Key válida;
-- Device ID coincide con Configuration;
-- Profile ID coincide con Key;
-- Profile Version coincide con Key;
-- Activation Context coincide con Key;
-- Primary Runtime Object no null;
-- Host Objects válidos y únicos;
-- Dependency Bindings válidos y únicos.
-
-## 22. Handle no ejecutable
-
-RuntimeDeviceHandle no expone:
-
-```text
-execute
-
-activate
-
-start_all
-
-shutdown_all
-
-attach
-
-detach
-
-save
-
-load
-```
-
-Handle representa ownership de una unidad runtime.
-
-No coordina el sistema completo.
-
-## 23. RuntimeFactoryBuildResult
-
-### 23.1 Archivo
-
-```text
-core/runtime/runtime_factory_build_result.gd
-```
-
-### 23.2 Forma
+### Estado
 
 ```gdscript
-extends RefCounted
-class_name RuntimeFactoryBuildResult
+handle: RuntimeDeviceHandle
+
+report: ValidationReport
 ```
 
-### 23.3 Estado
-
-```gdscript
-var _handle: RuntimeDeviceHandle
-
-var _report: ValidationReport
-```
-
-### 23.4 API
+### API
 
 ```gdscript
 get_handle() -> RuntimeDeviceHandle
@@ -847,42 +583,34 @@ get_report() -> ValidationReport
 is_success() -> bool
 ```
 
-### 23.5 Success
+### Success
 
 Requiere:
 
-```text
-Handle no null;
+- Handle no null;
+- Report no null;
+- Handle válido;
+- Report válido para Activation Context.
 
-Report no null;
-
-Handle válido;
-
-Report válido para Activation Context
-de RuntimeFactoryKey.
-```
-
-Para Simulation:
+Simulation utiliza:
 
 ```gdscript
 report.is_valid_for_simulation()
 ```
 
-Para Hardware:
+Hardware utiliza:
 
 ```gdscript
 report.is_valid_for_hardware()
 ```
 
-### 23.6 Inmutabilidad
+### Inmutabilidad
 
 No expone setters.
 
-## 24. RuntimeFactory behavior
+## 20. RuntimeFactory behavior
 
-RuntimeFactory es rol por comportamiento.
-
-Contrato:
+Contrato verificado:
 
 ```gdscript
 build(
@@ -896,88 +624,83 @@ release(
 ) -> ValidationReport
 ```
 
-No se crea clase base universal.
+No existe clase base universal.
 
-## 25. Factory build
+## 21. Factory build
 
-`build()`:
+Factory:
 
 - valida Request;
 - construye recursos;
-- no adjunta host objects;
+- no adjunta Host Objects;
 - no inicializa lifecycle;
 - no publica;
-- no registra suscripciones;
+- no registra subscriptions;
 - no crea DeviceBus global;
-- produce Handle completo o null;
-- limpia parciales en failure.
+- devuelve Handle completo o null;
+- limpia parciales en fallo.
 
-## 26. Factory release
+## 22. Factory release
 
-La misma factory conoce cómo liberar el Handle que construyó.
+La misma factory libera su producto.
 
-`release()`:
+Release:
 
-- recibe RuntimeDeviceHandle;
-- libera recursos propios;
-- libera bindings TRANSFERRED;
-- no libera bindings BORROWED;
-- no libera recursos globales;
+- libera Primary Runtime Object;
+- libera Host Objects propios;
+- libera TRANSFERRED;
+- preserva BORROWED;
 - no coordina otros Handles;
 - devuelve ValidationReport;
-- debe ser segura ante cleanup parcial;
-- no debe provocar double-free.
+- tolera repetición sin double-free.
 
-CompositionRuntime coordina el orden.
+## 23. Construcción atómica
 
-Factory implementa el detalle.
-
-## 27. Repeated release
-
-CompositionRuntime debe invocar release como máximo una vez por Handle adquirido.
-
-La implementación de factory debe tolerar defensivamente una repetición sin:
-
-- double-free;
-- crash;
-- corrupción;
-- excepción no contenida.
-
-Una repetición puede producir WARNING o resultado neutral según diseño de la factory concreta.
-
-No se introduce estado mutable público en RuntimeDeviceHandle únicamente para esta comprobación.
-
-## 28. Construcción atómica
-
-Durante `build()` la factory es responsable de:
-
-- objetos creados;
-- recursos abiertos;
-- bindings TRANSFERRED;
-- host objects todavía no adjuntos.
-
-En failure:
+Éxito:
 
 ```text
-Handle:
-null
+Factory build
 
-Report:
-failure
+↓
 
-recursos:
-liberados
+RuntimeDeviceHandle válido
+
+↓
+
+RuntimeFactoryBuildResult success
 ```
 
-Un resultado fallido con Handle no null es incoherente.
+Fallo:
 
-RuntimeFactoryBuildResult lo rechazará.
+```text
+Factory build
 
-## 29. RuntimeHost behavior
+↓
 
-RuntimeHost es rol por comportamiento.
+cleanup local
 
-Contrato conceptual:
+↓
+
+TRANSFERRED liberado
+
+↓
+
+BORROWED preservado
+
+↓
+
+Handle null
+
+↓
+
+ValidationReport
+```
+
+No se conservan parciales vivos.
+
+## 24. RuntimeHost behavior
+
+Contrato verificado:
 
 ```gdscript
 attach(
@@ -991,22 +714,19 @@ detach(
 ) -> ValidationReport
 ```
 
-No se crea clase base universal.
+No existe clase base universal.
 
-## 30. RuntimeHost recibe Handle
+## 25. RuntimeHost recibe Handle
 
-RuntimeHost recibe RuntimeDeviceHandle completo.
+No recibe solamente Array de Objects.
 
-No recibe únicamente Array de Objects.
-
-Esto preserva:
+Handle conserva:
 
 - Device ID;
 - Factory Key;
-- agrupación;
-- orden;
+- grouping;
 - provenance;
-- rollback por Handle.
+- ownership.
 
 RuntimeHost consulta:
 
@@ -1014,132 +734,124 @@ RuntimeHost consulta:
 handle.get_host_objects()
 ```
 
-## 31. RuntimeHost.attach()
+## 26. Attach
 
 Attach:
 
 - valida Handle;
 - procesa Host Objects en orden;
 - no modifica Handle;
-- no inicializa Device lifecycle;
-- registra qué objetos adjuntó;
-- revierte parcialmente si falla dentro del mismo Handle;
+- no inicializa lifecycle;
+- evita attach duplicado;
+- revierte parcialmente si falla;
 - produce ValidationReport.
 
-Una implementación Godot futura podrá adjuntar Nodes.
-
-El contrato base no conoce SceneTree.
-
-## 32. RuntimeHost.detach()
+## 27. Detach
 
 Detach:
 
-- recibe Handle;
 - procesa Host Objects en orden inverso;
-- tolera objetos ya separados;
-- no libera bindings BORROWED;
-- no sustituye factory.release();
+- tolera Handle no adjunto;
+- no libera BORROWED;
+- no sustituye factory release;
 - produce ValidationReport.
 
-Orden global entre Handles pertenece a CompositionRuntime.
+## 28. Rollback local de Host
 
-## 33. Secuencia de activación futura
-
-```text
-1. Validar CompositionPlan.
-
-2. Resolver RuntimeFactoryKeys.
-
-3. Resolver RuntimeDependencyBindings.
-
-4. Crear RuntimeConstructionRequests.
-
-5. Factory build de todos los Handles.
-
-6. RuntimeHost attach de todos los Handles.
-
-7. Crear o asignar DeviceBus.
-
-8. initialize en orden.
-
-9. set_ready en orden.
-
-10. start en orden.
-
-11. commit de nueva Active Simulation.
-```
-
-## 34. Rollback futuro
-
-Si falla factory build:
+Verificado:
 
 ```text
-release Handles anteriores
-en orden inverso.
+attach primer Host Object
+
+↓
+
+fallo controlado
+
+↓
+
+detach del objeto ya adjunto
+
+↓
+
+Handle no registrado como attached
 ```
 
-Si falla attach:
+RuntimeHost no ejecuta release.
+
+## 29. Rollback global
+
+Simulación de contrato:
 
 ```text
-detach Handles adjuntos
-en orden inverso;
+build A
 
-release todos los Handles
-en orden inverso.
+build B
+
+build C
+
+build D falla
 ```
 
-Si falla lifecycle:
+Rollback:
 
 ```text
-shutdown componentes iniciados;
+detach C
+release C
 
-detach Handles;
+detach B
+release B
 
-release Handles;
-
-conservar Last Known Good.
+detach A
+release A
 ```
 
-## 35. DeviceBus
+Resultado verificado:
 
-DeviceBus no forma parte de RuntimeConstructionRequest 1.0 como dependencia global de construcción.
+- orden inverso;
+- cero Handles adjuntos;
+- objetos runtime liberados;
+- no double cleanup.
 
-CompositionRuntime:
+## 30. DeviceBus
 
-- crea o recibe DeviceBus;
-- conserva ownership;
-- lo entrega durante initialize;
-- limpia al finalizar;
-- observa DispatchReport.
+DeviceBus pertenece a CompositionRuntime.
 
-Una factory no usa autoload para obtenerlo.
+Factory no crea Bus global.
 
-Si una implementación concreta necesita una referencia preparatoria, deberá declararse explícitamente y no cambiar ownership global.
+Factory no usa autoload.
 
-## 36. RuntimeFactoryRegistry futuro
+Factory build produce estado equivalente a:
 
-RuntimeFactoryRegistry resolverá:
+```text
+CREATED
+```
+
+DeviceBus se entregará durante initialize coordinado.
+
+## 31. RuntimeFactoryRegistry futuro
+
+Resolverá:
 
 ```text
 RuntimeFactoryKey
-→ RuntimeFactory
+
+→
+
+RuntimeFactory
 ```
 
-Debe validar el behavior contract:
+Debe validar behavior:
 
-```text
-build
+- build;
+- release.
 
-release
-```
+Mutabilidad requiere diseño propio.
 
-No se diseña su mutabilidad en este documento.
+No se implementa dentro de este milestone.
 
-Requerirá diseño propio.
+## 32. CompositionPlan futuro
 
-## 37. CompositionPlan futuro
-
-CompositionPlan conservará:
+Conservará:
 
 - RuntimeFactoryKeys;
 - dependency directives;
@@ -1151,35 +863,158 @@ No conservará:
 
 - RuntimeFactory;
 - Callable;
-- RuntimeDeviceHandle;
-- Object activo;
+- Handle;
+- Device activo;
 - Node activo;
 - DeviceBus activo.
 
-## 38. Host independence
+## 33. RuntimeHost concreto futuro
 
-Los contratos base utilizan:
+Los contratos base utilizan Object.
 
-```text
-Object
-```
-
-para objetos runtime y host.
-
-No utilizan:
+No dependen de:
 
 - Node;
 - Node3D;
 - SceneTree;
 - World3D;
-- physics server;
-- autoload.
+- physics server.
 
-RuntimeHost concreto adapta esos objetos al host.
+Una implementación futura adaptará Host Objects.
 
-## 39. Errores y ValidationReport
+## 34. Pruebas unitarias
 
-Errores conceptuales de Key:
+### RuntimeFactoryKeyTest
+
+```text
+Checks: 24
+Failures: 0
+RESULT: PASS
+```
+
+### RuntimeDependencyBindingTest
+
+```text
+Checks: 23
+Failures: 0
+RESULT: PASS
+```
+
+### RuntimeConstructionRequestTest
+
+```text
+Checks: 29
+Failures: 0
+RESULT: PASS
+```
+
+### RuntimeDeviceHandleTest
+
+```text
+Checks: 35
+Failures: 0
+RESULT: PASS
+```
+
+### RuntimeFactoryBuildResultTest
+
+```text
+Checks: 21
+Failures: 0
+RESULT: PASS
+```
+
+## 35. Prueba de integración
+
+### RuntimeConstructionContractIntegrationTest
+
+```text
+Checks: 41
+Failures: 0
+RESULT: PASS
+```
+
+Cobertura:
+
+- build exitoso;
+- Request válido;
+- Handle completo;
+- Host Objects no adjuntos;
+- BORROWED preservado;
+- TRANSFERRED liberado;
+- release;
+- release idempotente;
+- build failure;
+- cleanup local;
+- attach;
+- detach;
+- attach idempotente;
+- detach idempotente;
+- partial attach rollback;
+- reverse global rollback;
+- behavior contracts.
+
+## 36. Baseline Runtime Construction
+
+```text
+Tests: 6
+Checks: 173
+Failures: 0
+```
+
+## 37. Regresión global
+
+Confirmada mediante Dashboard 0.4.0:
+
+```text
+Tests: 54
+Checks: 1569
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+## 38. Soporte de pruebas
+
+### RuntimeTestObject
+
+Registra:
+
+- attach count;
+- detach count;
+- release count.
+
+### RuntimeTestFactory
+
+Verifica:
+
+- build;
+- controlled failure;
+- TRANSFERRED cleanup;
+- BORROWED preservation;
+- Handle creation;
+- release;
+- repeated release;
+- release order.
+
+### RuntimeTestHost
+
+Verifica:
+
+- attach;
+- detach;
+- idempotencia;
+- partial rollback;
+- order.
+
+No representan producción.
+
+## 39. Códigos conceptuales
+
+Factory Key:
 
 ```text
 runtime_factory_profile_id_missing
@@ -1189,7 +1024,7 @@ runtime_factory_profile_version_invalid
 runtime_factory_activation_context_invalid
 ```
 
-Errores conceptuales de Binding:
+Dependency Binding:
 
 ```text
 runtime_dependency_id_missing
@@ -1199,7 +1034,7 @@ runtime_dependency_value_missing
 runtime_dependency_ownership_invalid
 ```
 
-Errores conceptuales de Request:
+Construction Request:
 
 ```text
 runtime_construction_device_id_missing
@@ -1225,7 +1060,7 @@ runtime_construction_dependency_invalid
 runtime_construction_duplicate_dependency
 ```
 
-Errores conceptuales de Handle:
+Handle:
 
 ```text
 runtime_handle_device_id_missing
@@ -1253,25 +1088,25 @@ runtime_handle_dependency_invalid
 runtime_handle_duplicate_dependency
 ```
 
-Los primeros contratos podrán utilizar `is_valid()`.
+Las primitivas actuales utilizan `is_valid()`.
 
-Components de compilación posteriores producirán Issues estructurados.
+Compilers posteriores producirán Issues estructurados.
 
 ## 40. Transaccionalidad
 
 Crear Request no transfiere ownership.
 
-Invocar factory build comienza la transacción local.
+Invocar build comienza transacción.
 
 Build exitoso produce Handle.
 
 Build fallido limpia localmente.
 
-CompositionRuntime adquiere Handle exitoso.
+Runtime adquiere Handle exitoso.
 
 Fallo global produce rollback inverso.
 
-Last Known Good solo cambia después de commit completo.
+Last Known Good cambia únicamente después de commit completo.
 
 ## 41. Determinismo
 
@@ -1281,111 +1116,21 @@ Se conserva orden de:
 - Host Objects;
 - Handles;
 - attach;
-- lifecycle;
+- detach;
+- release;
 - rollback.
 
 No se depende de:
 
 - filesystem;
-- global registry mutable;
 - SceneTree discovery;
 - latest;
 - fallback;
-- hash iteration no controlada.
+- singleton mutable.
 
-## 42. Estrategia de pruebas
+## 42. Baselines preservadas
 
-### RuntimeFactoryKeyTest
-
-Verifica:
-
-- Profile ID;
-- Profile Version;
-- Context;
-- identidad inválida;
-- igualdad lógica;
-- diferencias por versión;
-- diferencias por contexto;
-- ausencia de setters.
-
-### RuntimeDependencyBindingTest
-
-Verifica:
-
-- BORROWED;
-- TRANSFERRED;
-- ID vacío;
-- Value null;
-- Ownership inválido;
-- getters;
-- ausencia de setters.
-
-### RuntimeConstructionRequestTest
-
-Verifica:
-
-- identidad;
-- Configuration;
-- Factory Key;
-- correspondencia de Device ID;
-- correspondencia de Profile;
-- correspondencia de Version;
-- correspondencia de Context;
-- Binding null;
-- Binding inválido;
-- Dependency ID duplicado;
-- lookup;
-- Arrays independientes;
-- ausencia de service locator.
-
-### RuntimeDeviceHandleTest
-
-Verifica:
-
-- identidad;
-- Primary Runtime Object;
-- Host Objects;
-- bindings;
-- referencias duplicadas;
-- null objects;
-- correspondencia con Configuration y Key;
-- Arrays independientes;
-- no ejecución;
-- ausencia de setters.
-
-### RuntimeFactoryBuildResultTest
-
-Verifica:
-
-- Handle null;
-- Report null;
-- Handle inválido;
-- Simulation Report;
-- Hardware Report;
-- getters;
-- ausencia de setters.
-
-### RuntimeConstructionContractIntegrationTest
-
-Utiliza factory y host controlados.
-
-Verifica:
-
-- build exitoso;
-- Handle completo;
-- transferred ownership;
-- borrowed ownership;
-- host objects sin attach durante build;
-- RuntimeHost attach;
-- RuntimeHost detach;
-- factory release;
-- failure cleanup;
-- rollback conceptual;
-- entradas no modificadas.
-
-## 43. Baselines preservadas
-
-No se modifican:
+No se modificaron:
 
 ```text
 DeviceLifecycleTest
@@ -1403,115 +1148,143 @@ SystemProfileCatalogGraphAssemblyIntegrationTest
 
 Runtime Construction utiliza pruebas sucesoras.
 
+## 43. Commit
+
+Implementación:
+
+```text
+4147ec4
+feat(runtime):
+add runtime construction contracts
+```
+
 ## 44. Orden de implementación
 
 ```text
-1. Implementar RuntimeFactoryKey.
+1. RuntimeFactoryKey.
+   COMPLETADO.
 
-2. Ejecutar RuntimeFactoryKeyTest.
+2. RuntimeFactoryKeyTest.
+   PASS — 24 checks.
 
-3. Implementar RuntimeDependencyBinding.
+3. RuntimeDependencyBinding.
+   COMPLETADO.
 
-4. Ejecutar RuntimeDependencyBindingTest.
+4. RuntimeDependencyBindingTest.
+   PASS — 23 checks.
 
-5. Implementar RuntimeConstructionRequest.
+5. RuntimeConstructionRequest.
+   COMPLETADO.
 
-6. Ejecutar RuntimeConstructionRequestTest.
+6. RuntimeConstructionRequestTest.
+   PASS — 29 checks.
 
-7. Implementar RuntimeDeviceHandle.
+7. RuntimeDeviceHandle.
+   COMPLETADO.
 
-8. Ejecutar RuntimeDeviceHandleTest.
+8. RuntimeDeviceHandleTest.
+   PASS — 35 checks.
 
-9. Implementar RuntimeFactoryBuildResult.
+9. RuntimeFactoryBuildResult.
+   COMPLETADO.
 
-10. Ejecutar RuntimeFactoryBuildResultTest.
+10. RuntimeFactoryBuildResultTest.
+	PASS — 21 checks.
 
-11. Crear Test RuntimeFactory.
+11. Test RuntimeFactory.
+	COMPLETADO.
 
-12. Crear Test RuntimeHost.
+12. Test RuntimeHost.
+	COMPLETADO.
 
-13. Ejecutar RuntimeConstructionContractIntegrationTest.
+13. Runtime Construction Integration.
+	PASS — 41 checks.
 
-14. Ejecutar Run All.
+14. Run All.
+	PASS — 54 tests, 1569 checks.
 
 15. Registrar baseline.
+	COMPLETADO.
 
 16. Actualizar Core Architecture.
+	PENDIENTE EN CIERRE DOCUMENTAL.
 
 17. Actualizar Project Handoff.
+	PENDIENTE EN CIERRE DOCUMENTAL.
 
-18. Cerrar Runtime Construction Contract 1.0.
+18. Cerrar Runtime Construction Contract.
+	COMPLETADO FUNCIONALMENTE.
 
 19. Diseñar RuntimeFactoryRegistry.
+	SIGUIENTE.
 
 20. Diseñar CompositionPlan.
+	SIGUIENTE.
 ```
 
 ## 45. Criterios de aceptación
 
-1. RuntimeFactoryKey es inmutable.
+1. RuntimeFactoryKey inmutable.
 
-2. Key incluye Profile ID.
+2. Key exacta.
 
-3. Key incluye Profile Version.
+3. Sin fallback.
 
-4. Key incluye Activation Context.
+4. Binding inmutable.
 
-5. Key usa igualdad lógica.
+5. Value Object.
 
-6. No existe fallback.
+6. Ownership explícito.
 
-7. RuntimeDependencyBinding es inmutable.
+7. BORROWED probado.
 
-8. Dependency Value es Object.
+8. TRANSFERRED probado.
 
-9. Ownership es explícito.
+9. Request inmutable.
 
-10. BORROWED está probado.
+10. Dependencies pre-resueltas.
 
-11. TRANSFERRED está probado.
+11. Request no es service locator.
 
-12. Request es inmutable.
+12. Request valida Configuration.
 
-13. Request contiene bindings pre-resueltos.
+13. Handle válido.
 
-14. Request no es service locator.
+14. Host Objects preservados.
 
-15. Request valida coherencia con Configuration.
+15. Factory construct-only.
 
-16. Handle es inmutable por contrato.
+16. Factory build y release.
 
-17. Handle representa ownership.
+17. Build atómico.
 
-18. Handle conserva Host Objects.
+18. Failure Handle null.
 
-19. Host Objects no se adjuntan durante build.
+19. Failure cleanup.
 
-20. Factory construye solamente.
+20. RuntimeHost attach/detach.
 
-21. Factory expone build y release.
+21. Partial rollback.
 
-22. Build es atómico.
+22. Reverse rollback.
 
-23. Failure produce Handle null.
+23. DeviceBus no global.
 
-24. Failure limpia TRANSFERRED.
+24. Result defensivo.
 
-25. RuntimeHost recibe Handle.
+25. Pruebas unitarias PASS.
 
-26. RuntimeHost controla attach/detach.
+26. Integración PASS.
 
-27. DeviceBus no es global oculto.
+27. Run All PASS.
 
-28. Result es defensivo.
+Estado:
 
-29. Pruebas sucesoras terminan PASS.
-
-30. Run All termina PASS.
+```text
+TODOS LOS CRITERIOS SATISFECHOS
+```
 
 ## 46. Fuera de alcance
-
-Runtime Construction Contract 1.0 no implementará:
 
 - RuntimeFactoryRegistry;
 - CompositionPlan;
@@ -1532,76 +1305,58 @@ Runtime Construction Contract 1.0 no implementará:
 - AdaptationPolicy;
 - RuntimeAllocation.
 
-## 47. Consecuencias positivas
+## 47. Consecuencias
+
+Positivas:
 
 - factory contract explícito;
 - ownership claro;
-- dependencias pre-resueltas;
+- dependencies pre-resueltas;
 - no service locator;
-- soporte de Objects host;
-- Core sin dependencia de Node;
-- cleanup delegado a quien construye;
-- rollback global coordinable;
-- Plan no ejecutable;
+- Host Objects soportados;
+- cleanup delegado a factory;
+- rollback coordinable;
+- Plan puede permanecer declarativo;
 - Registry separado de Catalog.
 
-## 48. Consecuencias negativas
+Negativas:
 
 - cinco clases nuevas;
-- dos behaviors documentados;
-- factories necesitan build y release;
-- CompositionRuntime debe coordinar más etapas;
-- ownership transferido requiere disciplina;
-- no se puede utilizar Callable como atajo.
+- behaviors adicionales;
+- factories requieren build y release;
+- ownership transferido exige disciplina;
+- no se utiliza Callable como atajo.
 
-Estas consecuencias son aceptadas.
+Consecuencias aceptadas.
 
-## 49. Invariantes
-
-1. Key es exacta.
-
-2. Binding ownership es explícito.
-
-3. Request contiene dependencias pre-resueltas.
-
-4. Request no descubre servicios.
-
-5. Factory construye solamente.
-
-6. Factory build es atómico.
-
-7. Factory release conoce su producto.
-
-8. Handle representa una unidad runtime.
-
-9. Handle no coordina sistema completo.
-
-10. RuntimeHost recibe Handle.
-
-11. Host attach ocurre después de build.
-
-12. DeviceBus pertenece a CompositionRuntime.
-
-13. Rollback global es inverso.
-
-14. Plan guarda Key, no factory.
-
-15. Registry permanece separado de Catalog.
-
-16. Last Known Good solo cambia después de commit.
-
-## 50. Estado
+## 48. Estado
 
 ```text
-DISEÑO ACTIVO
+RUNTIME CONSTRUCTION CONTRACT 1.0
+
+IMPLEMENTADO
+
+VERIFICADO
+
+BASELINE ACEPTADA
 ```
 
-Runtime Construction Contract 1.0 está autorizado para implementación incremental.
-
-Primer componente:
+Baseline:
 
 ```text
-RuntimeFactoryKey
+6 tests
+173 checks
+0 failures
 ```
 
-RuntimeFactoryRegistry y CompositionPlan permanecen fuera de esta implementación.
+Siguiente milestone:
+
+```text
+RuntimeFactoryRegistry Design
+
++
+
+CompositionPlan Design
+```
+
+Ambos deben definirse antes de CompositionCompiler.

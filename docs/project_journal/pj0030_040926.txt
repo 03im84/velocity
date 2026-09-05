@@ -1,0 +1,671 @@
+PJ0030 – Runtime Construction Contract 1.0 Completed
+
+Fecha:
+
+04/09/2026
+
+Objetivo:
+
+Implementar y verificar los contratos
+fundamentales de construcción runtime
+antes de diseñar:
+
+RuntimeFactoryRegistry
+
+CompositionPlan
+
+CompositionCompiler
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-010 — Runtime Construction and Factory Binding.md
+
+docs/architecture/
+runtime_construction_contract_design.md
+
+docs/architecture/
+system_composition_pipeline_design.md
+
+docs/architecture/
+core_architecture.md
+
+docs/project_state/
+velocity_handoff.md
+
+docs/project_state/
+velocity_resume_prompt.md
+
+Componentes creados:
+
+res://core/runtime/
+runtime_factory_key.gd
+
+res://core/runtime/
+runtime_dependency_binding.gd
+
+res://core/runtime/
+runtime_construction_request.gd
+
+res://core/runtime/
+runtime_device_handle.gd
+
+res://core/runtime/
+runtime_factory_build_result.gd
+
+Pruebas creadas:
+
+res://test/core/runtime/
+RuntimeFactoryKeyTest.tscn
+
+res://test/core/runtime/
+runtime_factory_key_test.gd
+
+res://test/core/runtime/
+RuntimeDependencyBindingTest.tscn
+
+res://test/core/runtime/
+runtime_dependency_binding_test.gd
+
+res://test/core/runtime/
+RuntimeConstructionRequestTest.tscn
+
+res://test/core/runtime/
+runtime_construction_request_test.gd
+
+res://test/core/runtime/
+RuntimeDeviceHandleTest.tscn
+
+res://test/core/runtime/
+runtime_device_handle_test.gd
+
+res://test/core/runtime/
+RuntimeFactoryBuildResultTest.tscn
+
+res://test/core/runtime/
+runtime_factory_build_result_test.gd
+
+res://test/core/runtime/
+RuntimeConstructionContractIntegrationTest.tscn
+
+res://test/core/runtime/
+runtime_construction_contract_integration_test.gd
+
+Soporte de pruebas:
+
+res://test/core/runtime/
+runtime_test_object.gd
+
+res://test/core/runtime/
+runtime_test_factory.gd
+
+res://test/core/runtime/
+runtime_test_host.gd
+
+RuntimeFactoryKey:
+
+Identidad:
+
+Profile ID
+
++
+
+Profile Version
+
++
+
+Activation Context
+
+Reglas:
+
+✔ Profile ID no vacío.
+
+✔ Profile Version positiva.
+
+✔ Activation Context válido.
+
+✔ Igualdad lógica por contenido.
+
+✔ Simulation y Hardware
+  son Keys diferentes.
+
+✔ Versiones diferentes
+  son Keys diferentes.
+
+✔ No contiene host_target.
+
+✔ No contiene factory.
+
+✔ No contiene Callable.
+
+✔ No existe latest.
+
+✔ No existe fallback.
+
+RuntimeDependencyBinding:
+
+Value:
+
+Object no null
+
+Ownership:
+
+BORROWED
+
+o
+
+TRANSFERRED
+
+BORROWED:
+
+✔ Owner original permanece.
+
+✔ Handle puede utilizar.
+
+✔ Factory release no libera.
+
+TRANSFERRED:
+
+✔ Transferencia comienza
+  al invocar factory.build().
+
+✔ Factory es custodio
+  durante construcción.
+
+✔ Handle asume ownership
+  en éxito.
+
+✔ Factory limpia en fallo.
+
+✔ Caller no ejecuta
+  segundo cleanup.
+
+RuntimeConstructionRequest:
+
+Contiene:
+
+- Device ID;
+
+- DeviceConfiguration;
+
+- RuntimeFactoryKey;
+
+- RuntimeDependencyBindings
+  pre-resueltos.
+
+Validaciones:
+
+✔ Device ID requerido.
+
+✔ Configuration requerida.
+
+✔ Configuration válida.
+
+✔ Factory Key requerida.
+
+✔ Factory Key válida.
+
+✔ Device ID coincide.
+
+✔ Profile ID coincide.
+
+✔ Profile Version coincide.
+
+✔ Activation Context coincide.
+
+✔ Binding no null.
+
+✔ Binding válido.
+
+✔ Dependency ID único.
+
+No responsabilidades:
+
+- no service locator;
+
+- no SceneTree;
+
+- no autoload;
+
+- no filesystem;
+
+- no factory;
+
+- no runtime execution.
+
+RuntimeDeviceHandle:
+
+Contiene:
+
+- Device ID;
+
+- DeviceConfiguration;
+
+- RuntimeFactoryKey;
+
+- Primary Runtime Object;
+
+- Host Objects;
+
+- Dependency Bindings.
+
+Primary Runtime Object:
+
+Object no null
+
+Host Objects:
+
+Array[Object]
+
+Reglas:
+
+✔ Arrays copiados.
+
+✔ Host Objects no null.
+
+✔ Host Objects válidos.
+
+✔ Host Objects sin duplicados.
+
+✔ Dependency Bindings válidos.
+
+✔ Dependency IDs únicos.
+
+✔ Identidad coincide
+  con Configuration y Key.
+
+No responsabilidades:
+
+- no execute;
+
+- no activate;
+
+- no attach;
+
+- no detach;
+
+- no release;
+
+- no lifecycle global.
+
+RuntimeFactoryBuildResult:
+
+Contiene:
+
+RuntimeDeviceHandle
+
++
+
+ValidationReport
+
+Success requiere:
+
+✔ Handle no null.
+
+✔ Report no null.
+
+✔ Handle válido.
+
+✔ Report válido para contexto.
+
+Simulation:
+
+INFO permitido
+
+WARNING permitido
+
+SIMULATION_HAZARD permitido
+
+HARDWARE_SAFETY_ERROR permitido
+por ValidationReport de Simulation
+
+STRUCTURAL_ERROR bloqueado
+
+PLATFORM_SAFETY_ERROR bloqueado
+
+Hardware:
+
+INFO permitido
+
+WARNING permitido
+
+SIMULATION_HAZARD bloqueado
+
+HARDWARE_SAFETY_ERROR bloqueado
+
+STRUCTURAL_ERROR bloqueado
+
+PLATFORM_SAFETY_ERROR bloqueado
+
+RuntimeFactory behavior verificado:
+
+build(
+	RuntimeConstructionRequest
+)
+→ RuntimeFactoryBuildResult
+
+release(
+	RuntimeDeviceHandle
+)
+→ ValidationReport
+
+Factory:
+
+✔ Construye solamente.
+
+✔ No inicializa.
+
+✔ No ejecuta set_ready.
+
+✔ No ejecuta start.
+
+✔ No adjunta Host Objects.
+
+✔ No crea DeviceBus global.
+
+✔ Limpia recursos parciales.
+
+✔ Libera su propio Handle.
+
+RuntimeHost behavior verificado:
+
+attach(
+	RuntimeDeviceHandle
+)
+→ ValidationReport
+
+detach(
+	RuntimeDeviceHandle
+)
+→ ValidationReport
+
+RuntimeHost:
+
+✔ Recibe Handle completo.
+
+✔ Adjunta Host Objects en orden.
+
+✔ Evita attach duplicado.
+
+✔ Detach es idempotente.
+
+✔ Revierte attach parcial.
+
+✔ Detach usa orden inverso.
+
+✔ No ejecuta factory release.
+
+Factory build exitoso:
+
+Request válido
+
+↓
+
+Primary Runtime Object
+
++
+
+Host Objects no adjuntos
+
++
+
+Dependency Bindings
+
+↓
+
+RuntimeDeviceHandle válido
+
+↓
+
+RuntimeFactoryBuildResult success
+
+Factory build fallido:
+
+Request
+
+↓
+
+controlled failure
+
+↓
+
+cleanup de TRANSFERRED
+
+↓
+
+BORROWED preservado
+
+↓
+
+Handle null
+
+↓
+
+ValidationReport
+
+Factory release:
+
+Libera:
+
+- Primary Runtime Object;
+
+- Host Objects;
+
+- TRANSFERRED dependencies.
+
+Preserva:
+
+- BORROWED dependencies.
+
+Repeated release:
+
+✔ No repite cleanup.
+
+✔ No produce double-free.
+
+✔ No incrementa release count.
+
+Rollback global simulado:
+
+Construcción:
+
+Handle A
+
+Handle B
+
+Handle C
+
+Factory D falla
+
+Rollback:
+
+detach C
+
+release C
+
+detach B
+
+release B
+
+detach A
+
+release A
+
+Orden verificado:
+
+inverso a adquisición
+
+Resultado:
+
+✔ cero Handles adjuntos;
+
+✔ tres Handles liberados;
+
+✔ objetos runtime liberados;
+
+✔ Last Known Good protegible.
+
+Pruebas:
+
+RuntimeFactoryKeyTest:
+
+Checks: 24
+Failures: 0
+RESULT: PASS
+
+RuntimeDependencyBindingTest:
+
+Checks: 23
+Failures: 0
+RESULT: PASS
+
+RuntimeConstructionRequestTest:
+
+Checks: 29
+Failures: 0
+RESULT: PASS
+
+RuntimeDeviceHandleTest:
+
+Checks: 35
+Failures: 0
+RESULT: PASS
+
+RuntimeFactoryBuildResultTest:
+
+Checks: 21
+Failures: 0
+RESULT: PASS
+
+RuntimeConstructionContractIntegrationTest:
+
+Checks: 41
+Failures: 0
+RESULT: PASS
+
+Runtime Construction baseline:
+
+Tests: 6
+Checks: 173
+Failures: 0
+
+Regresión completa verificada
+antes de Dashboard 0.4.0:
+
+Planned: 54
+Completed: 54
+Passed: 54
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Plan ExitCode: 0
+RESULT: PASS
+
+Checks calculados desde
+baselines individuales:
+
+1569
+
+Checks posteriormente confirmados
+por Dashboard 0.4.0:
+
+1569
+
+Commit de implementación:
+
+4147ec4
+feat(runtime):
+add runtime construction contracts
+
+Baselines preservadas:
+
+DeviceLifecycleTest
+
+DeviceCoreContractTest
+
+DeviceManifestBuilderTest
+
+DeviceGraphSnapshotTest
+
+SystemProfileCompilerTest
+
+DeviceCatalogCompilerTest
+
+DeviceGraphAssemblerTest
+
+SystemProfileCatalogGraphAssemblyIntegrationTest
+
+Ninguna baseline anterior fue modificada.
+
+Estado:
+
+RUNTIME FACTORY KEY VERIFICADO
+
+RUNTIME DEPENDENCY OWNERSHIP VERIFICADO
+
+RUNTIME CONSTRUCTION REQUEST VERIFICADO
+
+RUNTIME DEVICE HANDLE VERIFICADO
+
+RUNTIME FACTORY BUILD RESULT VERIFICADO
+
+FACTORY ATOMIC BUILD VERIFICADO
+
+FACTORY RELEASE VERIFICADO
+
+RUNTIME HOST CONTRACT VERIFICADO
+
+PARTIAL ATTACH ROLLBACK VERIFICADO
+
+REVERSE GLOBAL ROLLBACK VERIFICADO
+
+RUNTIME CONSTRUCTION CONTRACT 1.0 COMPLETADO
+
+Siguiente paso runtime:
+
+Diseñar:
+
+RuntimeFactoryRegistry
+
+y
+
+CompositionPlan
+
+antes de CompositionCompiler.
+
+RuntimeFactoryRegistry deberá:
+
+- resolver RuntimeFactoryKey exacta;
+
+- validar build behavior;
+
+- validar release behavior;
+
+- permanecer separado
+  de DeviceCatalog;
+
+- no utilizar fallback;
+
+- definir mutabilidad
+  antes de implementación.
+
+CompositionPlan deberá:
+
+- almacenar RuntimeFactoryKeys;
+
+- no almacenar factories;
+
+- no almacenar Callables;
+
+- definir lifecycle order;
+
+- definir dependency directives;
+
+- definir communication directives;
+
+- definir runtime policies;
+
+- considerar Graph cycles;
+
+- permanecer no ejecutable.
