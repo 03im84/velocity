@@ -1,0 +1,837 @@
+PJ0031 – Velocity Test Dashboard 0.4.0 Completed
+
+Fecha:
+
+04/09/2026
+
+Objetivo:
+
+Implementar métricas estructuradas
+de checks y clasificación automática
+de suites en Velocity Test Dashboard.
+
+Documentos relacionados:
+
+docs/tools/
+velocity_test_dashboard_design.md
+
+test/tools/
+run_godot_tests.ps1
+
+test/tools/
+velocity_test_dashboard_logic.py
+
+test/tools/
+velocity_test_dashboard.py
+
+test/tools/
+test_velocity_test_dashboard_logic.py
+
+test/tools/
+test_dashboard.json
+
+Versiones:
+
+Velocity Test Dashboard:
+
+0.4.0
+
+Velocity Test Dashboard Design:
+
+1.3 durante diseño
+
+Versión documental de cierre:
+
+1.4
+
+Runner Metrics Protocol:
+
+1
+
+Estado anterior:
+
+Velocity Test Dashboard:
+
+0.3.2
+
+Limitaciones anteriores:
+
+- no agregaba Checks;
+
+- no agregaba Check Failures;
+
+- no detectaba Missing Metrics;
+
+- suites configuradas manualmente;
+
+- categorías nuevas terminaban
+  potencialmente en Other;
+
+- parsing mezclado con Tkinter;
+
+- copy_command() definido dos veces;
+
+- engineErrorDetected no inicializado
+  explícitamente por attempt.
+
+Componentes modificados:
+
+res://test/tools/
+run_godot_tests.ps1
+
+res://test/tools/
+velocity_test_dashboard.py
+
+res://test/tools/
+test_dashboard.json
+
+Componentes nuevos:
+
+res://test/tools/
+velocity_test_dashboard_logic.py
+
+res://test/tools/
+test_velocity_test_dashboard_logic.py
+
+Configuración local preservada:
+
+res://test/tools/
+test_dashboard.local.json
+
+No fue modificada.
+
+Runner Metrics Protocol:
+
+Prefix:
+
+VELOCITY_TEST_METRICS_JSON:
+
+Protocol Version:
+
+1
+
+Marker disponible:
+
+{
+  "version": 1,
+  "scene": "res://...",
+  "attempt": 1,
+  "available": true,
+  "checks": 24,
+  "check_failures": 0
+}
+
+Marker no disponible:
+
+{
+  "version": 1,
+  "scene": "res://...",
+  "attempt": 1,
+  "available": false,
+  "checks": null,
+  "check_failures": null
+}
+
+Runner extrae:
+
+Checks
+
+Failures
+
+Patrones:
+
+Checks:
+entero no negativo
+
+Failures:
+entero no negativo
+
+Runner emite:
+
+✔ un marker por attempt;
+
+✔ marker en PASS;
+
+✔ marker en FAIL;
+
+✔ marker en TIMEOUT;
+
+✔ marker en ENGINE_ERROR;
+
+✔ marker cuando metrics no están disponibles.
+
+Runner Result contiene:
+
+Scene
+
+Attempt
+
+ExitCode
+
+Status
+
+EngineError
+
+Checks
+
+CheckFailures
+
+MetricsAvailable
+
+Runner Summary contiene:
+
+Total runs
+
+Passed
+
+Failed
+
+Total checks
+
+Check failures
+
+Missing metrics
+
+RESULT
+
+Cross-check defensivo:
+
+Si:
+
+Check Failures mayor que cero
+
+y:
+
+Godot ExitCode cero
+
+Runner cambia el resultado a FAIL.
+
+Esto evita PASS silencioso
+con assertions fallidas.
+
+Engine Error:
+
+engineErrorDetected se inicializa:
+
+false
+
+por cada attempt.
+
+Godot ExitCode cero
+con Engine Error produce:
+
+ExitCode 126
+
+Status ENGINE_ERROR
+
+Repeat verificado:
+
+Test:
+
+RuntimeFactoryKeyTest
+
+Repeat:
+
+2
+
+Checks por attempt:
+
+24
+
+Total Runs:
+
+2
+
+Total Checks:
+
+48
+
+Check Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+RESULT:
+
+PASS
+
+Dashboard Logic:
+
+Archivo:
+
+velocity_test_dashboard_logic.py
+
+Responsabilidad:
+
+- normalizar paths;
+
+- humanizar nombres;
+
+- inferir suites;
+
+- aplicar aliases;
+
+- aplicar overrides;
+
+- ordenar suites;
+
+- parsear markers;
+
+- validar protocol;
+
+- agregar attempts;
+
+- contar checks;
+
+- contar check failures;
+
+- contar missing metrics;
+
+- contar protocol errors.
+
+No depende de:
+
+- Tkinter;
+
+- subprocess;
+
+- Godot;
+
+- red;
+
+- archivos por ejecución.
+
+Modelos:
+
+RunnerAttemptMetrics
+
+RunnerMetricsSummary
+
+RunnerAttemptMetrics contiene:
+
+version
+
+scene
+
+attempt
+
+available
+
+checks
+
+check_failures
+
+RunnerMetricsSummary contiene:
+
+attempts
+
+checks
+
+check_failures
+
+metrics_runs
+
+missing_metrics
+
+markers_found
+
+protocol_errors
+
+Prueba Python:
+
+Archivo:
+
+test_velocity_test_dashboard_logic.py
+
+Framework:
+
+unittest
+
+Dependencias externas:
+
+ninguna
+
+Resultado:
+
+Ran 17 tests
+
+OK
+
+Cobertura:
+
+✔ Windows paths.
+
+✔ POSIX paths.
+
+✔ Resource paths.
+
+✔ snake_case humanization.
+
+✔ kebab-case humanization.
+
+✔ PascalCase Test names.
+
+✔ suite aliases.
+
+✔ suite overrides.
+
+✔ unknown folders.
+
+✔ root-level tests.
+
+✔ configured suite order.
+
+✔ valid marker.
+
+✔ unavailable marker.
+
+✔ missing marker.
+
+✔ malformed JSON.
+
+✔ unsupported protocol.
+
+✔ wrong scene.
+
+✔ Repeat aggregation.
+
+✔ duplicate attempt.
+
+✔ attempt over expected count.
+
+✔ invalid metrics values.
+
+Clasificación automática:
+
+Suites detectadas:
+
+All
+
+DeviceBus
+
+DeviceCore
+
+Providers
+
+Profiles
+
+Message Contracts
+
+DeviceGraph
+
+Composition
+
+DeviceCatalog
+
+Runtime
+
+Debug
+
+Cantidad total de valores:
+
+11
+
+Suites de dominio:
+
+10
+
+Other:
+
+0
+
+Aliases:
+
+device_bus
+→ DeviceBus
+
+device_core
+→ DeviceCore
+
+device
+→ DeviceCore
+
+provider
+→ Providers
+
+profile
+→ Profiles
+
+message_contract
+→ Message Contracts
+
+device_graph
+→ DeviceGraph
+
+composition
+→ Composition
+
+catalog
+→ DeviceCatalog
+
+runtime
+→ Runtime
+
+debug
+→ Debug
+
+Directorio desconocido:
+
+se humaniza automáticamente.
+
+Ejemplo:
+
+measurement_contract
+
+→
+
+Measurement Contract
+
+Prioridad:
+
+1. suite override;
+
+2. directory alias;
+
+3. humanized directory;
+
+4. humanized test name;
+
+5. Other.
+
+All:
+
+implícita
+
+No requiere root manual.
+
+Dashboard PlanResult:
+
+Campos nuevos:
+
+checks
+
+check_failures
+
+metrics_runs
+
+missing_metrics
+
+protocol_errors
+
+Results Table:
+
+Columnas:
+
+1. Test
+
+2. Status
+
+3. Exit
+
+4. Runs
+
+5. Checks
+
+6. Check Failures
+
+7. Metrics
+
+8. Seconds
+
+Metrics states:
+
+OK
+
+Missing N
+
+Error N
+
+—
+
+Política de Missing Metrics:
+
+✔ PASS del Runner se conserva.
+
+✔ Dashboard no redefine PASS.
+
+✔ Métrica ausente no se interpreta
+  como cero checks.
+
+✔ Missing Metrics se agrega
+  al summary.
+
+Selected Test verificado:
+
+RuntimeFactoryKeyTest
+
+Resultado:
+
+Planned: 1
+
+Completed: 1
+
+Passed: 1
+
+Failed: 0
+
+Total Runs: 1
+
+Checks: 24
+
+Check Failures: 0
+
+Missing Metrics: 0
+
+Plan ExitCode: 0
+
+RESULT: PASS
+
+Runtime Suite verificada:
+
+Planned: 6
+
+Completed: 6
+
+Passed: 6
+
+Failed: 0
+
+Total Runs: 6
+
+Checks: 173
+
+Check Failures: 0
+
+Missing Metrics: 0
+
+Plan ExitCode: 0
+
+RESULT: PASS
+
+Todas las filas Runtime:
+
+Metrics OK
+
+Pause y Resume:
+
+✔ un único botón dinámico;
+
+✔ Pause solicita pausa
+  después del test actual;
+
+✔ PASS previos no se repiten;
+
+✔ métricas previas se conservan;
+
+✔ NOT_RUN se reanuda;
+
+✔ checks no se duplican;
+
+✔ summary final correcto.
+
+Stop y Resume:
+
+Verificado con:
+
+Runtime Suite
+
+Repeat 5
+
+Comportamiento:
+
+✔ Stop termina árbol propio;
+
+✔ no deja ventanas;
+
+✔ test STOPPED se reinicia;
+
+✔ tests PASS no se repiten;
+
+✔ métricas del test detenido
+  se reinician;
+
+✔ no hay checks duplicados;
+
+✔ no quedan procesos huérfanos.
+
+Dashboard completo:
+
+Título:
+
+Velocity Test Dashboard 0.4.0
+
+Tests descubiertos:
+
+54
+
+Results columns:
+
+8
+
+Run All:
+
+Planned: 54
+
+Completed: 54
+
+Passed: 54
+
+Failed: 0
+
+Timeout: 0
+
+Engine Error: 0
+
+Not Run: 0
+
+Total Runs: 54
+
+Checks: 1569
+
+Check Failures: 0
+
+Missing Metrics: 0
+
+Plan ExitCode: 0
+
+RESULT: PASS
+
+Baseline global autoritativa:
+
+Tests:
+
+54
+
+Checks:
+
+1569
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Suites Other:
+
+0
+
+No ventanas PowerShell visibles.
+
+No ventanas Godot Console visibles.
+
+Dashboard permaneció abierto.
+
+Dashboard permaneció responsivo.
+
+Duplicación eliminada:
+
+copy_command()
+
+Cantidad de implementaciones:
+
+1
+
+Output capture:
+
+Runner output se conserva
+separado de headers Dashboard.
+
+Clear Output durante ejecución
+no borra metrics pendientes.
+
+Compatibilidad preservada:
+
+✔ GODOT_CONSOLE.
+
+✔ test_dashboard.local.json.
+
+✔ Run Selected.
+
+✔ Run Suite.
+
+✔ Run All.
+
+✔ Repeat.
+
+✔ Timeout.
+
+✔ Pause/Resume.
+
+✔ Stop.
+
+✔ Copy Command.
+
+✔ Copy Output.
+
+✔ Clear Output.
+
+✔ safe close.
+
+✔ no dependencies externas.
+
+Commit de implementación:
+
+db330c2
+feat(tools):
+add test metrics and automatic suites
+
+Estado:
+
+RUNNER METRICS PROTOCOL 1 VERIFICADO
+
+AUTOMATIC SUITES VERIFICADO
+
+DASHBOARD LOGIC UNIT TESTS VERIFICADO
+
+CHECKS POR TEST VERIFICADO
+
+CHECKS TOTALES VERIFICADO
+
+CHECK FAILURES VERIFICADO
+
+MISSING METRICS VERIFICADO
+
+REPEAT METRICS VERIFICADO
+
+PAUSE/RESUME METRICS VERIFICADO
+
+STOP/RESUME METRICS VERIFICADO
+
+RUN ALL VERIFICADO
+
+VELOCITY TEST DASHBOARD 0.4.0 COMPLETADO
+
+Siguiente paso:
+
+Actualizar mediante archivos completos:
+
+- velocity_test_dashboard_design.md;
+
+- runtime_construction_contract_design.md;
+
+- system_composition_pipeline_design.md;
+
+- core_architecture.md;
+
+- engineering_standars.md
+  solamente si cambia contrato;
+
+- velocity_handoff.md;
+
+- velocity_resume_prompt.md.
+
+Después:
+
+- commit documental;
+
+- push;
+
+- diseñar RuntimeFactoryRegistry;
+
+- diseñar CompositionPlan.
