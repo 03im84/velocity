@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dqhb5xlnnlf2x"]
+
+[ext_resource type="Script" uid="uid://cx6pqd3l7r1ka" path="res://test/core/runtime/runtime_dependency_spec_test.gd" id="1_jegfj"]
+
+[node name="RuntimeDependencySpecTest" type="Node" unique_id=1875714100]
+script = ExtResource("1_jegfj")

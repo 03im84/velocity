@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://fjsau26byer5"]
+
+[ext_resource type="Script" uid="uid://dtcjge0megu54" path="res://test/core/runtime/runtime_factory_descriptor_test.gd" id="1_83eg6"]
+
+[node name="RuntimeFactoryDescriptorTest" type="Node" unique_id=707323776]
+script = ExtResource("1_83eg6")
