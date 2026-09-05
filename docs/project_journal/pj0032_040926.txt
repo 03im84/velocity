@@ -1,0 +1,742 @@
+PJ0032 – RuntimeFactoryRegistry and CompositionPlan Architecture
+
+Fecha:
+
+04/09/2026
+
+Objetivo:
+
+Definir conjuntamente:
+
+RuntimeFactoryRegistry
+
+y
+
+CompositionPlan
+
+antes de implementar:
+
+CompositionCompiler
+
+Documentos relacionados:
+
+docs/architecture/adr/
+ADR-009 — System Composition Pipeline.md
+
+docs/architecture/adr/
+ADR-010 — Runtime Construction and Factory Binding.md
+
+docs/architecture/
+runtime_construction_contract_design.md
+
+docs/architecture/
+system_composition_pipeline_design.md
+
+docs/architecture/
+core_architecture.md
+
+Estado previo:
+
+SystemProfile 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+DeviceCatalog 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+DeviceGraphAssembler 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+Runtime Construction Contract 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+Velocity Test Dashboard 0.4.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+Baseline previa:
+
+Tests:
+
+54
+
+Checks:
+
+1569
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+RuntimeFactoryRegistry:
+
+Responsabilidad:
+
+Resolver RuntimeFactory
+mediante RuntimeFactoryKey exacta.
+
+Mutabilidad seleccionada:
+
+Draft
+
+↓
+
+Compiler
+
+↓
+
+Snapshot inmutable
+
+Componentes previstos:
+
+RuntimeDependencySpec
+
+RuntimeFactoryDescriptor
+
+RuntimeFactoryRegistryDraft
+
+RuntimeFactoryRegistry
+
+RuntimeFactoryRegistryCompileResult
+
+RuntimeFactoryRegistryCompiler
+
+RuntimeFactoryKey:
+
+Ya implementada.
+
+Identidad:
+
+Profile ID
+
++
+
+Profile Version
+
++
+
+Activation Context
+
+No contiene:
+
+host_target
+
+No existe:
+
+latest
+
+fallback
+
+nearest
+
+compatible enough
+
+RuntimeFactoryDescriptor:
+
+Contendrá:
+
+RuntimeFactoryKey
+
+RuntimeFactory Object
+
+RuntimeDependencySpecs
+
+No contendrá:
+
+Callable genérico
+
+Device activo
+
+RuntimeDeviceHandle activo
+
+DeviceBus activo
+
+RuntimeDependencySpec:
+
+Contendrá:
+
+Dependency ID
+
+Ownership
+
+Ownership:
+
+BORROWED
+
+o
+
+TRANSFERRED
+
+RuntimeDependencySpec 1.0:
+
+✔ Todas las dependencias
+  son obligatorias.
+
+✔ No existe campo optional.
+
+✔ No existe fallback
+  por dependencia faltante.
+
+✔ No contiene Dependency Value.
+
+✔ El Value aparece posteriormente
+  en RuntimeDependencyBinding.
+
+Separación:
+
+RuntimeDependencySpec:
+
+declaración requerida
+sin valor activo.
+
+RuntimeDependencyBinding:
+
+dependencia resuelta
+con Object activo.
+
+Factory behavior requerido:
+
+build(
+	RuntimeConstructionRequest
+)
+→ RuntimeFactoryBuildResult
+
+release(
+	RuntimeDeviceHandle
+)
+→ ValidationReport
+
+Registry validará:
+
+✔ Key válida.
+
+✔ Factory Object no null.
+
+✔ Factory expone build.
+
+✔ Factory expone release.
+
+✔ Dependency Specs válidas.
+
+✔ Dependency IDs únicas
+  por Descriptor.
+
+✔ RuntimeFactoryKey única
+  por Registry.
+
+Duplicados:
+
+Una Key exacta repetida:
+
+STRUCTURAL_ERROR
+
+No existe:
+
+overwrite
+
+last write wins
+
+first write wins silencioso
+
+La misma instancia de factory:
+
+✔ Puede registrarse bajo
+  varias Keys diferentes.
+
+Razón:
+
+Una factory stateless puede soportar:
+
+- varias versiones;
+
+- Simulation y Hardware;
+
+si cada binding es explícito.
+
+Registry identity:
+
+RuntimeFactoryRegistry 1.0:
+
+✔ No tiene Registry ID.
+
+✔ No tiene Registry Version.
+
+✔ No tiene content hash.
+
+La identidad pertenece a:
+
+RuntimeFactoryKey
+
+Estabilidad:
+
+RuntimeFactoryRegistry final:
+
+✔ Es inmutable.
+
+✔ No expone register.
+
+✔ No expone unregister.
+
+✔ No expone clear.
+
+✔ Permanece estable entre
+  CompositionCompiler
+  y CompositionRuntime.
+
+RuntimeFactoryRegistry no:
+
+- contiene DeviceProfiles
+  como autoridad canónica;
+
+- crea Devices;
+
+- ejecuta factories;
+
+- adjunta Nodes;
+
+- posee DeviceBus;
+
+- abre archivos;
+
+- guarda archivos.
+
+CompositionPlan:
+
+Responsabilidad:
+
+Representar instrucciones runtime
+inmutables y no ejecutables.
+
+CompositionPlan 1.0:
+
+✔ No tiene Plan ID.
+
+✔ No tiene Plan Version.
+
+✔ Es un snapshot anónimo.
+
+✔ Activation Context es explícito.
+
+✔ DeviceBusDispatchPolicy
+  es obligatoria y explícita.
+
+✔ Plan vacío es válido.
+
+Plan vacío:
+
+Representa un no-op estructural.
+
+Una capa de deployment futura
+puede rechazarlo por utilidad.
+
+CompositionPlan no contiene:
+
+- RuntimeFactory;
+
+- Callable;
+
+- RuntimeDeviceHandle;
+
+- Primary Runtime Object;
+
+- Host Objects activos;
+
+- Dependency Values activos;
+
+- Device activo;
+
+- Node activo;
+
+- DeviceBus activo.
+
+CompositionDeviceEntry:
+
+Componente tipado previsto.
+
+Contendrá:
+
+Device ID
+
+DeviceConfiguration
+
+RuntimeFactoryKey
+
+RuntimeDependencySpecs
+
+No contendrá:
+
+Factory Object
+
+RuntimeDependencyBindings activos
+
+RuntimeDeviceHandle
+
+CompositionConnectionDirective:
+
+Componente tipado previsto.
+
+Contendrá:
+
+Source Device ID
+
+Source Port ID
+
+Topic
+
+Target Device ID
+
+Target Port ID
+
+No contendrá:
+
+Callable
+
+Subscriber Object
+
+DeviceBus
+
+DeviceGraphConnection reference
+como modelo canónico
+
+Array[Dictionary]
+
+Connection directives:
+
+Se compilarán desde
+DeviceGraphConnection.
+
+Conservarán:
+
+- Source ID;
+
+- Source Port;
+
+- Topic;
+
+- Target ID;
+
+- Target Port;
+
+- orden.
+
+Lifecycle order:
+
+Política seleccionada:
+
+Phase barriers
+
++
+
+Device Entry insertion order
+
+Fases:
+
+1. construction
+
+2. attach
+
+3. initialize
+
+4. set_ready
+
+5. start
+
+Cada fase termina para todos
+antes de comenzar la siguiente.
+
+Orden de:
+
+construction
+
+attach
+
+initialize
+
+set_ready
+
+start
+
+se deriva directamente de:
+
+CompositionDeviceEntries
+
+Shutdown:
+
+orden inverso de Device Entries
+
+Rollback:
+
+orden inverso de adquisición
+
+No se almacenan Arrays
+duplicados por cada fase.
+
+Razón:
+
+Evita siete secuencias
+que puedan contradecirse.
+
+Ciclos:
+
+DeviceGraph permite ciclos.
+
+No se utiliza topological sort
+como requisito universal.
+
+Phase barriers permiten:
+
+- construir todos;
+
+- adjuntar todos;
+
+- inicializar todos;
+
+- preparar todos;
+
+antes de iniciar cualquiera.
+
+Scheduling avanzado futuro podrá usar:
+
+- SCC;
+
+- grupos;
+
+- temporal boundaries;
+
+- prioridades;
+
+sin cambiar la identidad básica
+de Device Entries.
+
+DeviceBusDispatchPolicy:
+
+Es obligatoria dentro del Plan.
+
+Razones:
+
+- reproducibilidad;
+
+- budgets explícitos;
+
+- VP-002;
+
+- no depender de defaults ocultos;
+
+- misma política entre compile
+  y runtime.
+
+CompositionPlan API futura:
+
+get_activation_context()
+
+get_device_entries()
+
+get_connection_directives()
+
+get_dispatch_policy()
+
+get_construction_order()
+
+get_attach_order()
+
+get_initialization_order()
+
+get_ready_order()
+
+get_start_order()
+
+get_shutdown_order()
+
+get_rollback_order()
+
+is_valid()
+
+Los órdenes forward se derivan
+de Device Entries.
+
+Shutdown y rollback
+devuelven orden inverso.
+
+Dependency flow:
+
+RuntimeFactoryDescriptor
+
+↓
+
+RuntimeDependencySpecs
+
+↓
+
+CompositionDeviceEntry
+
+↓
+
+CompositionPlan
+
+↓
+
+CompositionRuntime
+
+↓
+
+RuntimeDependencyBindings
+pre-resueltos
+
+↓
+
+RuntimeConstructionRequest
+
+No service locator.
+
+No dependency discovery
+dentro de factory.
+
+Componentes previstos de Registry:
+
+res://core/runtime/
+runtime_dependency_spec.gd
+
+res://core/runtime/
+runtime_factory_descriptor.gd
+
+res://core/runtime/
+runtime_factory_registry_draft.gd
+
+res://core/runtime/
+runtime_factory_registry.gd
+
+res://core/runtime/
+runtime_factory_registry_compile_result.gd
+
+res://core/runtime/
+runtime_factory_registry_compiler.gd
+
+Componentes previstos de Plan:
+
+res://core/composition/
+composition_device_entry.gd
+
+res://core/composition/
+composition_connection_directive.gd
+
+res://core/composition/
+composition_plan.gd
+
+Pruebas previstas de Registry:
+
+RuntimeDependencySpecTest
+
+RuntimeFactoryDescriptorTest
+
+RuntimeFactoryRegistryDraftTest
+
+RuntimeFactoryRegistryCompilerTest
+
+Pruebas previstas de Plan:
+
+CompositionDeviceEntryTest
+
+CompositionConnectionDirectiveTest
+
+CompositionPlanTest
+
+CompositionCompiler:
+
+No está autorizado todavía.
+
+Antes necesita:
+
+✔ RuntimeFactoryRegistry Design.
+
+✔ CompositionPlan Design.
+
+Después deberá definir:
+
+- input Graph Snapshot;
+
+- input Registry;
+
+- input Dispatch Policy;
+
+- Activation Context;
+
+- Factory Key generation;
+
+- Factory availability;
+
+- Device Entry creation;
+
+- Connection Directive creation;
+
+- Plan validation;
+
+- Result;
+
+- no ejecución.
+
+Borrador alternativo recuperado:
+
+Ideas aprovechadas:
+
+✔ lifecycle order explícito;
+
+✔ DeviceBusDispatchPolicy en Plan;
+
+✔ communication directives;
+
+✔ separación Registry/Catalog;
+
+✔ Plan sin recursos activos.
+
+Alternativas rechazadas:
+
+Callable genérico
+
+Factory directa en Plan
+
+Factory devuelve Device directamente
+
+host_target como Factory Key
+
+Registry mutable sin diseño
+
+Array[Dictionary]
+
+topological order obligatorio
+
+Estado:
+
+RUNTIME FACTORY REGISTRY
+ARCHITECTURE ACCEPTED
+
+COMPOSITION PLAN
+ARCHITECTURE ACCEPTED
+
+NO IMPLEMENTATION YET
+
+Siguiente paso documental:
+
+Crear archivos completos:
+
+runtime_factory_registry_design.md
+
+composition_plan_design.md
+
+Después:
+
+- actualizar System Composition Pipeline;
+
+- actualizar Core Architecture;
+
+- actualizar Project Handoff;
+
+- commit arquitectónico;
+
+- implementar RuntimeDependencySpec.

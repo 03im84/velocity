@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.2 |
-| Fecha | 04/09/2026 |
+| Versión | 1.3 |
+| Fecha | 05/09/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
 ## 1. Archivos a adjuntar
@@ -21,9 +21,13 @@ velocity_collaboration_contract.md
 
 También adjuntar cuando sea posible:
 
-- ADR del milestone;
-- diseños activos;
+- `runtime_factory_registry_design.md`;
+- `composition_plan_design.md`;
+- `system_composition_pipeline_design.md`;
+- ADR-009;
+- ADR-010;
 - `git status -sb`;
+- `git log -1 --oneline`;
 - URL del repositorio.
 
 ## 2. Prompt listo para copiar
@@ -45,6 +49,21 @@ He adjuntado:
 - velocity_handoff.md
 - velocity_resume_prompt.md
 - velocity_collaboration_contract.md
+
+Estado arquitectónico esperado:
+
+- Runtime Construction Contract 1.0 está implementado y verificado.
+- RuntimeFactoryRegistry 1.0 tiene diseño activo.
+- CompositionPlan 1.0 tiene diseño activo.
+- CompositionCompiler permanece pendiente de diseño.
+- La siguiente implementación es RuntimeDependencySpec.
+
+Baseline esperada:
+
+- 54 tests.
+- 1569 checks.
+- 0 failures.
+- 0 missing metrics.
 
 Antes de responder:
 
@@ -95,6 +114,14 @@ Antes de responder:
 
 22. Mantén tono claro, didáctico, directo, cercano y honesto.
 
+23. No rediseñes RuntimeFactoryRegistry 1.0 o CompositionPlan 1.0 por intuición.
+
+24. No implementes CompositionCompiler antes de completar e integrar Registry y Plan.
+
+25. RuntimeDependencySpec declara Dependency ID y Ownership, pero no contiene Value activo.
+
+26. CompositionPlan conserva RuntimeFactoryKey, no factory.
+
 Tu primera respuesta debe incluir únicamente:
 
 A. confirmación de lectura;
@@ -107,7 +134,7 @@ D. baseline global;
 
 E. último commit y estado Git conocido;
 
-F. siguiente milestone arquitectónico;
+F. milestone actual y siguiente implementación;
 
 G. decisiones aceptadas;
 
@@ -196,6 +223,36 @@ RuntimeConstructionRequest
 RuntimeDeviceHandle
 
 RuntimeFactoryBuildResult
+```
+
+Diseños activos:
+
+```text
+RuntimeFactoryRegistry 1.0
+
+CompositionPlan 1.0
+```
+
+Documentos canónicos del milestone:
+
+```text
+Core Architecture 2.15
+
+System Composition Pipeline Design 1.6
+
+RuntimeFactoryRegistry Design 1.0
+
+CompositionPlan Design 1.0
+
+Project Handoff 1.3
+
+Resume Prompt 1.3
+```
+
+Siguiente implementación:
+
+```text
+res://core/runtime/runtime_dependency_spec.gd
 ```
 
 ## 4. Baseline global
@@ -411,70 +468,188 @@ rollback inverso
 
 Last Known Good cambia solo después de commit completo.
 
-## 14. Siguiente milestone
+## 14. Milestone actual
 
-Diseñar conjuntamente:
-
-```text
-RuntimeFactoryRegistry
-
-CompositionPlan
-```
-
-No implementar todavía:
+Diseños completos y activos:
 
 ```text
-RuntimeFactoryRegistry
+RuntimeFactoryRegistry 1.0
 
-CompositionPlan
-
-CompositionCompiler
-
-CompositionRuntime
+CompositionPlan 1.0
 ```
 
-## 15. RuntimeFactoryRegistry debe resolver
+Orden autorizado:
+
+```text
+RuntimeFactoryRegistry 1.0 implementation
+
+↓
+
+CompositionPlan 1.0 implementation
+
+↓
+
+Registry–Plan Integration
+
+↓
+
+CompositionCompiler Design
+```
+
+CompositionCompiler y CompositionRuntime no están autorizados para implementación.
+
+## 15. RuntimeFactoryRegistry 1.0
+
+Responsabilidad:
+
+> Resolver RuntimeFactory mediante RuntimeFactoryKey exacta.
+
+Pipeline:
+
+```text
+RuntimeFactoryRegistryDraft
+		│
+		▼
+RuntimeFactoryRegistryCompiler
+		│
+		▼
+RuntimeFactoryRegistryCompileResult
+		├── RuntimeFactoryRegistry
+		└── ValidationReport
+```
+
+Componentes diseñados:
+
+```text
+RuntimeDependencySpec
+
+RuntimeFactoryDescriptor
+
+RuntimeFactoryRegistryDraft
+
+RuntimeFactoryRegistry
+
+RuntimeFactoryRegistryCompileResult
+
+RuntimeFactoryRegistryCompiler
+```
+
+RuntimeDependencySpec contiene:
+
+```text
+Dependency ID
+
+Ownership
+```
+
+No contiene Value activo.
+
+RuntimeFactoryDescriptor asocia:
 
 ```text
 RuntimeFactoryKey
 
-→
+RuntimeFactory Object
 
-RuntimeFactory
+RuntimeDependencySpecs
 ```
 
-Decisiones pendientes:
+Registry final:
 
-- mutabilidad;
-- Draft–Compiler–Snapshot;
-- behavior validation;
-- duplicados;
-- estabilidad;
-- lookup;
-- release binding;
-- persistencia externa.
+- es inmutable;
+- permite Registry vacío válido;
+- conserva orden;
+- valida `build` y `release` sin ejecutarlos;
+- resuelve por Key exacta;
+- permite la misma factory bajo Keys diferentes;
+- rechaza Key duplicada;
+- no utiliza latest;
+- no utiliza fallback;
+- no utiliza overwrite;
+- no depende de DeviceCatalog;
+- no forma parte de CompositionPlan.
 
-## 16. CompositionPlan debe definir
+CompositionCompiler y CompositionRuntime observan el mismo Registry snapshot durante una activación.
 
-- Factory Keys;
-- Device entries tipadas;
-- dependency directives;
-- lifecycle order;
-- communication directives;
-- DeviceBusDispatchPolicy;
-- rollback directives;
-- ciclos;
-- grupos;
-- orden estable.
+## 16. CompositionPlan 1.0
+
+Componentes diseñados:
+
+```text
+CompositionDeviceEntry
+
+CompositionConnectionDirective
+
+CompositionPlan
+```
+
+Plan contiene:
+
+```text
+Activation Context
+
+CompositionDeviceEntries
+
+CompositionConnectionDirectives
+
+DeviceBusDispatchPolicy
+```
+
+Device Entries conservan:
+
+- Device ID;
+- DeviceConfiguration;
+- RuntimeFactoryKey;
+- RuntimeDependencySpecs.
+
+Connection Directives conservan:
+
+- Connection ID;
+- Source Device ID;
+- Source Port ID;
+- Topic;
+- Target Device ID;
+- Target Port ID.
+
+Forward order deriva de Entries para:
+
+```text
+construction
+
+attach
+
+initialize
+
+set_ready
+
+start
+```
+
+Reverse order invierte Entries para:
+
+```text
+shutdown
+
+rollback
+```
+
+Phase barriers son obligatorias.
+
+Plan 1.0 no requiere topological sort.
+
+Plan vacío con contexto y Dispatch Policy válidos es válido.
 
 Plan no contiene:
 
-- factory;
+- RuntimeFactory;
 - Callable;
-- Handle;
+- RuntimeDependencyBinding con Value activo;
+- RuntimeDeviceHandle;
 - Device activo;
 - Node activo;
-- DeviceBus activo.
+- DeviceBus activo;
+- Plan ID;
+- Plan Version.
 
 ## 17. Señales de pérdida de contexto
 
@@ -494,7 +669,14 @@ Detener si un asistente propone:
 - service locator;
 - host target como Factory Key actual;
 - CompositionCompiler ejecutando runtime;
+- Registry mutable después de compilación;
+- Registry dentro de CompositionPlan;
+- RuntimeDependencySpec con Value activo;
+- optional dependencies en Registry 1.0;
+- Plan sin DeviceBusDispatchPolicy explícita;
+- Compiler y Runtime usando Registries diferentes durante una activación;
 - topological sort obligatorio ignorando ciclos;
+- arrays independientes de orden para cada fase;
 - tests modificados;
 - archivos por fragmentos;
 - código antes de diseño.
@@ -509,12 +691,20 @@ recovered_runtime_factory_and_composition_plan_design_250826.md
 
 No es arquitectura canónica.
 
-Ideas candidatas:
+Ideas incorporadas a los diseños activos:
 
-- lifecycle order;
-- DispatchPolicy;
-- communication directives;
-- host abstractions.
+- lifecycle order derivado;
+- phase barriers;
+- DeviceBusDispatchPolicy obligatoria;
+- communication directives tipadas;
+- rollback inverso;
+- Last Known Good.
+
+Ideas que permanecen futuras:
+
+- RuntimeHost concreto;
+- scheduling mediante SCC;
+- temporal boundaries.
 
 Alternativas rechazadas:
 
@@ -544,6 +734,21 @@ Alternativas rechazadas:
 8. aceptar baseline solo en PASS.
 
 ## 20. Protocolo Git
+
+Base commit antes del paquete Registry–Plan:
+
+```text
+659c3c3
+docs(runtime): close runtime construction contract 1.0
+```
+
+Commit sugerido para el paquete actual:
+
+```text
+docs(runtime): define factory registry and composition plan
+```
+
+Antes del commit:
 
 ```powershell
 git status --short
@@ -592,16 +797,28 @@ Baseline:
 
 0 failures
 
-Siguiente milestone:
+Diseños activos:
 
-RuntimeFactoryRegistry Design
+RuntimeFactoryRegistry 1.0
 
 +
 
-CompositionPlan Design
+CompositionPlan 1.0
+
+Siguiente implementación:
+
+RuntimeDependencySpec
+
+Ruta:
+
+res://core/runtime/runtime_dependency_spec.gd
+
+CompositionCompiler:
+
+PENDIENTE DE DISEÑO
 ```
 
-No debe escribir código.
+No debe escribir código hasta recibir confirmación y comprobar que el paquete documental está cerrado.
 
 ## 22. Regla final
 

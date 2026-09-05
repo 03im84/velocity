@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.14 |
+| Versión | 2.15 |
 | Fecha inicial | 2026-08-14 |
-| Última revisión | 04/09/2026 |
+| Última revisión | 05/09/2026 |
 | Alcance | Núcleo lógico de Velocity |
 
 ## 1. Propósito
@@ -55,6 +55,8 @@ Conceptos actuales:
 - DeviceCatalog;
 - DeviceGraphAssembler;
 - Runtime Construction;
+- RuntimeFactoryRegistry;
+- CompositionPlan;
 - System Composition;
 - estado;
 - health;
@@ -115,13 +117,15 @@ core/graph/
 		DeviceGraph.
 
 core/composition/
-		SystemProfile y DeviceGraphAssembler.
+		SystemProfile, DeviceGraphAssembler
+		y CompositionPlan.
 
 core/catalog/
 		DeviceCatalog.
 
 core/runtime/
-		Runtime Construction Contracts.
+		Runtime Construction Contracts
+		y RuntimeFactoryRegistry.
 
 core/debug/
 		Observación y diagnóstico.
@@ -194,16 +198,23 @@ SceneTree no define Core.
 | DeviceGraphAssembler | Construir Graph desde SystemProfile | Implementado y verificado |
 | DeviceGraphAssemblyResult | Resultado de Graph assembly | Implementado y verificado |
 | RuntimeFactoryKey | Identidad exacta de factory | Implementado y verificado |
-| RuntimeDependencyBinding | Dependencia con ownership | Implementado y verificado |
+| RuntimeDependencyBinding | Dependencia activa con ownership | Implementado y verificado |
 | RuntimeConstructionRequest | Request pre-resuelto | Implementado y verificado |
 | RuntimeDeviceHandle | Producto y ownership runtime | Implementado y verificado |
 | RuntimeFactoryBuildResult | Resultado de factory | Implementado y verificado |
 | RuntimeFactory behavior | Construcción y release | Verificado mediante integración |
 | RuntimeHost behavior | Attach y detach | Verificado mediante integración |
-| RuntimeFactoryRegistry | Resolver factories exactas | Siguiente diseño |
-| CompositionPlan | Instrucciones runtime inmutables | Siguiente diseño |
-| CompositionCompiler | Compilar Snapshot a Plan | Pendiente |
-| CompositionRuntime | Ejecutar Plan | Pendiente |
+| RuntimeDependencySpec | Declarar dependencia requerida sin Value activo | Diseño 1.0 activo; siguiente implementación |
+| RuntimeFactoryDescriptor | Asociar Key, factory behavior y Dependency Specs | Diseño 1.0 activo; implementación pendiente |
+| RuntimeFactoryRegistryDraft | Colección editable de Descriptors | Diseño 1.0 activo; implementación pendiente |
+| RuntimeFactoryRegistryCompiler | Validar Draft y producir Registry | Diseño 1.0 activo; implementación pendiente |
+| RuntimeFactoryRegistry | Resolver factories mediante Key exacta | Diseño 1.0 activo; implementación pendiente |
+| RuntimeFactoryRegistryCompileResult | Contener Registry y ValidationReport | Diseño 1.0 activo; implementación pendiente |
+| CompositionDeviceEntry | Describir construcción declarativa de un Device | Diseño 1.0 activo; implementación posterior al Registry |
+| CompositionConnectionDirective | Describir wiring sin callbacks activos | Diseño 1.0 activo; implementación posterior al Registry |
+| CompositionPlan | Instrucciones runtime inmutables y no ejecutables | Diseño 1.0 activo; implementación posterior al Registry |
+| CompositionCompiler | Compilar Snapshot y Registry a Plan | Diseño pendiente |
+| CompositionRuntime | Ejecutar Plan y poseer recursos activos | Pendiente |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
 ## 6. DeviceBus
@@ -727,96 +738,295 @@ Runtime Construction Contracts
 ## 26. Pipeline futuro
 
 ```text
-DeviceGraphSnapshot
-
-↓
-
-CompositionCompiler
-
-↓
-
-CompositionPlan
-
-↓
-
-CompositionRuntime
-
-↓
-
+RuntimeFactoryRegistryDraft
+		│
+		▼
+RuntimeFactoryRegistryCompiler
+		│
+		▼
 RuntimeFactoryRegistry
+```
 
-↓
+```text
+DeviceGraphSnapshot
++
+RuntimeFactoryRegistry
++
+Activation Context
++
+DeviceBusDispatchPolicy
+		│
+		▼
+CompositionCompiler
+		│
+		▼
+CompositionPlan
+```
 
-RuntimeFactory
-
-↓
-
-RuntimeDeviceHandle
+```text
+CompositionPlan
++
+RuntimeFactoryRegistry
++
+resolved dependency values
++
+RuntimeHost
+		│
+		▼
+CompositionRuntime
+		│
+		├── DeviceBus
+		├── RuntimeConstructionRequests
+		├── RuntimeFactoryBuildResults
+		└── RuntimeDeviceHandles
 ```
 
 ## 27. RuntimeFactoryRegistry
 
-Siguiente diseño.
+Definido por:
 
-Resolverá:
+```text
+RuntimeFactoryRegistry Design 1.0
+```
+
+Estado:
+
+```text
+DISEÑO ACTIVO
+```
+
+Está autorizado para implementación incremental.
+
+Responsabilidad:
+
+> Resolver RuntimeFactory mediante RuntimeFactoryKey exacta.
+
+Pipeline:
+
+```text
+RuntimeFactoryRegistryDraft
+		│
+		▼
+RuntimeFactoryRegistryCompiler
+		│
+		▼
+RuntimeFactoryRegistryCompileResult
+		├── RuntimeFactoryRegistry
+		└── ValidationReport
+```
+
+Cada RuntimeFactoryDescriptor asocia:
 
 ```text
 RuntimeFactoryKey
 
-→
+RuntimeFactory Object
 
-RuntimeFactory
+RuntimeDependencySpecs
 ```
+
+Descriptor valida:
+
+- RuntimeFactoryKey;
+- factory Object no null y con instancia válida;
+- behavior `build`;
+- behavior `release`;
+- RuntimeDependencySpecs válidas;
+- Dependency IDs únicas.
+
+La validación no ejecuta la factory.
+
+RuntimeDependencySpec declara:
+
+```text
+Dependency ID
+
+Ownership
+```
+
+No contiene Value activo.
+
+RuntimeDependencyBinding contiene posteriormente el Object que satisface la dependencia.
+
+El Registry final:
+
+- es inmutable;
+- permite Registry vacío válido;
+- conserva orden del Draft;
+- resuelve por Profile ID, Profile Version y Activation Context;
+- permite una misma factory Object bajo Keys diferentes;
+- rechaza RuntimeFactoryKey duplicada;
+- no tiene Registry ID o Registry Version;
+- no utiliza latest;
+- no utiliza fallback;
+- no reemplaza factories silenciosamente;
+- no ejecuta `build()`;
+- no ejecuta `release()`.
+
+Una compilación fallida no sustituye el Registry Last Known Good.
+
+CompositionCompiler y CompositionRuntime deben observar el mismo Registry snapshot durante una activación.
 
 Permanecerá separado de:
 
 - DeviceCatalog;
-- CompositionPlan.
+- CompositionPlan;
+- CompositionRuntime;
+- persistencia.
 
-Mutabilidad debe definirse.
+Primera implementación:
+
+```text
+RuntimeDependencySpec
+```
 
 ## 28. CompositionPlan
 
-Siguiente diseño.
+Definido por:
 
-Conservará:
+```text
+CompositionPlan Design 1.0
+```
 
-- RuntimeFactoryKeys;
-- dependency directives;
-- lifecycle order;
-- communication directives;
-- runtime policies.
+Estado:
 
-No conservará:
+```text
+DISEÑO ACTIVO
+```
 
-- factory;
+Está autorizado para implementación después de completar RuntimeFactoryRegistry 1.0.
+
+CompositionPlan representa instrucciones runtime validadas, inmutables y no ejecutables.
+
+Contiene:
+
+```text
+Activation Context
+
+CompositionDeviceEntries
+
+CompositionConnectionDirectives
+
+DeviceBusDispatchPolicy
+```
+
+CompositionDeviceEntry conserva:
+
+- Device ID;
+- DeviceConfiguration;
+- RuntimeFactoryKey;
+- RuntimeDependencySpecs.
+
+CompositionConnectionDirective conserva:
+
+- Connection ID;
+- Source Device ID;
+- Source Port ID;
+- Topic;
+- Target Device ID;
+- Target Port ID.
+
+Forward order deriva del orden de Device Entries para:
+
+```text
+construction
+
+attach
+
+initialize
+
+set_ready
+
+start
+```
+
+Reverse order invierte Device Entries para:
+
+```text
+shutdown
+
+rollback
+```
+
+CompositionRuntime deberá respetar phase barriers.
+
+Plan 1.0 no requiere topological sort.
+
+DeviceGraph puede contener ciclos.
+
+El orden por Entries y las phase barriers permiten que todos los participantes existan antes de `start`.
+
+Plan vacío es válido cuando contiene Activation Context y Dispatch Policy válidos.
+
+No contiene:
+
+- RuntimeFactory;
 - Callable;
-- Handle;
+- RuntimeDependencyBinding con Value activo;
+- RuntimeDeviceHandle;
 - Device activo;
 - Node activo;
-- DeviceBus activo.
+- DeviceBus activo;
+- Plan ID;
+- Plan Version.
 
 ## 29. CompositionCompiler
 
 Futuro.
 
-Recibirá Graph Snapshot y Registry.
+Será diseñado después de implementar e integrar RuntimeFactoryRegistry 1.0 y CompositionPlan 1.0.
 
-Producirá Plan.
+Entradas conceptuales:
 
-No ejecutará factories ni runtime.
+```text
+DeviceGraphSnapshot
+
+RuntimeFactoryRegistry
+
+Activation Context
+
+DeviceBusDispatchPolicy
+```
+
+Salida conceptual:
+
+```text
+CompositionPlan
+
+ValidationReport
+```
+
+Validará disponibilidad exacta de RuntimeFactoryDescriptor y trasladará Dependency Specs a Device Entries.
+
+No:
+
+- ejecutará factories;
+- creará Devices activos;
+- adjuntará Host Objects;
+- poseerá DeviceBus;
+- activará runtime.
 
 ## 30. CompositionRuntime
 
 Futuro.
 
+Recibirá:
+
+- CompositionPlan;
+- RuntimeFactoryRegistry;
+- dependency values resueltos;
+- RuntimeHost.
+
+Resolverá nuevamente cada RuntimeFactoryKey en el mismo Registry snapshot antes de construir.
+
 Poseerá:
 
 - DeviceBus;
-- Handles;
-- RuntimeHost;
+- RuntimeDeviceHandles;
+- host attachment state;
 - lifecycle;
-- rollback;
+- phase barriers;
+- rollback inverso;
 - shutdown;
 - Runtime Safety observation.
 
@@ -838,15 +1048,29 @@ Poseerá:
 
 8. RuntimeHost controla attach/detach.
 
-9. Plan no contiene factory.
+9. RuntimeDependencySpec declara requisitos sin Value activo.
 
-10. CompositionCompiler no ejecuta.
+10. RuntimeDependencyBinding contiene el Value activo resuelto.
 
-11. CompositionRuntime posee recursos activos.
+11. RuntimeFactoryRegistry no depende de DeviceCatalog.
 
-12. UI depende de Core.
+12. RuntimeFactoryRegistry no depende de CompositionPlan.
 
-13. Persistencia depende del modelo.
+13. RuntimeFactoryRegistry resuelve exacto y no ejecuta factories.
+
+14. CompositionCompiler y CompositionRuntime observan el mismo Registry snapshot durante una activación.
+
+15. CompositionPlan conserva Key, no factory.
+
+16. CompositionPlan no contiene Callable o recursos activos.
+
+17. CompositionCompiler no ejecuta.
+
+18. CompositionRuntime posee recursos activos.
+
+19. UI depende de Core.
+
+20. Persistencia depende del modelo.
 
 ## 32. Invariantes
 
@@ -876,9 +1100,31 @@ Poseerá:
 
 13. Rollback inverso.
 
-14. Plan no ejecutable.
+14. RuntimeFactoryKey es exacta.
 
-15. Archivos completos.
+15. RuntimeDependencySpec no contiene Value activo.
+
+16. Registry es inmutable y no ejecuta.
+
+17. Registry no utiliza latest, fallback u overwrite.
+
+18. Compiler y Runtime comparten el mismo Registry snapshot durante una activación.
+
+19. Plan es inmutable y no ejecutable.
+
+20. Plan conserva Key, no factory.
+
+21. Plan no contiene Callable o recursos activos.
+
+22. DeviceBusDispatchPolicy es obligatoria en Plan.
+
+23. Forward order deriva de Device Entries.
+
+24. Reverse order invierte Device Entries.
+
+25. Ciclos no requieren topological sort en Plan 1.0.
+
+26. Archivos completos.
 
 ## 33. Godot
 
@@ -935,11 +1181,7 @@ Draft validation
 
 +
 
-Snapshot validation
-
-+
-
-Dependency resolution
+Profile y Catalog snapshot validation
 
 +
 
@@ -947,11 +1189,23 @@ Graph assembly
 
 +
 
-Runtime construction validation
+RuntimeFactoryRegistry compilation
 
 +
 
 CompositionCompiler validation
+
++
+
+CompositionPlan validation
+
++
+
+Runtime dependency resolution
+
++
+
+Runtime construction validation
 
 +
 
@@ -994,18 +1248,24 @@ Velocity Test Runner
 Velocity Test Dashboard 0.4.0
 ```
 
-## 37. Siguiente diseño
+## 37. Diseños activos
 
 ```text
-RuntimeFactoryRegistry
+RuntimeFactoryRegistry 1.0
 
-CompositionPlan
+CompositionPlan 1.0
 ```
+
+Ambos diseños están completos, activos y autorizan implementación incremental en el orden establecido.
 
 ## 38. Pendiente
 
 ```text
-CompositionCompiler
+Implementación de RuntimeFactoryRegistry 1.0
+
+Implementación de CompositionPlan 1.0
+
+Diseño e implementación de CompositionCompiler
 
 CompositionRuntime
 
@@ -1136,16 +1396,48 @@ Toda modificación se entrega como archivo completo.
 
 ## 44. Siguiente paso
 
-Diseñar conjuntamente:
+Implementar incrementalmente RuntimeFactoryRegistry 1.0.
+
+Primer archivo:
 
 ```text
+res://core/runtime/runtime_dependency_spec.gd
+```
+
+Primera prueba sucesora:
+
+```text
+res://test/core/runtime/RuntimeDependencySpecTest.tscn
+
+res://test/core/runtime/runtime_dependency_spec_test.gd
+```
+
+Orden posterior:
+
+```text
+RuntimeFactoryDescriptor
+
+RuntimeFactoryRegistryDraft
+
 RuntimeFactoryRegistry
 
+RuntimeFactoryRegistryCompileResult
+
+RuntimeFactoryRegistryCompiler
+
+Run All
+
+CompositionDeviceEntry
+
+CompositionConnectionDirective
+
 CompositionPlan
+
+Registry–Plan Integration
+
+Run All
+
+CompositionCompiler Design
 ```
 
-Antes de implementar:
-
-```text
-CompositionCompiler
-```
+No se implementará CompositionCompiler antes de completar e integrar Registry y Plan.
