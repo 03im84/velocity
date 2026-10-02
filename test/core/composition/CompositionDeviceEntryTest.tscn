@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://test/core/composition/composition_device_entry_test.gd" id="1_cde"]
+
+[node name="CompositionDeviceEntryTest" type="Node"]
+script = ExtResource("1_cde")

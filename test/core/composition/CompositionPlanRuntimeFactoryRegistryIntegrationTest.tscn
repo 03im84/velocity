@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bvdh5bnqeeg31"]
+
+[ext_resource type="Script" uid="uid://tf5cb7vmr7fj" path="res://test/core/composition/composition_plan_runtime_factory_registry_integration_test.gd" id="1_geixd"]
+
+[node name="CompositionPlanRuntimeFactoryRegistryIntegrationTest" type="Node" unique_id=1060375651]
+script = ExtResource("1_geixd")
