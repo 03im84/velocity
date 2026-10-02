@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.3 |
-| Fecha | 05/09/2026 |
+| Versión | 1.4 |
+| Fecha | 02/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
 ## 1. Archivos a adjuntar
@@ -53,15 +53,15 @@ He adjuntado:
 Estado arquitectónico esperado:
 
 - Runtime Construction Contract 1.0 está implementado y verificado.
-- RuntimeFactoryRegistry 1.0 tiene diseño activo.
+- RuntimeFactoryRegistry 1.0 está implementado y verificado.
 - CompositionPlan 1.0 tiene diseño activo.
 - CompositionCompiler permanece pendiente de diseño.
-- La siguiente implementación es RuntimeDependencySpec.
+- La siguiente implementación es CompositionDeviceEntry.
 
 Baseline esperada:
 
-- 54 tests.
-- 1569 checks.
+- 58 tests.
+- 1710 checks.
 - 0 failures.
 - 0 missing metrics.
 
@@ -187,6 +187,8 @@ DeviceGraphAssembler 1.0
 Runtime Construction Contract 1.0
 
 Velocity Test Dashboard 0.4.0
+
+RuntimeFactoryRegistry 1.0
 ```
 
 Pipeline implementado:
@@ -225,48 +227,46 @@ RuntimeDeviceHandle
 RuntimeFactoryBuildResult
 ```
 
-Diseños activos:
+Diseño activo:
 
 ```text
-RuntimeFactoryRegistry 1.0
-
 CompositionPlan 1.0
 ```
 
 Documentos canónicos del milestone:
 
 ```text
-Core Architecture 2.15
+Core Architecture 2.16
 
-System Composition Pipeline Design 1.6
+System Composition Pipeline Design 1.7
 
-RuntimeFactoryRegistry Design 1.0
+RuntimeFactoryRegistry Design 1.1
 
-CompositionPlan Design 1.0
+CompositionPlan Design 1.1
 
-Project Handoff 1.3
+Project Handoff 1.4
 
-Resume Prompt 1.3
+Resume Prompt 1.4
 ```
 
 Siguiente implementación:
 
 ```text
-res://core/runtime/runtime_dependency_spec.gd
+res://core/composition/composition_device_entry.gd
 ```
 
 ## 4. Baseline global
 
 ```text
-Planned: 54
-Completed: 54
-Passed: 54
+Planned: 58
+Completed: 58
+Passed: 58
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 54
-Checks: 1569
+Total Runs: 58
+Checks: 1710
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
@@ -470,21 +470,22 @@ Last Known Good cambia solo después de commit completo.
 
 ## 14. Milestone actual
 
-Diseños completos y activos:
+Último milestone completado:
 
 ```text
 RuntimeFactoryRegistry 1.0
+IMPLEMENTADO Y VERIFICADO
+```
 
+Diseño activo:
+
+```text
 CompositionPlan 1.0
 ```
 
 Orden autorizado:
 
 ```text
-RuntimeFactoryRegistry 1.0 implementation
-
-↓
-
 CompositionPlan 1.0 implementation
 
 ↓
@@ -499,6 +500,35 @@ CompositionCompiler Design
 CompositionCompiler y CompositionRuntime no están autorizados para implementación.
 
 ## 15. RuntimeFactoryRegistry 1.0
+
+Estado:
+
+```text
+IMPLEMENTADO Y VERIFICADO
+```
+
+Baseline:
+
+```text
+4 tests
+141 checks
+0 failures
+```
+
+Runtime Suite:
+
+```text
+10 tests
+314 checks
+0 failures
+```
+
+Commit:
+
+```text
+ca2aa04
+feat(runtime): add immutable factory registry
+```
 
 Responsabilidad:
 
@@ -735,17 +765,17 @@ Alternativas rechazadas:
 
 ## 20. Protocolo Git
 
-Base commit antes del paquete Registry–Plan:
+Base commit antes del cierre de Registry 1.0:
 
 ```text
-659c3c3
-docs(runtime): close runtime construction contract 1.0
+257103a
+chore(editor): remove unused lore plugin
 ```
 
 Commit sugerido para el paquete actual:
 
 ```text
-docs(runtime): define factory registry and composition plan
+docs(runtime): record factory registry 1.0 baseline
 ```
 
 Antes del commit:
@@ -791,27 +821,29 @@ Dashboard 0.4.0
 
 Baseline:
 
-54 tests
+58 tests
 
-1569 checks
+1710 checks
 
 0 failures
 
-Diseños activos:
+Último milestone:
 
 RuntimeFactoryRegistry 1.0
 
-+
+IMPLEMENTADO Y VERIFICADO
+
+Diseño activo:
 
 CompositionPlan 1.0
 
 Siguiente implementación:
 
-RuntimeDependencySpec
+CompositionDeviceEntry
 
 Ruta:
 
-res://core/runtime/runtime_dependency_spec.gd
+res://core/composition/composition_device_entry.gd
 
 CompositionCompiler:
 

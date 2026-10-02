@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.6 |
-| Fecha | 04/09/2026 |
+| Versión | 1.7 |
+| Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
 
@@ -22,20 +22,20 @@ DeviceCatalog 1.0
 DeviceGraphAssembler 1.0
 
 Runtime Construction Contract 1.0
+
+RuntimeFactoryRegistry 1.0
 ```
 
-Diseños activos:
+Diseño activo:
 
 ```text
-RuntimeFactoryRegistry 1.0
-
 CompositionPlan 1.0
 ```
 
 Siguiente implementación:
 
 ```text
-RuntimeDependencySpec
+CompositionDeviceEntry
 ```
 
 CompositionCompiler permanece posterior a Registry y Plan.
@@ -128,21 +128,23 @@ RuntimeFactoryBuildResult
 RuntimeFactory behavior
 
 RuntimeHost behavior
-```
 
-### Diseñado
-
-```text
 RuntimeDependencySpec
 
 RuntimeFactoryDescriptor
 
 RuntimeFactoryRegistryDraft
 
-RuntimeFactoryRegistryCompiler
-
 RuntimeFactoryRegistry
 
+RuntimeFactoryRegistryCompileResult
+
+RuntimeFactoryRegistryCompiler
+```
+
+### Diseñado
+
+```text
 CompositionDeviceEntry
 
 CompositionConnectionDirective
@@ -185,15 +187,7 @@ core/runtime/
 ├── runtime_dependency_binding.gd
 ├── runtime_construction_request.gd
 ├── runtime_device_handle.gd
-└── runtime_factory_build_result.gd
-```
-
-## 5. Estructura siguiente
-
-### RuntimeFactoryRegistry
-
-```text
-core/runtime/
+├── runtime_factory_build_result.gd
 ├── runtime_dependency_spec.gd
 ├── runtime_factory_descriptor.gd
 ├── runtime_factory_registry_draft.gd
@@ -201,6 +195,8 @@ core/runtime/
 ├── runtime_factory_registry_compile_result.gd
 └── runtime_factory_registry_compiler.gd
 ```
+
+## 5. Estructura siguiente
 
 ### CompositionPlan
 
@@ -926,11 +922,25 @@ Runtime Construction:
 173 checks
 ```
 
+RuntimeFactoryRegistry:
+
+```text
+4 tests
+141 checks
+```
+
+Runtime Suite:
+
+```text
+10 tests
+314 checks
+```
+
 Global:
 
 ```text
-54 tests
-1569 checks
+58 tests
+1710 checks
 0 failures
 0 missing metrics
 ```
@@ -960,26 +970,37 @@ Automatic suites:
 
 ```text
 1. RuntimeDependencySpec.
+   COMPLETADO.
 
 2. RuntimeDependencySpecTest.
+   PASS.
 
 3. RuntimeFactoryDescriptor.
+   COMPLETADO.
 
 4. RuntimeFactoryDescriptorTest.
+   PASS.
 
 5. RuntimeFactoryRegistryDraft.
+   COMPLETADO.
 
 6. RuntimeFactoryRegistryDraftTest.
+   PASS.
 
 7. RuntimeFactoryRegistry.
+   COMPLETADO.
 
-8. CompileResult.
+8. RuntimeFactoryRegistryCompileResult.
+   COMPLETADO.
 
-9. RegistryCompiler.
+9. RuntimeFactoryRegistryCompiler.
+   COMPLETADO.
 
-10. RegistryCompilerTest.
+10. RuntimeFactoryRegistryCompilerTest.
+    PASS.
 
 11. CompositionDeviceEntry.
+    SIGUIENTE.
 
 12. CompositionDeviceEntryTest.
 
@@ -1085,7 +1106,7 @@ RUNTIME CONSTRUCTION CONTRACT 1.0
 IMPLEMENTADO Y VERIFICADO
 
 RUNTIMEFACTORYREGISTRY 1.0
-DISEÑO ACTIVO
+IMPLEMENTADO Y VERIFICADO
 
 COMPOSITIONPLAN 1.0
 DISEÑO ACTIVO
@@ -1094,5 +1115,5 @@ DISEÑO ACTIVO
 Siguiente implementación:
 
 ```text
-RuntimeDependencySpec
+CompositionDeviceEntry
 ```

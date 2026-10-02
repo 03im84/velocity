@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.15 |
+| Versión | 2.16 |
 | Fecha inicial | 2026-08-14 |
-| Última revisión | 05/09/2026 |
+| Última revisión | 02/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
 
 ## 1. Propósito
@@ -204,15 +204,15 @@ SceneTree no define Core.
 | RuntimeFactoryBuildResult | Resultado de factory | Implementado y verificado |
 | RuntimeFactory behavior | Construcción y release | Verificado mediante integración |
 | RuntimeHost behavior | Attach y detach | Verificado mediante integración |
-| RuntimeDependencySpec | Declarar dependencia requerida sin Value activo | Diseño 1.0 activo; siguiente implementación |
-| RuntimeFactoryDescriptor | Asociar Key, factory behavior y Dependency Specs | Diseño 1.0 activo; implementación pendiente |
-| RuntimeFactoryRegistryDraft | Colección editable de Descriptors | Diseño 1.0 activo; implementación pendiente |
-| RuntimeFactoryRegistryCompiler | Validar Draft y producir Registry | Diseño 1.0 activo; implementación pendiente |
-| RuntimeFactoryRegistry | Resolver factories mediante Key exacta | Diseño 1.0 activo; implementación pendiente |
-| RuntimeFactoryRegistryCompileResult | Contener Registry y ValidationReport | Diseño 1.0 activo; implementación pendiente |
-| CompositionDeviceEntry | Describir construcción declarativa de un Device | Diseño 1.0 activo; implementación posterior al Registry |
-| CompositionConnectionDirective | Describir wiring sin callbacks activos | Diseño 1.0 activo; implementación posterior al Registry |
-| CompositionPlan | Instrucciones runtime inmutables y no ejecutables | Diseño 1.0 activo; implementación posterior al Registry |
+| RuntimeDependencySpec | Declarar dependencia requerida sin Value activo | Implementado y verificado |
+| RuntimeFactoryDescriptor | Asociar Key, factory behavior y Dependency Specs | Implementado y verificado |
+| RuntimeFactoryRegistryDraft | Colección editable de Descriptors | Implementado y verificado |
+| RuntimeFactoryRegistryCompiler | Validar Draft y producir Registry | Implementado y verificado |
+| RuntimeFactoryRegistry | Resolver factories mediante Key exacta | Implementado y verificado |
+| RuntimeFactoryRegistryCompileResult | Contener Registry y ValidationReport | Implementado y verificado |
+| CompositionDeviceEntry | Describir construcción declarativa de un Device | Diseño 1.0 activo; siguiente implementación |
+| CompositionConnectionDirective | Describir wiring sin callbacks activos | Diseño 1.0 activo; implementación pendiente |
+| CompositionPlan | Instrucciones runtime inmutables y no ejecutables | Diseño 1.0 activo; implementación pendiente |
 | CompositionCompiler | Compilar Snapshot y Registry a Plan | Diseño pendiente |
 | CompositionRuntime | Ejecutar Plan y poseer recursos activos | Pendiente |
 | Measurement | Dato de Sensor | Contrato pendiente |
@@ -733,6 +733,8 @@ DeviceGraphSnapshot
 
 ```text
 Runtime Construction Contracts
+
+RuntimeFactoryRegistry 1.0
 ```
 
 ## 26. Pipeline futuro
@@ -792,10 +794,17 @@ RuntimeFactoryRegistry Design 1.0
 Estado:
 
 ```text
-DISEÑO ACTIVO
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Está autorizado para implementación incremental.
+Baseline propia:
+
+```text
+Tests: 4
+Checks: 141
+Failures: 0
+RESULT: PASS
+```
 
 Responsabilidad:
 
@@ -874,10 +883,11 @@ Permanecerá separado de:
 - CompositionRuntime;
 - persistencia.
 
-Primera implementación:
+Commit de implementación:
 
 ```text
-RuntimeDependencySpec
+ca2aa04
+feat(runtime): add immutable factory registry
 ```
 
 ## 28. CompositionPlan
@@ -885,7 +895,7 @@ RuntimeDependencySpec
 Definido por:
 
 ```text
-CompositionPlan Design 1.0
+CompositionPlan Design 1.1
 ```
 
 Estado:
@@ -894,7 +904,9 @@ Estado:
 DISEÑO ACTIVO
 ```
 
-Está autorizado para implementación después de completar RuntimeFactoryRegistry 1.0.
+RuntimeFactoryRegistry 1.0 está completo.
+
+CompositionPlan 1.0 está autorizado para implementación incremental.
 
 CompositionPlan representa instrucciones runtime validadas, inmutables y no ejecutables.
 
@@ -1243,26 +1255,24 @@ DeviceGraphAssembler 1.0
 
 Runtime Construction Contract 1.0
 
+RuntimeFactoryRegistry 1.0
+
 Velocity Test Runner
 
 Velocity Test Dashboard 0.4.0
 ```
 
-## 37. Diseños activos
+## 37. Diseño activo
 
 ```text
-RuntimeFactoryRegistry 1.0
-
 CompositionPlan 1.0
 ```
 
-Ambos diseños están completos, activos y autorizan implementación incremental en el orden establecido.
+El diseño está completo y autoriza implementación incremental.
 
 ## 38. Pendiente
 
 ```text
-Implementación de RuntimeFactoryRegistry 1.0
-
 Implementación de CompositionPlan 1.0
 
 Diseño e implementación de CompositionCompiler
@@ -1299,8 +1309,8 @@ RuntimeAllocation
 Dashboard 0.4.0 confirma:
 
 ```text
-Tests: 54
-Checks: 1569
+Tests: 58
+Checks: 1710
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1396,37 +1406,25 @@ Toda modificación se entrega como archivo completo.
 
 ## 44. Siguiente paso
 
-Implementar incrementalmente RuntimeFactoryRegistry 1.0.
+Implementar incrementalmente CompositionPlan 1.0.
 
 Primer archivo:
 
 ```text
-res://core/runtime/runtime_dependency_spec.gd
+res://core/composition/composition_device_entry.gd
 ```
 
 Primera prueba sucesora:
 
 ```text
-res://test/core/runtime/RuntimeDependencySpecTest.tscn
+res://test/core/composition/CompositionDeviceEntryTest.tscn
 
-res://test/core/runtime/runtime_dependency_spec_test.gd
+res://test/core/composition/composition_device_entry_test.gd
 ```
 
 Orden posterior:
 
 ```text
-RuntimeFactoryDescriptor
-
-RuntimeFactoryRegistryDraft
-
-RuntimeFactoryRegistry
-
-RuntimeFactoryRegistryCompileResult
-
-RuntimeFactoryRegistryCompiler
-
-Run All
-
 CompositionDeviceEntry
 
 CompositionConnectionDirective

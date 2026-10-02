@@ -1,0 +1,451 @@
+PJ0033 – RuntimeFactoryRegistry 1.0 Implementation Baseline
+
+Fecha:
+
+02/10/2026
+
+Objetivo:
+
+Registrar la implementación,
+verificación y baseline aceptada de:
+
+RuntimeFactoryRegistry 1.0
+
+Estado previo:
+
+Runtime Construction Contract 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+RuntimeFactoryRegistry 1.0:
+
+DISEÑO ACTIVO
+
+CompositionPlan 1.0:
+
+DISEÑO ACTIVO
+
+Baseline previa:
+
+Tests:
+
+54
+
+Checks:
+
+1569
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Componentes implementados:
+
+res://core/runtime/
+runtime_dependency_spec.gd
+
+res://core/runtime/
+runtime_factory_descriptor.gd
+
+res://core/runtime/
+runtime_factory_registry_draft.gd
+
+res://core/runtime/
+runtime_factory_registry.gd
+
+res://core/runtime/
+runtime_factory_registry_compile_result.gd
+
+res://core/runtime/
+runtime_factory_registry_compiler.gd
+
+RuntimeDependencySpec:
+
+✔ Declara Dependency ID.
+
+✔ Declara Ownership.
+
+✔ Utiliza Ownership canónico de
+  RuntimeDependencyBinding.
+
+✔ No contiene Value activo.
+
+✔ Rechaza ID vacío.
+
+✔ Rechaza Ownership inválido.
+
+✔ No expone setters.
+
+RuntimeFactoryDescriptor:
+
+✔ Conserva RuntimeFactoryKey.
+
+✔ Conserva factory Object.
+
+✔ Conserva RuntimeDependencySpecs.
+
+✔ Copia Array de constructor.
+
+✔ Devuelve Array independiente.
+
+✔ Valida factory instance viva.
+
+✔ Valida behavior build.
+
+✔ Valida behavior release.
+
+✔ Valida Specs.
+
+✔ Rechaza Dependency IDs duplicadas.
+
+✔ No ejecuta factory.
+
+RuntimeFactoryRegistryDraft:
+
+✔ Colección editable.
+
+✔ Puede estar vacío.
+
+✔ Puede contener estado incompleto.
+
+✔ Puede contener Descriptor null.
+
+✔ Puede contener Key duplicada.
+
+✔ No valida.
+
+✔ No resuelve.
+
+✔ No ejecuta.
+
+RuntimeFactoryRegistry:
+
+✔ Snapshot inmutable.
+
+✔ Registry vacío válido.
+
+✔ Conserva orden del Draft.
+
+✔ Copia Arrays.
+
+✔ Lookup exacto por:
+
+  Profile ID
+
+  +
+
+  Profile Version
+
+  +
+
+  Activation Context
+
+✔ No usa key concatenada.
+
+✔ Permite múltiples versiones.
+
+✔ Permite múltiples contextos.
+
+✔ Permite misma factory Object
+  bajo Keys distintas.
+
+✔ Rechaza Key exacta duplicada.
+
+✔ Sin latest.
+
+✔ Sin fallback.
+
+✔ Sin overwrite.
+
+✔ No ejecuta build.
+
+✔ No ejecuta release.
+
+RuntimeFactoryRegistryCompileResult:
+
+✔ Registry + ValidationReport.
+
+✔ Success defensivo.
+
+✔ Report válido para Simulation.
+
+✔ Registry válido obligatorio.
+
+RuntimeFactoryRegistryCompiler:
+
+✔ Stateless.
+
+✔ Draft null rechazado.
+
+✔ Descriptor null rechazado.
+
+✔ Descriptor inválido rechazado.
+
+✔ Key duplicada rechazada.
+
+✔ No Registry parcial.
+
+✔ No mutación de Draft.
+
+✔ No mutación de Descriptors.
+
+✔ No ejecución de factories.
+
+✔ Snapshot final validado.
+
+Códigos verificados:
+
+runtime_factory_registry_draft_missing
+
+runtime_factory_descriptor_missing
+
+runtime_factory_descriptor_invalid
+
+duplicate_runtime_factory_key
+
+runtime_factory_registry_snapshot_invalid
+
+Pruebas sucesoras:
+
+RuntimeDependencySpecTest
+
+Checks:
+
+27
+
+Failures:
+
+0
+
+RuntimeFactoryDescriptorTest
+
+Checks:
+
+33
+
+Failures:
+
+0
+
+RuntimeFactoryRegistryDraftTest
+
+Checks:
+
+20
+
+Failures:
+
+0
+
+RuntimeFactoryRegistryCompilerTest
+
+Checks:
+
+61
+
+Failures:
+
+0
+
+Baseline propia de Registry:
+
+Tests:
+
+4
+
+Checks:
+
+141
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Runtime Suite:
+
+Tests:
+
+10
+
+Checks:
+
+314
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Baseline global aceptada:
+
+Planned:
+
+58
+
+Completed:
+
+58
+
+Passed:
+
+58
+
+Failed:
+
+0
+
+Timeout:
+
+0
+
+Engine Error:
+
+0
+
+Not Run:
+
+0
+
+Total Runs:
+
+58
+
+Checks:
+
+1710
+
+Check Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Plan ExitCode:
+
+0
+
+RESULT:
+
+PASS
+
+Baselines anteriores:
+
+PRESERVADAS
+
+Commit de implementación:
+
+ca2aa04
+
+feat(runtime):
+add immutable factory registry
+
+Commits de entorno posteriores:
+
+2a7f9a7
+
+chore(editor):
+add custom theme switcher
+
+257103a
+
+chore(editor):
+remove unused lore plugin
+
+Custom Editor Themes:
+
+Versión:
+
+1.1
+
+Estado:
+
+FUNCIONAL
+
+Responsabilidad:
+
+Preferencia del editor.
+
+No forma parte de Core.
+
+Godot Lore Plugin:
+
+Eliminado porque no era utilizado.
+
+La eliminación permaneció separada
+del milestone Runtime.
+
+Decisión sobre Dashboard Java externo:
+
+Se realizó un experimento separado
+fuera del repositorio Velocity.
+
+Resultado:
+
+Funcional y rápido.
+
+Decisión:
+
+No integrar en Velocity.
+
+No modifica:
+
+- arquitectura canónica;
+
+- Dashboard Python aceptado;
+
+- Runner autoritativo;
+
+- baseline Git.
+
+Estado final:
+
+RUNTIMEFACTORYREGISTRY 1.0
+
+IMPLEMENTADO Y VERIFICADO
+
+REGRESSION GLOBAL
+
+PASS
+
+Siguiente milestone:
+
+COMPOSITIONPLAN 1.0
+
+Primer componente:
+
+res://core/composition/
+composition_device_entry.gd
+
+Primera prueba sucesora:
+
+res://test/core/composition/
+CompositionDeviceEntryTest.tscn
+
+res://test/core/composition/
+composition_device_entry_test.gd
+
+CompositionCompiler:
+
+PENDIENTE DE DISEÑO
+
+No autorizado para implementación
+antes de completar e integrar:
+
+RuntimeFactoryRegistry 1.0
+
++
+
+CompositionPlan 1.0

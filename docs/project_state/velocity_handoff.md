@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.3 |
-| Fecha de actualización | 05/09/2026 |
+| Versión | 1.4 |
+| Fecha de actualización | 02/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
 | Repositorio | https://github.com/03im84/velocity |
@@ -441,6 +441,30 @@ RuntimeFactory
 RuntimeHost
 ```
 
+### RuntimeFactoryRegistry
+
+```text
+RuntimeDependencySpec
+
+RuntimeFactoryDescriptor
+
+RuntimeFactoryRegistryDraft
+
+RuntimeFactoryRegistry
+
+RuntimeFactoryRegistryCompileResult
+
+RuntimeFactoryRegistryCompiler
+```
+
+Lookup exacto.
+
+Registry inmutable.
+
+Sin latest, fallback u overwrite.
+
+No ejecución de factories.
+
 ## 12. Runtime Construction Contract
 
 Estado:
@@ -615,6 +639,8 @@ DeviceGraphSnapshot
 
 ```text
 Runtime Construction Contracts
+
+RuntimeFactoryRegistry 1.0
 ```
 
 ## 19. Pipeline futuro
@@ -671,21 +697,22 @@ CompositionRuntime poseerá:
 
 ## 20. Milestone actual
 
-Diseños completos y activos:
+Último milestone completado:
 
 ```text
 RuntimeFactoryRegistry 1.0
+IMPLEMENTADO Y VERIFICADO
+```
 
+Diseño activo:
+
+```text
 CompositionPlan 1.0
 ```
 
-Orden de implementación:
+Orden siguiente:
 
 ```text
-RuntimeFactoryRegistry 1.0
-
-↓
-
 CompositionPlan 1.0
 
 ↓
@@ -704,7 +731,7 @@ CompositionCompiler no está autorizado para implementación.
 Estado:
 
 ```text
-DISEÑO ACTIVO
+IMPLEMENTADO Y VERIFICADO
 ```
 
 Responsabilidad:
@@ -779,10 +806,20 @@ Registry final:
 
 CompositionCompiler y CompositionRuntime deben observar el mismo Registry snapshot durante una activación.
 
-Primera implementación:
+Baseline:
 
 ```text
-res://core/runtime/runtime_dependency_spec.gd
+Tests: 4
+Checks: 141
+Failures: 0
+RESULT: PASS
+```
+
+Commit:
+
+```text
+ca2aa04
+feat(runtime): add immutable factory registry
 ```
 
 ## 22. CompositionPlan 1.0
@@ -793,7 +830,9 @@ Estado:
 DISEÑO ACTIVO
 ```
 
-Será implementado después de completar RuntimeFactoryRegistry 1.0.
+RuntimeFactoryRegistry 1.0 está completo.
+
+CompositionPlan 1.0 está autorizado para implementación incremental.
 
 Componentes diseñados:
 
@@ -908,15 +947,15 @@ OK
 ## 24. Baseline global
 
 ```text
-Planned: 54
-Completed: 54
-Passed: 54
+Planned: 58
+Completed: 58
+Passed: 58
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 54
-Checks: 1569
+Total Runs: 58
+Checks: 1710
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
@@ -960,26 +999,40 @@ Runtime Construction:
 173 checks
 ```
 
+RuntimeFactoryRegistry:
+
+```text
+4 tests
+141 checks
+```
+
+Runtime Suite:
+
+```text
+10 tests
+314 checks
+```
+
 ## 26. Documentos vigentes
 
 ```text
 Core Architecture:
-2.15
+2.16
 
 Engineering Standards:
 1.3
 
 System Composition Pipeline Design:
-1.6
+1.7
 
 Runtime Construction Contract Design:
 1.1
 
 RuntimeFactoryRegistry Design:
-1.0
+1.1
 
 CompositionPlan Design:
-1.0
+1.1
 
 Velocity Test Dashboard Design:
 1.4
@@ -994,10 +1047,10 @@ DeviceGraph Design:
 1.3
 
 Project Handoff:
-1.3
+1.4
 
 Resume Prompt:
-1.3
+1.4
 
 Collaboration Contract:
 1.0
@@ -1020,14 +1073,26 @@ main
 Último commit conocido:
 
 ```text
-659c3c3
-docs(runtime):
-close runtime construction contract 1.0
+257103a
+chore(editor):
+remove unused lore plugin
 ```
 
 Commits relevantes:
 
 ```text
+2a7f9a7
+chore(editor):
+add custom theme switcher
+
+ca2aa04
+feat(runtime):
+add immutable factory registry
+
+77a68e3
+docs(runtime):
+define factory registry and composition plan
+
 5056e15
 docs(tools):
 record dashboard 0.4.0 baseline
@@ -1049,19 +1114,15 @@ docs(project):
 add recovery and collaboration package
 ```
 
-Estado local esperado durante este cierre:
+Estado sincronizado previo al cierre documental:
 
 ```text
- M docs/architecture/core_architecture.md
- M docs/architecture/system_composition_pipeline_design.md
- M docs/project_state/velocity_handoff.md
- M docs/project_state/velocity_resume_prompt.md
-?? docs/architecture/runtime_factory_registry_design.md
-?? docs/architecture/composition_plan_design.md
-?? docs/project_journal/pj0032_040926.txt
+## main...origin/main
 ```
 
 Implementación permanece limpia.
+
+El Dashboard Java experimental permanece externo y no forma parte de Velocity.
 
 
 ## 28. Convenciones GDScript
@@ -1221,54 +1282,44 @@ No debe escribir código en primera respuesta.
 ### Cierre documental inmediato
 
 ```text
-1. Guardar Project Handoff 1.3.
+1. Registrar RuntimeFactoryRegistry Design 1.1.
 
-2. Actualizar Resume Prompt a 1.3.
+2. Actualizar System Composition Pipeline 1.7.
 
-3. Ejecutar auditoría documental.
+3. Actualizar Core Architecture 2.16.
 
-4. Crear commit arquitectónico.
+4. Actualizar Project State 1.4.
 
-5. Ejecutar push a origin/main.
+5. Ejecutar auditoría documental.
+
+6. Crear commit de baseline.
+
+7. Ejecutar push a origin/main.
 ```
 
 Commit sugerido:
 
 ```text
-docs(runtime): define factory registry and composition plan
+docs(runtime): record factory registry 1.0 baseline
 ```
 
 ### Primera implementación posterior
 
 ```text
-res://core/runtime/runtime_dependency_spec.gd
+res://core/composition/composition_device_entry.gd
 ```
 
 Prueba sucesora:
 
 ```text
-res://test/core/runtime/RuntimeDependencySpecTest.tscn
+res://test/core/composition/CompositionDeviceEntryTest.tscn
 
-res://test/core/runtime/runtime_dependency_spec_test.gd
+res://test/core/composition/composition_device_entry_test.gd
 ```
 
 Orden posterior:
 
 ```text
-RuntimeFactoryDescriptor
-
-RuntimeFactoryRegistryDraft
-
-RuntimeFactoryRegistry
-
-RuntimeFactoryRegistryCompileResult
-
-RuntimeFactoryRegistryCompiler
-
-RuntimeFactoryRegistryCompilerTest
-
-Run All
-
 CompositionDeviceEntry
 
 CompositionConnectionDirective

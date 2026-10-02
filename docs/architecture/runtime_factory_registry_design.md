@@ -3,10 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
-| Fecha | 04/09/2026 |
+| Versión | 1.1 |
+| Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Declaración, validación y resolución exacta de RuntimeFactories |
+| Estado de implementación | COMPLETO Y VERIFICADO |
 
 ## 1. Propósito
 
@@ -1082,35 +1083,53 @@ Registry utiliza pruebas sucesoras.
 ## 39. Orden de implementación
 
 ```text
-1. Implementar RuntimeDependencySpec.
+1. RuntimeDependencySpec.
+   COMPLETADO.
 
-2. Ejecutar RuntimeDependencySpecTest.
+2. RuntimeDependencySpecTest.
+   PASS — 27 checks.
 
-3. Implementar RuntimeFactoryDescriptor.
+3. RuntimeFactoryDescriptor.
+   COMPLETADO.
 
-4. Ejecutar RuntimeFactoryDescriptorTest.
+4. RuntimeFactoryDescriptorTest.
+   PASS — 33 checks.
 
-5. Implementar RuntimeFactoryRegistryDraft.
+5. RuntimeFactoryRegistryDraft.
+   COMPLETADO.
 
-6. Ejecutar RuntimeFactoryRegistryDraftTest.
+6. RuntimeFactoryRegistryDraftTest.
+   PASS — 20 checks.
 
-7. Implementar RuntimeFactoryRegistry.
+7. RuntimeFactoryRegistry.
+   COMPLETADO.
 
-8. Implementar CompileResult.
+8. RuntimeFactoryRegistryCompileResult.
+   COMPLETADO.
 
-9. Implementar Compiler.
+9. RuntimeFactoryRegistryCompiler.
+   COMPLETADO.
 
-10. Ejecutar RuntimeFactoryRegistryCompilerTest.
+10. RuntimeFactoryRegistryCompilerTest.
+    PASS — 61 checks.
 
-11. Ejecutar Run All.
+11. Runtime Suite.
+    PASS — 10 tests, 314 checks.
 
-12. Registrar baseline.
+12. Run All.
+    PASS — 58 tests, 1710 checks.
 
-13. Diseñar CompositionPlan.
+13. Registrar baseline.
+    COMPLETADO.
 
-14. Integrar Plan y Registry.
+14. Implementar CompositionPlan 1.0.
+    SIGUIENTE.
 
-15. Diseñar CompositionCompiler.
+15. Integrar Plan y Registry.
+    POSTERIOR.
+
+16. Diseñar CompositionCompiler.
+    POSTERIOR.
 ```
 
 ## 40. Criterios de aceptación
@@ -1252,15 +1271,58 @@ Estas consecuencias son aceptadas.
 ## 45. Estado
 
 ```text
-DISEÑO ACTIVO
+RUNTIMEFACTORYREGISTRY 1.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
-RuntimeFactoryRegistry 1.0 está autorizado para implementación incremental.
-
-Primer componente:
+Baseline propia:
 
 ```text
-RuntimeDependencySpec
+Tests: 4
+Checks: 141
+Failures: 0
+Missing Metrics: 0
+RESULT: PASS
 ```
 
-CompositionPlan permanece pendiente de su documento de diseño completo.
+Runtime Suite:
+
+```text
+Tests: 10
+Checks: 314
+Failures: 0
+Missing Metrics: 0
+RESULT: PASS
+```
+
+Baseline global:
+
+```text
+Tests: 58
+Checks: 1710
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+Commit de implementación:
+
+```text
+ca2aa04
+feat(runtime): add immutable factory registry
+```
+
+Todos los criterios de aceptación fueron satisfechos.
+
+Siguiente componente:
+
+```text
+res://core/composition/composition_device_entry.gd
+```
+
+CompositionPlan 1.0 conserva diseño activo y está autorizado para implementación.
+
+CompositionCompiler permanece pendiente de diseño.

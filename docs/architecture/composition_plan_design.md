@@ -3,10 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
-| Fecha | 04/09/2026 |
+| Versión | 1.1 |
+| Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Directivas runtime inmutables, orden por fases, comunicación y Runtime Safety |
+| Prerrequisito | RuntimeFactoryRegistry 1.0 implementado y verificado |
 
 ## 1. Propósito
 
@@ -1229,16 +1230,12 @@ Estas consecuencias son aceptadas.
 DISEÑO ACTIVO
 ```
 
-CompositionPlan 1.0 está autorizado para implementación después de completar RuntimeFactoryRegistry 1.0.
+RuntimeFactoryRegistry 1.0 está implementado y verificado.
 
-Primer componente futuro:
+CompositionPlan 1.0 está autorizado para implementación incremental.
+
+Primer componente y siguiente implementación inmediata:
 
 ```text
 CompositionDeviceEntry
-```
-
-Siguiente implementación inmediata del proyecto:
-
-```text
-RuntimeDependencySpec
 ```
