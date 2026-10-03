@@ -1,0 +1,409 @@
+PJ0045 – Managed Runtime Adapter Boundary Problem and Analysis
+
+Fecha:
+
+03/10/2026
+
+Objetivo:
+
+Definir la frontera de adapters
+entre CompositionRuntime,
+runtime units, DeviceBus
+y Godot Node host.
+
+Estado previo:
+
+CompositionRuntime 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+Velocity Submit Tool 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+Baseline global Godot:
+
+69 tests
+
+2156 checks
+
+0 failures
+
+Baseline tooling:
+
+61 tests
+
+OK
+
+Problema:
+
+CompositionRuntime requiere:
+
+Dependency Value Resolver
+
+RuntimeHost
+
+Lifecycle Adapter
+
+Communication Binder
+
+Solo existen test doubles.
+
+Primary Runtime Object:
+
+Object
+
+Host Objects:
+
+Array[Object]
+
+No existe clase concreta
+que todos deban heredar.
+
+Evidencia Device:
+
+Device es RefCounted.
+
+Lifecycle devuelve bool.
+
+initialize no recibe DeviceBus.
+
+Evidencia Distance Sensor:
+
+DistanceSensorDevice es Node.
+
+Initialize requiere:
+
+sensor ID
+
+DeviceBus
+
+Provider
+
+La firma no coincide
+con Device.initialize().
+
+Discrepancia descubierta:
+
+Builtin ideal Profile declara:
+
+distance_measurement
+
+health_reporting
+
+Publica:
+
+distance_measurement
+
+health_report
+
+DistanceSensorDevice declara
+internamente solamente:
+
+distance_measurement
+
+También construye su Manifest
+sin usar DeviceConfiguration.
+
+Conclusión:
+
+DistanceSensorDevice actual
+es prototipo funcional,
+no factory product canónico todavía.
+
+No debe definir adapters genéricos.
+
+Alternativa A:
+
+Lifecycle Adapter central
+con type checks.
+
+Rechazada.
+
+Razón:
+
+- coupling por clase;
+
+- branches por Profile;
+
+- crecimiento central;
+
+- service locator disfrazado.
+
+Alternativa B:
+
+Adapter Registry por Profile.
+
+Viable,
+pero no seleccionada 1.0.
+
+Razón:
+
+- segundo Registry;
+
+- coherencia adicional;
+
+- necesidad no demostrada.
+
+Alternativa C:
+
+Adapters dentro de Handle.
+
+Rechazada.
+
+Razón:
+
+- rompe RuntimeDeviceHandle 1.0;
+
+- mezcla producto y coordinación.
+
+Alternativa D:
+
+Forzar herencia Device.
+
+Rechazada.
+
+Razón:
+
+- composición sobre herencia;
+
+- Nodes;
+
+- wrappers;
+
+- ADR-010.
+
+Alternativa E:
+
+Primary Runtime Object
+con managed behaviors.
+
+SELECCIONADA.
+
+Lifecycle behavior:
+
+runtime_initialize(bus)
+
+runtime_set_ready()
+
+runtime_start()
+
+runtime_shutdown()
+
+Todos devuelven:
+
+ValidationReport
+
+Communication behavior:
+
+get_runtime_input_endpoint(port_id)
+
+→ Callable
+
+Razón:
+
+El runtime unit concreto
+conoce implementación,
+dependencies y lifecycle.
+
+Adapter global solo delega.
+
+No type switch.
+
+No Profile switch.
+
+No segundo Registry.
+
+Resolver seleccionado:
+
+ScopedRuntimeDependencyResolver
+
+Lookup:
+
+Device ID
+
++
+
+Dependency ID
+
+→ Object
+
+No mutation API.
+
+No fallback.
+
+No global access.
+
+No ownership dentro de value.
+
+RuntimeDependencyValue:
+
+Device ID
+
+Dependency ID
+
+Object
+
+Ownership permanece
+en RuntimeDependencySpec
+y RuntimeDependencyBinding.
+
+Host seleccionado:
+
+GodotNodeRuntimeHost
+
+Parent Node explícito.
+
+No SceneTree discovery.
+
+Host adjunta Nodes
+de Handle Host Objects.
+
+Host no libera Nodes.
+
+Factory release conserva ownership.
+
+Communication Binder:
+
+Target Primary expone
+endpoint por Port ID.
+
+No callback en Plan.
+
+No method name derivado.
+
+No Node path.
+
+Source filtering:
+
+RuntimeSourceFilteredSubscription
+
+Filtra:
+
+BusMessage source_id
+
++
+
+BusMessage topic
+
+Reenvía envelope completo.
+
+No republishing.
+
+No payload transformation.
+
+Ownership:
+
+CompositionRuntime:
+
+Bus y Handles.
+
+Factory:
+
+Primary y Host Objects.
+
+Lifecycle Adapter:
+
+nada.
+
+Godot Host:
+
+attachment state.
+
+Binder:
+
+subscription wrappers.
+
+Resolver:
+
+scoped references.
+
+Boundary 1.0:
+
+Simulation-only.
+
+Hardware futuro.
+
+No concrete Distance Sensor factory.
+
+No Composition Root.
+
+No Supervisor.
+
+No hot swap.
+
+ADR requerido:
+
+ADR-012
+
+Managed Runtime Object Behaviors
+and Production Adapter Boundaries
+
+Diseño requerido:
+
+Managed Runtime Adapter Boundary
+Design 1.0
+
+Componentes previstos:
+
+runtime_dependency_value.gd
+
+scoped_runtime_dependency_resolver.gd
+
+managed_runtime_lifecycle_adapter.gd
+
+runtime_source_filtered_subscription.gd
+
+managed_runtime_communication_binder.gd
+
+godot_node_runtime_host.gd
+
+Pruebas previstas:
+
+6 pruebas unitarias
+
+1 integración sucesora
+
+Baselines preservadas.
+
+Milestone posterior:
+
+Distance Sensor Runtime Slice 1.0
+
+Debe resolver:
+
+- Configuration authority;
+
+- effective Manifest;
+
+- health_reporting gap;
+
+- provider ownership;
+
+- release real.
+
+Decisión del usuario:
+
+Excelente,
+implementar.
+
+Interpretación:
+
+ADR y diseño aprobados.
+
+Implementación autorizada
+después del commit documental.
+
+Estado:
+
+PROBLEMA CERRADO
+
+ANALISIS CERRADO
+
+ADR-012 ACEPTADO
+
+DESIGN 1.0 ACTIVO
+
+IMPLEMENTACION AUTORIZADA
+
+COMMIT DOCUMENTAL PENDIENTE

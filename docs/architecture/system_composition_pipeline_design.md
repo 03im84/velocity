@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.12 |
+| Versión | 1.13 |
 | Fecha | 03/10/2026 |
-| ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback |
+| ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback; ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
 
 ## 1. Propósito
@@ -41,12 +41,14 @@ DeviceProfiles
 → SHUTDOWN
 ```
 
-Siguiente milestone recomendado:
+Diseño activo:
 
 ```text
-Production Runtime Adapters
-Problema y análisis
+Managed Runtime Adapter Boundary Design 1.0
+ADR-012 ACEPTADO
 ```
+
+Implementación autorizada después del commit documental.
 
 ## 2. Pipeline completo
 
@@ -104,53 +106,32 @@ RuntimeDeviceHandle
 
 ```text
 DeviceProfiles
-↓
-DeviceCatalog
-↓
-SystemProfile
-↓
-DeviceGraphAssembler
-↓
-DeviceGraphSnapshot
-↓
-CompositionCompiler
-↓
-CompositionPlan
-↓
-CompositionRuntime
-↓
-ACTIVE
-↓
-SHUTDOWN
+→ DeviceCatalog
+→ SystemProfile
+→ DeviceGraphAssembler
+→ DeviceGraphSnapshot
+→ CompositionCompiler
+→ CompositionPlan
+→ CompositionRuntime
+→ ACTIVE
+→ SHUTDOWN
 ```
 
-Contratos y componentes:
+### Diseñado y autorizado
 
 ```text
-RuntimeFactoryKey
-RuntimeDependencyBinding
-RuntimeConstructionRequest
-RuntimeDeviceHandle
-RuntimeFactoryBuildResult
-RuntimeDependencySpec
-RuntimeFactoryDescriptor
-RuntimeFactoryRegistryDraft
-RuntimeFactoryRegistry
-RuntimeFactoryRegistryCompileResult
-RuntimeFactoryRegistryCompiler
-CompositionDeviceEntry
-CompositionConnectionDirective
-CompositionPlan
-CompositionCompileResult
-CompositionCompiler
-CompositionRuntimeOperationResult
-CompositionRuntime
+RuntimeDependencyValue
+ScopedRuntimeDependencyResolver
+ManagedRuntimeLifecycleAdapter
+RuntimeSourceFilteredSubscription
+ManagedRuntimeCommunicationBinder
+GodotNodeRuntimeHost
 ```
 
 ### Futuro
 
 ```text
-Production Runtime Adapters
+Distance Sensor Runtime Slice
 CompositionRuntimeSupervisor
 Last Known Good manager
 Hot swap
@@ -202,24 +183,23 @@ core/runtime/
 
 ## 5. Estructura siguiente
 
-CompositionRuntime 1.0 está cerrado.
-
-Siguiente frontera de trabajo:
+Después del commit documental:
 
 ```text
-Production Runtime Adapters
+core/runtime/
+├── runtime_dependency_value.gd
+├── scoped_runtime_dependency_resolver.gd
+├── managed_runtime_lifecycle_adapter.gd
+├── runtime_source_filtered_subscription.gd
+└── managed_runtime_communication_binder.gd
 ```
 
-Debe comenzar por problema y análisis antes de decidir:
+```text
+integration/godot/runtime/
+└── godot_node_runtime_host.gd
+```
 
-- Godot RuntimeHost concreto;
-- Dependency Value Resolver de producción;
-- Lifecycle Adapter de producción;
-- Communication Binder de producción;
-- factories concretas;
-- Composition Root.
-
-Supervisor, hot swap y Hardware Runtime permanecen posteriores.
+Concrete factories y Distance Sensor Runtime Slice permanecen posteriores.
 
 ## 6. SystemProfile
 
@@ -923,6 +903,17 @@ cc9a7ae
 feat(runtime): add transactional composition runtime
 ```
 
+Adapter boundary sucesor:
+
+```text
+managed Primary behaviors
+scoped dependency resolution
+source-filtered communication
+explicit Godot Node host
+```
+
+CompositionRuntime 1.0 permanece sin cambios.
+
 ## 40. Rollback
 
 Factory build local es atómico.
@@ -1103,8 +1094,8 @@ Automatic suites:
 Siguiente trabajo:
 
 ```text
-Production Runtime Adapters
-Problema y análisis
+Managed Runtime Adapter Boundary 1.0
+Implementación autorizada después del commit documental
 ```
 
 ## 45. Baselines preservadas
@@ -1127,7 +1118,9 @@ RuntimeConstructionContractIntegrationTest
 
 ## 46. Fuera de alcance
 
-- Production Runtime Adapters;
+- concrete Distance Sensor Runtime Slice;
+- concrete RuntimeFactories;
+- Composition Root production;
 - CompositionRuntimeSupervisor;
 - Last Known Good manager;
 - hot swap;
@@ -1193,40 +1186,27 @@ COMPOSITIONRUNTIME 1.0
 IMPLEMENTADOS Y VERIFICADOS
 ```
 
-ADR-011:
-
 ```text
-ACEPTADO
-IMPLEMENTADO
-VERIFICADO
+MANAGED RUNTIME ADAPTER BOUNDARY 1.0
+ADR-012 ACEPTADO
+DESIGN ACTIVO
+IMPLEMENTACIÓN AUTORIZADA
 ```
 
-Baseline final:
+Baseline vigente:
 
 ```text
-Composition Suite:
-16 tests
-702 checks
-0 failures
-
-Run All:
-69 tests
-2156 checks
-0 failures
-0 missing metrics
+Composition Suite: 16 tests / 702 checks
+Run All: 69 tests / 2156 checks
+Failures: 0
+Missing Metrics: 0
 RESULT: PASS
 ```
 
-Último commit de implementación:
+Siguiente paso:
 
 ```text
-cc9a7ae
-feat(runtime): add transactional composition runtime
+docs(runtime): define managed adapter boundary
 ```
 
-Siguiente milestone recomendado:
-
-```text
-Production Runtime Adapters
-Problema y análisis
-```
+Después comienza implementación incremental.

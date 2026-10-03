@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.13 |
+| Versión | 1.14 |
 | Fecha de actualización | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -233,6 +233,7 @@ ADR-008 — Device Definitions, Profiles and Configuration
 ADR-009 — System Composition Pipeline
 ADR-010 — Runtime Construction and Factory Binding
 ADR-011 — Composition Runtime Activation, Ownership and Rollback
+ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries
 ```
 
 Todos aceptados.
@@ -679,20 +680,21 @@ Modificar la implementación después del PASS no ofrecía beneficio demostrado 
 ## 23. Documentos vigentes
 
 ```text
-Core Architecture:                  2.22
+Core Architecture:                  2.23
 Engineering Standards:              1.7
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
-System Composition Pipeline Design: 1.12
+System Composition Pipeline Design: 1.13
 Runtime Construction Contract:      1.1
 RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
-Project Handoff:                    1.13
-Resume Prompt:                      1.13
+Managed Runtime Adapter Design:      1.0
+Project Handoff:                    1.14
+Resume Prompt:                      1.14
 Collaboration Contract:             1.5
 ```
 
@@ -728,10 +730,11 @@ Commit documental de CompositionRuntime baseline:
 38a5ea7 docs(runtime): record composition runtime 1.0 baseline
 ```
 
-Último commit de tooling:
+Tooling commits:
 
 ```text
 f7bd176 feat(tools): add guided package delivery
+19d1be8 docs(tools): record guided package delivery baseline
 ```
 
 ## 25. Tooling
@@ -890,57 +893,46 @@ Estado sincronizado:
 
 `Submit` significa staging + commit + push.
 
-## 29. Último milestone completado
+## 29. Milestone actual
 
 ```text
-Velocity Submit Tool 1.0.0
-IMPLEMENTADO Y VERIFICADO
+Managed Runtime Adapter Boundary 1.0
+ADR-012 ACEPTADO
+DESIGN 1.0 ACTIVO
+IMPLEMENTACIÓN AUTORIZADA
 ```
 
-Responsabilidad:
-
-> Validar, instalar y someter una entrega externa declarada por manifiesto.
-
-Flujo vigente:
+Decisión principal:
 
 ```text
-velocity_submit.bat
-→ native ZIP picker
-→ Validate
-→ Install transactionally
-→ authoritative tests
-→ velocity_submit.bat
-→ Submit
+managed Primary Runtime Object behaviors
++
+ScopedRuntimeDependencyResolver
++
+ManagedRuntimeLifecycleAdapter
++
+RuntimeSourceFilteredSubscription
++
+ManagedRuntimeCommunicationBinder
++
+GodotNodeRuntimeHost with explicit parent
 ```
 
-Baseline:
+No se modifican RuntimeDeviceHandle o CompositionRuntime 1.0.
+
+DistanceSensorDevice no define esta frontera porque su runtime Manifest diverge del Profile canónico.
+
+Commit previsto:
 
 ```text
-44 own tests PASS
-17 Dashboard Logic tests PASS
-61 total tooling tests PASS
-Windows launcher PASS
-Tkinter picker PASS
-ZIP validation PASS
-```
-
-Commit:
-
-```text
-f7bd176 feat(tools): add guided package delivery
-```
-
-Siguiente milestone:
-
-```text
-Production Runtime Adapters
-Problema y análisis
+docs(runtime): define managed adapter boundary
 ```
 
 ## 30. Trabajo futuro explícito
 
 ```text
-Production Runtime Adapters
+Managed Runtime Adapter Boundary implementation
+Distance Sensor Runtime Slice
 Composition Root concreto
 CompositionRuntimeSupervisor
 Last Known Good manager

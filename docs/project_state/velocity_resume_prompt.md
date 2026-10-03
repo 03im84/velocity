@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.13 |
+| Versión | 1.14 |
 | Fecha | 03/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -67,6 +67,9 @@ Estado arquitectónico esperado:
 - Guided ZIP picker, transactional Install y Submit están activos.
 - 44 tests propios y 61 tests de tooling pasan.
 - Windows launcher, process Bypass y Tkinter picker están verificados.
+- ADR-012 está aceptado.
+- Managed Runtime Adapter Boundary Design 1.0 está activo.
+- La implementación fue autorizada después del commit documental.
 
 Baseline esperada:
 
@@ -92,7 +95,7 @@ Milestone actual:
 Velocity Submit Tool 1.0.0
 IMPLEMENTADO Y VERIFICADO
 
-No implementes Production Runtime Adapters antes de cerrar problema, análisis y diseño.
+Managed Runtime Adapter Boundary tiene ADR y diseño aceptados; su implementación está autorizada después del commit documental.
 
 Antes de responder:
 
@@ -380,20 +383,21 @@ RESULT: PASS
 ## 8. Documentos canónicos
 
 ```text
-Core Architecture:                  2.22
+Core Architecture:                  2.23
 Engineering Standards:              1.7
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
-System Composition Pipeline Design: 1.12
+System Composition Pipeline Design: 1.13
 Runtime Construction Contract:      1.1
 RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
-Project Handoff:                    1.13
-Resume Prompt:                      1.13
+Managed Runtime Adapter Design:      1.0
+Project Handoff:                    1.14
+Resume Prompt:                      1.14
 Collaboration Contract:             1.5
 ```
 
@@ -426,10 +430,17 @@ Estado esperado después del push de implementación:
 docs(runtime): record composition runtime 1.0 baseline
 ```
 
-Commit de diseño de tooling sugerido:
+Tooling baseline:
 
 ```text
-docs(tools): add package installation phase
+f7bd176 feat(tools): add guided package delivery
+19d1be8 docs(tools): record guided package delivery baseline
+```
+
+Próximo commit documental:
+
+```text
+docs(runtime): define managed adapter boundary
 ```
 
 ## 10. RuntimeFactoryRegistry y Plan
@@ -522,21 +533,32 @@ Hot swap no está diseñado para 1.0.
 
 No añadirlo como parche.
 
-## 14. Siguiente milestone
+## 14. Milestone actual
 
 ```text
-Production Runtime Adapters
-Problema y análisis
+Managed Runtime Adapter Boundary 1.0
+ADR-012 ACEPTADO
+Design 1.0 ACTIVO
+Implementación autorizada
 ```
 
-Velocity Submit Tool está cerrado.
+Decisión:
 
-Los paquetes futuros se instalan y someten mediante guided mode.
+```text
+managed Primary behaviors
+no type switches
+no Adapter Registry 1.0
+explicit Node parent
+source-filtered BusMessage endpoints
+scoped dependency values
+```
+
+Distance Sensor Runtime Slice permanece posterior por discrepancia entre Profile y runtime Manifest.
 
 ## 15. Fuera de alcance actual
 
 ```text
-Production Runtime Adapters
+Distance Sensor Runtime Slice
 CompositionRuntimeSupervisor
 Last Known Good manager
 hot swap

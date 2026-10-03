@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.22 |
+| Versión | 2.23 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 03/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -59,6 +59,7 @@ Conceptos actuales:
 - CompositionPlan;
 - CompositionCompiler;
 - CompositionRuntime;
+- Managed Runtime Adapter Boundary;
 - System Composition;
 - estado;
 - health;
@@ -131,6 +132,9 @@ core/runtime/
 
 core/debug/
 		Observación y diagnóstico.
+
+integration/godot/runtime/
+		Adapters explícitos de Node host.
 
 profiles/
 		Estructura persistente futura.
@@ -219,6 +223,12 @@ SceneTree no define Core.
 | CompositionCompiler | Compilar Snapshot y Registry a Plan | Implementado y verificado |
 | CompositionRuntimeOperationResult | Describir activate o shutdown | Implementado y verificado |
 | CompositionRuntime | Ejecutar Plan y poseer recursos activos | Implementado y verificado |
+| RuntimeDependencyValue | Asociar Device, Dependency ID y Object scoped | Diseño 1.0 activo |
+| ScopedRuntimeDependencyResolver | Resolver Values exactos por activación | Diseño 1.0 activo |
+| ManagedRuntimeLifecycleAdapter | Delegar lifecycle a Primary managed behavior | Diseño 1.0 activo |
+| RuntimeSourceFilteredSubscription | Filtrar BusMessage por Source y Topic | Diseño 1.0 activo |
+| ManagedRuntimeCommunicationBinder | Resolver endpoints y poseer subscriptions | Diseño 1.0 activo |
+| GodotNodeRuntimeHost | Adjuntar Host Objects Node bajo parent explícito | Diseño 1.0 activo |
 | CompositionRuntimeSupervisor | Preservar Last Known Good y hot swap | Futuro |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
@@ -1139,6 +1149,29 @@ cc9a7ae
 feat(runtime): add transactional composition runtime
 ```
 
+### Managed Runtime Adapter Boundary
+
+ADR-012 selecciona managed behaviors sobre Primary Runtime Object.
+
+Lifecycle behavior:
+
+```text
+runtime_initialize
+runtime_set_ready
+runtime_start
+runtime_shutdown
+```
+
+Communication endpoint behavior:
+
+```text
+get_runtime_input_endpoint(port_id) -> Callable
+```
+
+Adapters genéricos no conocen Profiles o Devices concretos.
+
+Godot host vive fuera de Core y recibe parent Node explícito.
+
 ## 31. Reglas de dependencia
 
 1. DeviceBus no depende de Devices concretos.
@@ -1401,21 +1434,39 @@ ADR-011 1.1 está aceptado, implementado y verificado.
 
 Full pipeline alcanza `ACTIVE → SHUTDOWN` con identidades y ownership preservados.
 
-## 38. Pendiente
+## 38. Diseño activo y trabajo pendiente
+
+Diseño activo:
 
 ```text
-Production Runtime Adapters
+Managed Runtime Adapter Boundary Design 1.0
+ADR-012 ACEPTADO
+```
+
+Componentes diseñados:
+
+```text
+RuntimeDependencyValue
+ScopedRuntimeDependencyResolver
+ManagedRuntimeLifecycleAdapter
+RuntimeSourceFilteredSubscription
+ManagedRuntimeCommunicationBinder
+GodotNodeRuntimeHost
+```
+
+Pendiente posterior:
+
+```text
+Distance Sensor Runtime Slice
 Composition Root concreto
 CompositionRuntimeSupervisor
 Last Known Good manager
 Hot swap
-RuntimeHost concreto
 Factories de producción
 Measurement Identity
 Provenance
 Temporal Boundaries
-SystemProfile persistence
-DeviceCatalog persistence
+Persistence
 GraphEditor
 Hardware Mode
 Calibration
@@ -1423,9 +1474,7 @@ AdaptationPolicy
 RuntimeAllocation
 ```
 
-Production Runtime Adapters es el siguiente problema recomendado.
-
-No existe todavía ADR o diseño aceptado para esa frontera.
+Distance Sensor factory no comienza hasta reconciliar Profile, Configuration y runtime Manifest.
 
 ## 39. Baseline global
 
@@ -1549,22 +1598,25 @@ Toda modificación se entrega como archivo completo.
 
 ## 44. Siguiente paso
 
-Abrir:
+Cerrar commit documental de:
 
 ```text
-Production Runtime Adapters
-Problema y análisis
+ADR-012
+Managed Runtime Adapter Boundary Design 1.0
 ```
 
-Antes de implementar debe definirse qué responsabilidad pertenece a:
+Después implementar, en orden incremental:
 
-- Composition Root;
-- Godot RuntimeHost;
-- Dependency Value Resolver;
-- Lifecycle Adapter;
-- Communication Binder;
-- factories concretas.
+```text
+RuntimeDependencyValue
+ScopedRuntimeDependencyResolver
+ManagedRuntimeLifecycleAdapter
+RuntimeSourceFilteredSubscription
+ManagedRuntimeCommunicationBinder
+GodotNodeRuntimeHost
+ManagedRuntimeAdapterIntegrationTest
+```
 
-No crear adapters por conveniencia ni convertirlos en service locators.
+La implementación está autorizada por el usuario.
 
-Supervisor, Last Known Good replacement y Hardware Runtime permanecen posteriores.
+Distance Sensor Runtime Slice permanece posterior.
