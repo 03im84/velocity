@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.19 |
+| Versión | 1.20 |
 | Fecha de actualización | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -693,11 +693,13 @@ CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
-Velocity Tooling Dashboard Web:      1.1
+Velocity Tooling Dashboard Web:      1.2
 Managed Runtime Adapter Design:      1.1
 Distance Sensor Runtime Design:     1.1
-Project Handoff:                    1.19
-Resume Prompt:                      1.19
+Product Roadmap:                    1.0
+Playable Vertical Slice Design:     1.0
+Project Handoff:                    1.20
+Resume Prompt:                      1.20
 Collaboration Contract:             1.5
 ```
 
@@ -896,21 +898,16 @@ Estado sincronizado:
 
 `Submit` significa staging + commit + push.
 
-## 29. Último milestone completado
+## 29. Current direction
 
 ```text
-Distance Sensor Runtime Slice 1.0
-IMPLEMENTADO Y VERIFICADO
+Target: Playable Vertical Slice 1.0
+Current: Input Runtime Slice 1.0
 ```
 
-```text
-3 tests / 55 checks
-Runtime Suite: 20 / 475
-Run All: 79 / 2317
-Commit: 53ffe1d
-```
+Web VTD Roadmap/Gantt candidate is implemented with 39 Web tests and 100 total tooling tests PASS.
 
-Siguiente milestone pendiente de problema y análisis.
+Roadmap is versioned in `docs/project_state/velocity_roadmap.json`.
 
 ## 30. Trabajo futuro explícito
 

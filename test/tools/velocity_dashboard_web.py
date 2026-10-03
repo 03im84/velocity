@@ -34,6 +34,7 @@ from velocity_dashboard_service import (
     TestExecutionService,
     TestScene,
     discover_tests,
+    load_roadmap,
     suite_names,
     write_json_file,
 )
@@ -91,6 +92,7 @@ class VelocityWebApplication:
             / "server.json"
         )
         self.shutting_down = False
+        self.roadmap = load_roadmap(self.configuration)
         self.refresh_tests()
 
     def refresh_tests(self) -> list[TestScene]:
@@ -134,6 +136,7 @@ class VelocityWebApplication:
             "execution": self.execution.snapshot(),
             "delivery": self.delivery.snapshot(),
             "settings": self.configuration.public_settings(),
+            "roadmap": self.roadmap,
             "environment": {
                 "project_root": str(self.configuration.project_root),
                 "runner": str(self.configuration.runner_path),
@@ -377,6 +380,8 @@ class VelocityRequestHandler(BaseHTTPRequestHandler):
                 HTTPStatus.OK,
                 self.app.configuration.public_settings(),
             )
+        elif parsed.path == "/api/roadmap":
+            self._json_response(HTTPStatus.OK, self.app.roadmap)
         elif parsed.path == "/api/events":
             self._serve_events()
         else:

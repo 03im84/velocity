@@ -1,0 +1,50 @@
+PJ0051 – Product Roadmap and Gantt Implementation Candidate
+
+Fecha: 03/10/2026
+
+Purpose:
+Restore visible project direction and connect technical milestones to a playable target.
+
+Target:
+Playable Vertical Slice 1.0.
+
+Definition:
+One antigravity craft, one simple closed track, input, propulsion, hover, camera, checkpoints, minimal HUD and one complete lap.
+
+Roadmap source:
+docs/project_state/velocity_roadmap.json
+
+Schema:
+velocity-roadmap/v1
+
+Statuses:
+completed, active, planned, blocked, deferred.
+
+Current milestone:
+Input Runtime Slice 1.0.
+
+Web VTD additions:
+- Roadmap tab;
+- phase-based Gantt;
+- YOU ARE HERE marker;
+- completed/active/planned/deferred bars;
+- target and completion summary;
+- milestone detail;
+- dependencies;
+- deliverables;
+- acceptance criteria;
+- commit reference.
+
+No fabricated calendar dates.
+Phases P1–P24 are relative planning units.
+
+Implementation remains read-only. Roadmap editing stays in versioned JSON.
+
+Tests:
+VTD Web 39 PASS.
+Python tooling total 100 PASS.
+Godot baseline remains 79 tests / 2317 checks PASS.
+
+Status:
+IMPLEMENTATION CANDIDATE
+WINDOWS VISUAL ACCEPTANCE PENDING

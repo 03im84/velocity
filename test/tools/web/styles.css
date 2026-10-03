@@ -206,6 +206,10 @@ select {
   grid-template-rows: auto 1fr auto;
 }
 
+#roadmap-panel {
+  grid-template-rows: auto auto minmax(260px, 1fr) auto;
+}
+
 .panel-title {
   display: flex;
   align-items: center;
@@ -446,6 +450,108 @@ th {
 .history-entry {
   padding: 8px 0;
   border-bottom: 1px solid var(--border);
+}
+
+.roadmap-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-soft);
+}
+
+.roadmap-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gantt-scroll {
+  overflow: auto;
+  padding: 12px;
+}
+
+.gantt-grid {
+  display: grid;
+  min-width: 1150px;
+  gap: 4px 0;
+  align-items: center;
+}
+
+.gantt-cell {
+  min-height: 28px;
+  border-left: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.gantt-phase {
+  padding: 5px 2px;
+  color: var(--muted);
+  text-align: center;
+  font-size: 0.78em;
+}
+
+.gantt-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  min-height: 34px;
+  padding: 7px 10px;
+  overflow: hidden;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt-label.current {
+  color: var(--green);
+  font-weight: 700;
+}
+
+.gantt-bar {
+  z-index: 1;
+  min-height: 24px;
+  margin: 3px;
+  padding: 3px 7px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gantt-bar.completed { background: color-mix(in srgb, var(--green) 34%, var(--panel)); }
+.gantt-bar.active { background: var(--selection); border-color: var(--green); }
+.gantt-bar.planned { background: color-mix(in srgb, var(--blue) 22%, var(--panel)); }
+.gantt-bar.blocked { background: color-mix(in srgb, var(--failure) 24%, var(--panel)); }
+.gantt-bar.deferred { background: var(--panel-alt); color: var(--muted); }
+
+.milestone-detail {
+  max-height: 230px;
+  padding: 12px 14px;
+  overflow: auto;
+  border-top: 1px solid var(--border);
+  background: var(--panel-alt);
+}
+
+.milestone-detail h2 {
+  margin: 0 0 8px;
+  color: var(--green);
+  font-size: 1em;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 6px 12px;
+}
+
+.detail-list {
+  margin: 4px 0;
+  padding-left: 18px;
 }
 
 .settings-grid {

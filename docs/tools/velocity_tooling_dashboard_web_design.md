@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO — IMPLEMENTADO Y VERIFICADO |
-| Versión | 1.1 |
+| Versión | 1.2 |
 | Producto objetivo | Velocity Tooling Dashboard 0.5.0 |
 | Fecha | 03/10/2026 |
 | Backend | Python 3.10+ standard library |
@@ -702,4 +702,21 @@ Web launcher recomendado:
 
 ```text
 test/tools/start_velocity_dashboard_web.bat
+```
+
+## 37. Product Roadmap and Gantt
+
+VTD 0.5.0 includes a read-only Roadmap tab backed by:
+
+```text
+docs/project_state/velocity_roadmap.json
+```
+
+It displays relative phases, dependencies, progress, current milestone and Playable Vertical Slice target. No calendar dates are invented.
+
+Candidate baseline:
+
+```text
+VTD Web: 39 tests PASS
+Tooling total: 100 tests PASS
 ```

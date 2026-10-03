@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.19 |
+| Versión | 1.20 |
 | Fecha | 03/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -398,11 +398,13 @@ CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
-Velocity Tooling Dashboard Web:      1.1
+Velocity Tooling Dashboard Web:      1.2
 Managed Runtime Adapter Design:      1.1
 Distance Sensor Runtime Design:     1.1
-Project Handoff:                    1.19
-Resume Prompt:                      1.19
+Product Roadmap:                    1.0
+Playable Vertical Slice Design:     1.0
+Project Handoff:                    1.20
+Resume Prompt:                      1.20
 Collaboration Contract:             1.5
 ```
 
@@ -538,18 +540,14 @@ Hot swap no está diseñado para 1.0.
 
 No añadirlo como parche.
 
-## 14. Último milestone
+## 14. Current direction
 
 ```text
-Distance Sensor Runtime Slice 1.0
-IMPLEMENTADO Y VERIFICADO
-3 tests / 55 checks
-Runtime Suite: 20 / 475
-Run All: 79 / 2317
-Commit: 53ffe1d
+Product target: Playable Vertical Slice 1.0
+Current milestone: Input Runtime Slice 1.0
 ```
 
-Siguiente milestone requiere problema y análisis.
+Roadmap/Gantt is data-driven from `velocity_roadmap.json`.
 
 ## 15. Fuera de alcance actual
 

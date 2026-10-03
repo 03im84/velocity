@@ -9,6 +9,7 @@ const state = {
   settings: {},
   environment: {},
   server: {},
+  roadmap: {},
   activeTab: "tests",
   eventSource: null,
 };
@@ -167,6 +168,110 @@ function renderEnvironment() {
   $("#env-project").title = state.environment.project_root || "";
   $("#env-server").textContent = state.server.url || "—";
   $("#env-python").textContent = state.environment.python || "—";
+}
+
+function renderRoadmap() {
+  const roadmap = state.roadmap || {};
+  const milestones = roadmap.milestones || [];
+  const phaseCount = Number(roadmap.phase_count || 1);
+  const currentId = roadmap.current_milestone || "";
+  const targetId = roadmap.target || "";
+  const current = milestones.find((item) => item.id === currentId);
+  const target = milestones.find((item) => item.id === targetId);
+  $("#roadmap-target").textContent = target ? target.name : targetId || "—";
+  $("#roadmap-current-name").textContent = current ? current.name : currentId || "—";
+  $("#roadmap-completed").textContent = `${milestones.filter((item) => item.status === "completed").length} / ${milestones.length}`;
+
+  const grid = $("#gantt-grid");
+  grid.replaceChildren();
+  grid.style.gridTemplateColumns = `240px repeat(${phaseCount}, minmax(34px, 1fr))`;
+
+  const corner = document.createElement("div");
+  corner.className = "gantt-label label";
+  corner.textContent = "milestone / phase";
+  corner.style.gridRow = "1";
+  corner.style.gridColumn = "1";
+  grid.append(corner);
+
+  for (let phase = 1; phase <= phaseCount; phase += 1) {
+    const header = document.createElement("div");
+    header.className = "gantt-cell gantt-phase";
+    header.textContent = `P${phase}`;
+    header.style.gridRow = "1";
+    header.style.gridColumn = String(phase + 1);
+    grid.append(header);
+  }
+
+  milestones.forEach((milestone, index) => {
+    const row = index + 2;
+    const label = document.createElement("div");
+    label.className = `gantt-label${milestone.id === currentId ? " current" : ""}`;
+    label.textContent = `${milestone.group} · ${milestone.name}`;
+    label.title = milestone.name;
+    label.style.gridRow = String(row);
+    label.style.gridColumn = "1";
+    grid.append(label);
+
+    for (let phase = 1; phase <= phaseCount; phase += 1) {
+      const cell = document.createElement("div");
+      cell.className = "gantt-cell";
+      cell.style.gridRow = String(row);
+      cell.style.gridColumn = String(phase + 1);
+      grid.append(cell);
+    }
+
+    const bar = document.createElement("button");
+    bar.className = `gantt-bar ${milestone.status}`;
+    bar.textContent = `${milestone.progress}% ${milestone.id === currentId ? "· YOU ARE HERE" : ""}`;
+    bar.style.gridRow = String(row);
+    bar.style.gridColumn = `${Number(milestone.phase) + 1} / span ${Number(milestone.duration)}`;
+    bar.addEventListener("click", () => renderMilestoneDetail(milestone, milestones));
+    grid.append(bar);
+  });
+
+  if (current) renderMilestoneDetail(current, milestones);
+}
+
+function renderMilestoneDetail(milestone, milestones) {
+  const detail = $("#milestone-detail");
+  detail.replaceChildren();
+  const title = document.createElement("h2");
+  title.textContent = `${milestone.name}${milestone.id === state.roadmap.current_milestone ? " · YOU ARE HERE" : ""}`;
+  detail.append(title);
+  const grid = document.createElement("div");
+  grid.className = "detail-grid";
+
+  const rows = [
+    ["status", milestone.status],
+    ["progress", `${milestone.progress}%`],
+    ["phase", `P${milestone.phase} · duration ${milestone.duration}`],
+    ["purpose", milestone.purpose || "—"],
+    ["dependencies", (milestone.dependencies || []).map((id) => milestones.find((item) => item.id === id)?.name || id).join(", ") || "none"],
+    ["commit", milestone.commit || "pending"],
+  ];
+  rows.forEach(([name, value]) => {
+    const key = document.createElement("div");
+    key.className = "label";
+    key.textContent = name;
+    const content = document.createElement("div");
+    content.textContent = value;
+    grid.append(key, content);
+  });
+  detail.append(grid);
+
+  [["deliverables", milestone.deliverables], ["acceptance", milestone.acceptance]].forEach(([heading, values]) => {
+    const subtitle = document.createElement("div");
+    subtitle.className = "label";
+    subtitle.textContent = heading;
+    const list = document.createElement("ul");
+    list.className = "detail-list";
+    (values || []).forEach((value) => {
+      const item = document.createElement("li");
+      item.textContent = value;
+      list.append(item);
+    });
+    detail.append(subtitle, list);
+  });
 }
 
 function renderSettings() {
@@ -527,9 +632,11 @@ async function bootstrap() {
     state.settings = data.settings;
     state.environment = data.environment;
     state.server = data.server;
+    state.roadmap = data.roadmap;
     renderTests();
     renderExecution();
     renderDelivery();
+    renderRoadmap();
     renderSettings();
     renderEnvironment();
     connectEvents();

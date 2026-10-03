@@ -15,6 +15,7 @@
         <button class="tab active" data-tab="tests">tests</button>
         <button class="tab" data-tab="delivery">delivery</button>
         <button class="tab" data-tab="history">history</button>
+        <button class="tab" data-tab="roadmap">roadmap</button>
         <button class="tab" data-tab="settings">settings</button>
       </nav>
       <div class="header-status">
@@ -90,6 +91,25 @@
           <div id="history-list" class="history-list">
             <p class="muted">Los eventos de esta sesión aparecerán aquí.</p>
           </div>
+        </div>
+
+        <div id="roadmap-panel" class="panel-view">
+          <div class="panel-title">
+            <span>PRODUCT ROADMAP</span>
+            <span id="roadmap-current" class="badge">YOU ARE HERE</span>
+          </div>
+          <div class="roadmap-summary">
+            <div><span class="label">target</span><strong id="roadmap-target">—</strong></div>
+            <div><span class="label">current</span><strong id="roadmap-current-name">—</strong></div>
+            <div><span class="label">completed</span><strong id="roadmap-completed">0</strong></div>
+          </div>
+          <div id="gantt-scroll" class="gantt-scroll">
+            <div id="gantt-grid" class="gantt-grid"></div>
+          </div>
+          <section id="milestone-detail" class="milestone-detail">
+            <h2>Selecciona un milestone</h2>
+            <p class="muted">Aquí verás propósito, dependencias, entregables y aceptación.</p>
+          </section>
         </div>
 
         <div id="settings-panel" class="panel-view">

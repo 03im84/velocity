@@ -60,6 +60,7 @@ DEFAULT_SHARED_CONFIG: dict[str, Any] = {
         "Debug",
     ],
     "suite_overrides": {},
+    "roadmap": "docs/project_state/velocity_roadmap.json",
 }
 
 DEFAULT_LOCAL_CONFIG: dict[str, Any] = {
@@ -472,6 +473,84 @@ def suite_names(
             )
         ],
     )
+
+
+def load_roadmap(
+    configuration: DashboardConfiguration,
+) -> dict[str, Any]:
+    relative = str(
+        configuration.shared.get(
+            "roadmap",
+            "docs/project_state/velocity_roadmap.json",
+        )
+    )
+    path = (configuration.project_root / relative).resolve()
+    try:
+        path.relative_to(configuration.project_root)
+    except ValueError as error:
+        raise ValueError("Roadmap path escapes project root.") from error
+
+    roadmap = read_json_file(path, {})
+    validate_roadmap(roadmap)
+    return roadmap
+
+
+def validate_roadmap(roadmap: Mapping[str, Any]) -> None:
+    if roadmap.get("schema") != "velocity-roadmap/v1":
+        raise ValueError("Unsupported roadmap schema.")
+    phase_count = roadmap.get("phase_count")
+    if not isinstance(phase_count, int) or not 1 <= phase_count <= 100:
+        raise ValueError("Roadmap phase_count must be 1–100.")
+    milestones = roadmap.get("milestones")
+    if not isinstance(milestones, list) or not milestones:
+        raise ValueError("Roadmap milestones must be a non-empty array.")
+    valid_statuses = {"completed", "active", "planned", "blocked", "deferred"}
+    seen: set[str] = set()
+
+    for item in milestones:
+        if not isinstance(item, dict):
+            raise ValueError("Roadmap milestone must be an object.")
+        milestone_id = item.get("id")
+        if not isinstance(milestone_id, str) or not milestone_id:
+            raise ValueError("Roadmap milestone ID is required.")
+        if milestone_id in seen:
+            raise ValueError("Duplicate roadmap milestone: " + milestone_id)
+        seen.add(milestone_id)
+        if item.get("status") not in valid_statuses:
+            raise ValueError("Invalid milestone status: " + milestone_id)
+        phase = item.get("phase")
+        duration = item.get("duration")
+        progress = item.get("progress")
+        if not isinstance(phase, int) or not 1 <= phase <= phase_count:
+            raise ValueError("Invalid milestone phase: " + milestone_id)
+        if not isinstance(duration, int) or duration <= 0:
+            raise ValueError("Invalid milestone duration: " + milestone_id)
+        if phase + duration - 1 > phase_count:
+            raise ValueError("Milestone exceeds phase range: " + milestone_id)
+        if not isinstance(progress, int) or not 0 <= progress <= 100:
+            raise ValueError("Invalid milestone progress: " + milestone_id)
+        dependencies = item.get("dependencies", [])
+        if not isinstance(dependencies, list) or not all(
+            isinstance(value, str) for value in dependencies
+        ):
+            raise ValueError("Invalid dependencies: " + milestone_id)
+
+    for item in milestones:
+        for dependency in item.get("dependencies", []):
+            if dependency not in seen:
+                raise ValueError(
+                    "Unknown roadmap dependency: "
+                    + item["id"]
+                    + " -> "
+                    + dependency
+                )
+
+    current = roadmap.get("current_milestone")
+    target = roadmap.get("target")
+    if current not in seen:
+        raise ValueError("Current roadmap milestone is unknown.")
+    if target not in seen:
+        raise ValueError("Roadmap target is unknown.")
 
 
 class TestExecutionService:

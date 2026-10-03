@@ -28,10 +28,12 @@ from velocity_dashboard_service import (  # noqa: E402
     build_execution_summary,
     deep_merge,
     discover_tests,
+    load_roadmap,
     parse_runner_summary,
     status_from_output,
     suite_names,
     validate_local_config,
+    validate_roadmap,
 )
 from velocity_dashboard_delivery import DeliveryService  # noqa: E402
 from velocity_submit_contract import ExitCode  # noqa: E402
@@ -230,6 +232,35 @@ class DiscoveryAndLogicTests(unittest.TestCase):
         self.assertEqual(summary["result"], "PASS")
 
 
+class RoadmapTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.configuration = DashboardConfiguration(TOOLS_DIRECTORY)
+
+    def test_versioned_roadmap_is_valid(self) -> None:
+        roadmap = load_roadmap(self.configuration)
+        self.assertEqual(roadmap["schema"], "velocity-roadmap/v1")
+        self.assertEqual(roadmap["target"], "playable_vertical_slice")
+        self.assertEqual(roadmap["current_milestone"], "input_runtime_slice")
+        self.assertGreaterEqual(len(roadmap["milestones"]), 10)
+
+    def test_current_milestone_is_active(self) -> None:
+        roadmap = load_roadmap(self.configuration)
+        current = next(
+            item
+            for item in roadmap["milestones"]
+            if item["id"] == roadmap["current_milestone"]
+        )
+        self.assertEqual(current["status"], "active")
+        self.assertEqual(current["progress"], 0)
+
+    def test_unknown_dependency_is_rejected(self) -> None:
+        roadmap = load_roadmap(self.configuration)
+        copied = json.loads(json.dumps(roadmap))
+        copied["milestones"][0]["dependencies"] = ["missing"]
+        with self.assertRaises(ValueError):
+            validate_roadmap(copied)
+
+
 class DeliveryBridgeTests(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
@@ -341,8 +372,14 @@ class StaticFrontendContractTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
 
     def test_required_tabs_exist(self) -> None:
-        for tab in ("tests", "delivery", "history", "settings"):
+        for tab in ("tests", "delivery", "history", "roadmap", "settings"):
             self.assertIn(f'data-tab="{tab}"', self.html)
+
+    def test_roadmap_gantt_contract_exists(self) -> None:
+        self.assertIn('id="gantt-grid"', self.html)
+        self.assertIn('id="milestone-detail"', self.html)
+        self.assertIn("renderRoadmap", self.js)
+        self.assertIn("YOU ARE HERE", self.js)
 
     def test_browser_uses_select(self) -> None:
         self.assertIn('<select id="browser-select">', self.html)
@@ -476,7 +513,11 @@ class HttpSecurityTests(unittest.TestCase):
         )
         self.assertEqual(data["app"]["version"], "0.5.0")
         self.assertEqual(data["server"]["host"], "127.0.0.1")
-        self.assertGreaterEqual(len(data["tests"]), 76)
+        self.assertGreaterEqual(len(data["tests"]), 79)
+        self.assertEqual(
+            data["roadmap"]["target"],
+            "playable_vertical_slice",
+        )
         self.assertTrue(data["csrf_token"])
 
     def test_post_requires_csrf(self) -> None:
