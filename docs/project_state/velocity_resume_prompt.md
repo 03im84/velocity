@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.5 |
+| Versión | 1.6 |
 | Fecha | 02/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -56,8 +56,9 @@ Estado arquitectónico esperado:
 - RuntimeFactoryRegistry 1.0 está implementado y verificado.
 - CompositionPlan 1.0 está implementado y verificado.
 - Registry–Plan Integration está verificada.
-- CompositionCompiler permanece pendiente de diseño.
-- El siguiente milestone es CompositionCompiler Design.
+- CompositionCompiler Design 1.0 está activo.
+- CompositionCompiler no está implementado.
+- La siguiente implementación posterior al commit es CompositionCompileResult.
 
 Baseline esperada:
 
@@ -230,32 +231,34 @@ RuntimeDeviceHandle
 RuntimeFactoryBuildResult
 ```
 
-Siguiente diseño:
+Diseño activo:
 
 ```text
-CompositionCompiler
+CompositionCompiler Design 1.0
 ```
 
 Documentos canónicos del milestone:
 
 ```text
-Core Architecture 2.17
+Core Architecture 2.18
 
-System Composition Pipeline Design 1.8
+System Composition Pipeline Design 1.9
 
-RuntimeFactoryRegistry Design 1.2
+RuntimeFactoryRegistry Design 1.3
 
-CompositionPlan Design 1.2
+CompositionPlan Design 1.3
 
-Project Handoff 1.5
+CompositionCompiler Design 1.0
 
-Resume Prompt 1.5
+Project Handoff 1.6
+
+Resume Prompt 1.6
 ```
 
-Siguiente milestone:
+Siguiente implementación posterior al commit:
 
 ```text
-CompositionCompiler Design
+CompositionCompileResult
 ```
 
 ## 4. Baseline global
@@ -487,13 +490,17 @@ RuntimeFactoryRegistry–CompositionPlan
 PASS
 ```
 
-Siguiente milestone:
+Diseño activo:
 
 ```text
-CompositionCompiler Design
+CompositionCompiler Design 1.0
 ```
 
-CompositionCompiler y CompositionRuntime no están autorizados para implementación.
+Compiler 1.0 será Simulation-only.
+
+CompositionCompiler no está implementado.
+
+CompositionRuntime permanece futuro.
 
 ## 15. RuntimeFactoryRegistry 1.0
 
@@ -790,17 +797,17 @@ Alternativas rechazadas:
 
 ## 20. Protocolo Git
 
-Base commit antes del cierre de CompositionPlan 1.0:
+Base commit antes de CompositionCompiler Design:
 
 ```text
-3d62a7b
-feat(composition): add immutable composition plan
+f2c65de
+docs(composition): record composition plan 1.0 baseline
 ```
 
 Commit sugerido para el paquete actual:
 
 ```text
-docs(composition): record composition plan 1.0 baseline
+docs(composition): define composition compiler
 ```
 
 Antes del commit:
@@ -864,13 +871,17 @@ RuntimeFactoryRegistry–CompositionPlan
 
 PASS
 
-Siguiente milestone:
+Diseño activo:
 
-CompositionCompiler Design
+CompositionCompiler Design 1.0
+
+Siguiente implementación posterior al commit:
+
+CompositionCompileResult
 
 CompositionCompiler:
 
-PENDIENTE DE DISEÑO E IMPLEMENTACIÓN
+DISEÑADO, NO IMPLEMENTADO
 ```
 
 No debe escribir código hasta recibir confirmación y comprobar que el paquete documental está cerrado.

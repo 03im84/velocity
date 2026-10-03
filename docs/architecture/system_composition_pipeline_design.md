@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.8 |
+| Versión | 1.9 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
@@ -28,13 +28,17 @@ RuntimeFactoryRegistry 1.0
 CompositionPlan 1.0
 ```
 
-Siguiente milestone:
+Diseño activo:
 
 ```text
-CompositionCompiler Design
+CompositionCompiler Design 1.0
 ```
 
-CompositionCompiler permanece posterior a Registry y Plan.
+Siguiente implementación después del commit documental:
+
+```text
+CompositionCompileResult
+```
 
 ## 2. Pipeline completo
 
@@ -146,17 +150,17 @@ CompositionPlan
 CompositionPlanRuntimeFactoryRegistryIntegrationTest
 ```
 
-### Pendiente de diseño
+### Diseñado
 
 ```text
+CompositionCompileResult
+
 CompositionCompiler
 ```
 
 ### Futuro
 
 ```text
-CompositionCompiler
-
 CompositionRuntime
 ```
 
@@ -201,9 +205,15 @@ core/runtime/
 
 ## 5. Estructura siguiente
 
-CompositionCompiler permanece pendiente de diseño.
+Después del commit documental:
 
-No existe estructura de implementación autorizada todavía.
+```text
+core/composition/
+├── composition_compile_result.gd
+└── composition_compiler.gd
+```
+
+No se implementará durante diseño abierto.
 
 ## 6. SystemProfile
 
@@ -827,7 +837,14 @@ RuntimeDependencyBindings
 RuntimeConstructionRequest
 ```
 
-## 38. CompositionCompiler futuro
+## 38. CompositionCompiler Design
+
+Documento activo:
+
+```text
+docs/architecture/composition_compiler_design.md
+Versión 1.0
+```
 
 Entradas:
 
@@ -844,12 +861,16 @@ DeviceBusDispatchPolicy
 Salida:
 
 ```text
-CompositionPlan
-
-ValidationReport
+CompositionCompileResult
+	├── CompositionPlan
+	└── ValidationReport
 ```
 
-No ejecuta.
+Compiler 1.0 será Simulation-only.
+
+Hardware queda bloqueado con HARDWARE_SAFETY_ERROR.
+
+No ejecuta runtime.
 
 ## 39. CompositionRuntime futuro
 
@@ -1036,7 +1057,13 @@ Automatic suites:
     PASS — 62 tests, 1851 checks.
 
 19. CompositionCompiler Design.
+    COMPLETADO.
+
+20. Commit de diseño.
     SIGUIENTE.
+
+21. CompositionCompileResult.
+    POSTERIOR AL COMMIT.
 ```
 
 ## 45. Baselines preservadas
@@ -1132,10 +1159,21 @@ COMPOSITIONPLAN 1.0
 IMPLEMENTADO Y VERIFICADO
 ```
 
+```text
+COMPOSITIONCOMPILER DESIGN 1.0
+ACTIVO
+```
+
 Siguiente milestone:
 
 ```text
-CompositionCompiler Design
+CompositionCompiler Design Commit
+```
+
+Primera implementación posterior:
+
+```text
+CompositionCompileResult
 ```
 
 CompositionCompiler no está implementado.

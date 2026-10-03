@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.2 |
+| Versión | 1.3 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Directivas runtime inmutables, orden por fases, comunicación y Runtime Safety |
@@ -840,13 +840,20 @@ Plan no contiene Registry.
 
 CompositionRuntime recibe ambos.
 
-## 37. CompositionCompiler futuro
+## 37. CompositionCompiler Design
+
+Documento activo:
+
+```text
+docs/architecture/composition_compiler_design.md
+Versión 1.0
+```
 
 Responsabilidad:
 
 > Convertir DeviceGraphSnapshot y RuntimeFactoryRegistry en CompositionPlan.
 
-Entradas conceptuales:
+Entradas:
 
 ```text
 DeviceGraphSnapshot
@@ -861,12 +868,16 @@ DeviceBusDispatchPolicy
 Salida:
 
 ```text
-CompositionPlan
-
-ValidationReport
+CompositionCompileResult
+	├── CompositionPlan
+	└── ValidationReport
 ```
 
-No ejecuta.
+Compiler 1.0 será Simulation-only.
+
+No ejecuta runtime.
+
+Implementación permanece pendiente hasta cerrar el commit documental.
 
 ## 38. CompositionRuntime futuro
 
@@ -1294,7 +1305,18 @@ Todos los criterios de aceptación fueron satisfechos.
 Siguiente milestone:
 
 ```text
-CompositionCompiler Design
+CompositionCompiler Implementation
 ```
 
-CompositionCompiler no está implementado.
+Prerrequisito:
+
+```text
+CompositionCompiler Design 1.0
+commit documental aceptado
+```
+
+Primer componente futuro:
+
+```text
+CompositionCompileResult
+```

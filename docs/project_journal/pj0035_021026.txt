@@ -1,0 +1,641 @@
+PJ0035 – CompositionCompiler Problem and Analysis
+
+Fecha:
+
+02/10/2026
+
+Objetivo:
+
+Definir CompositionCompiler
+antes de cualquier implementación.
+
+Estado previo:
+
+DeviceGraphAssembler 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+Runtime Construction Contract 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+RuntimeFactoryRegistry 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+CompositionPlan 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+Registry–Plan Integration:
+
+PASS
+
+Baseline global:
+
+Tests:
+
+62
+
+Checks:
+
+1851
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Problema:
+
+Existe DeviceGraphSnapshot
+validado e inmutable.
+
+Existe RuntimeFactoryRegistry
+exacto e inmutable.
+
+Existe CompositionPlan
+inmutable y no ejecutable.
+
+Falta una frontera que convierta:
+
+DeviceGraphSnapshot
+
++
+
+RuntimeFactoryRegistry
+
++
+
+Activation Context
+
++
+
+DeviceBusDispatchPolicy
+
+↓
+
+CompositionPlan
+
++
+
+ValidationReport
+
+Responsabilidad seleccionada:
+
+Convertir topología lógica validada
+en instrucciones runtime declarativas,
+sin ejecutar factories o runtime.
+
+Nombre:
+
+CompositionCompiler
+
+Componentes seleccionados:
+
+CompositionCompileResult
+
+CompositionCompiler
+
+No se crea:
+
+CompositionCompilerDraft
+
+CompositionCompileRequest
+
+CompositionCompilerRegistry
+
+Razón:
+
+Las cuatro entradas son snapshots
+o políticas explícitas.
+
+No existe estado editable propio
+del Compiler.
+
+API conceptual:
+
+compile(
+	graph_snapshot,
+	factory_registry,
+	activation_context,
+	dispatch_policy
+)
+→ CompositionCompileResult
+
+CompositionCompileResult:
+
+Contendrá:
+
+CompositionPlan
+
+ValidationReport
+
+Success requiere:
+
+- Plan no null;
+
+- Report no null;
+
+- Plan válido;
+
+- Report válido para Context.
+
+CompositionCompiler:
+
+✔ Stateless.
+
+✔ No modifica Snapshot.
+
+✔ No modifica Registry.
+
+✔ No modifica Policy.
+
+✔ No ejecuta factories.
+
+✔ No crea RuntimeDeviceHandle.
+
+✔ No crea DeviceBus.
+
+✔ No adjunta Host Objects.
+
+✔ No inicia lifecycle.
+
+✔ No resuelve Dependency Values.
+
+Pipeline interno:
+
+1. Validar inputs.
+
+2. Validar Activation Context.
+
+3. Aplicar Hardware gate.
+
+4. Validar Snapshot.
+
+5. Validar Registry.
+
+6. Validar Dispatch Policy.
+
+7. Compilar Device Entries.
+
+8. Gate después de Devices.
+
+9. Compilar Connection Directives.
+
+10. Gate después de Connections.
+
+11. Crear CompositionPlan.
+
+12. Validar Plan defensivamente.
+
+13. Devolver Result.
+
+Activation Context:
+
+Compiler recibe Context explícito.
+
+Cada DeviceConfiguration debe coincidir.
+
+RuntimeFactoryKey se deriva de:
+
+Profile ID
+
++
+
+Profile Version
+
++
+
+Activation Context explícito
+
+La Configuration debe coincidir
+antes de crear la Key.
+
+RuntimeFactoryRegistry:
+
+Compiler requiere Registry válido.
+
+Por cada DeviceGraphNode:
+
+- deriva Key exacta;
+
+- exige Descriptor exacto;
+
+- no usa fallback;
+
+- obtiene Dependency Specs;
+
+- no obtiene Dependency Values;
+
+- no ejecuta factory.
+
+CompositionDeviceEntry:
+
+Se crea desde:
+
+DeviceGraphNode Device ID
+
+DeviceGraphNode Configuration
+
+RuntimeFactoryKey derivada
+
+RuntimeFactoryDescriptor Specs
+
+Connection Directives:
+
+Se crean desde
+DeviceGraphConnections
+en orden.
+
+Conservan:
+
+Source Device ID
+
+Source Port ID
+
+Topic
+
+Target Device ID
+
+Target Port ID
+
+Connection ID compilada
+debe coincidir con
+Graph Connection ID.
+
+No contienen callback.
+
+No contienen DeviceBus.
+
+No contienen Graph Connection
+como referencia canónica.
+
+Transaccionalidad:
+
+Si falla Device stage:
+
+- no se compilan Connections;
+
+- no se devuelve Plan parcial.
+
+Si falla Connection stage:
+
+- se descartan Entries parciales;
+
+- no se devuelve Plan parcial.
+
+Si Plan final es inválido:
+
+- Plan null;
+
+- Report con error;
+
+- Last Known Good externo intacto.
+
+Hardware:
+
+CompositionCompiler 1.0:
+
+SIMULATION-ONLY
+
+Hardware produce:
+
+HARDWARE_SAFETY_ERROR
+
+Razón:
+
+DeviceGraphSnapshot.is_valid()
+representa validez para Simulation.
+
+Snapshot no conserva por sí mismo
+el ValidationReport upstream.
+
+Un ciclo puede ser:
+
+SIMULATION_HAZARD
+
+permitido en Simulation
+
+bloqueante en Hardware
+
+Compiler no puede reconstruir
+con certeza toda evidencia upstream
+desde Snapshot solamente.
+
+No se permite compilar Hardware
+sin un contrato sucesor que incluya
+evidencia de seguridad explícita.
+
+No se añade upstream report
+como quinto argumento en 1.0.
+
+Razón:
+
+El report de CompositionCompiler
+tiene scope de compilación.
+
+El caller conserva reports upstream.
+
+Una futura Composition Orchestrator
+podrá agregar evidencia completa.
+
+Ciclos:
+
+Compiler no ejecuta topological sort.
+
+Conserva orden del Snapshot.
+
+CompositionPlan utiliza phase barriers.
+
+Un ciclo válido para Simulation
+no impide construir Plan.
+
+Registry stability:
+
+Compiler usa un Registry snapshot.
+
+CompositionRuntime deberá recibir
+la misma instancia.
+
+Plan no contiene Registry.
+
+Result no contiene Registry.
+
+La preservación de referencia
+pertenece a Composition Root futura.
+
+No se inventa Registry ID
+o content hash.
+
+Error aggregation:
+
+Device stage agrega errores
+para todos los Nodes.
+
+Connection stage agrega errores
+para todas las Connections.
+
+Existe gate entre stages.
+
+No se generan errores derivados
+de Connections cuando Device stage
+ya es inválido.
+
+Códigos conceptuales:
+
+composition_compile_snapshot_missing
+
+composition_compile_snapshot_invalid
+
+composition_compile_registry_missing
+
+composition_compile_registry_invalid
+
+composition_compile_activation_context_invalid
+
+composition_compile_hardware_not_supported
+
+composition_compile_dispatch_policy_missing
+
+composition_compile_dispatch_policy_invalid
+
+composition_compile_node_missing
+
+composition_compile_node_invalid
+
+composition_compile_configuration_missing
+
+composition_compile_configuration_context_mismatch
+
+composition_compile_factory_key_invalid
+
+composition_compile_factory_missing
+
+composition_compile_descriptor_invalid
+
+composition_compile_device_entry_invalid
+
+composition_compile_connection_missing
+
+composition_compile_connection_invalid
+
+composition_compile_directive_invalid
+
+composition_compile_connection_id_mismatch
+
+composition_compile_plan_invalid
+
+Severity:
+
+Errores de estructura:
+
+STRUCTURAL_ERROR
+
+Hardware no soportado:
+
+HARDWARE_SAFETY_ERROR
+
+No service locator:
+
+Compiler no busca:
+
+- Nodes;
+
+- autoloads;
+
+- filesystem;
+
+- plugins;
+
+- factories por path;
+
+- dependency values;
+
+- hardware;
+
+- servicios globales.
+
+Persistencia:
+
+Compiler no abre:
+
+- JSON;
+
+- .tres;
+
+- directorios;
+
+- red.
+
+Pruebas previstas:
+
+CompositionCompileResultTest
+
+CompositionCompilerTest
+
+SystemCompositionCompilerIntegrationTest
+
+CompositionCompilerTest verificará:
+
+- inputs null;
+
+- Context inválido;
+
+- Hardware bloqueado;
+
+- Snapshot inválido;
+
+- Registry inválido;
+
+- Policy inválida;
+
+- Plan vacío;
+
+- factory faltante;
+
+- múltiples Nodes;
+
+- múltiples versiones;
+
+- Connections;
+
+- orden;
+
+- Specs;
+
+- identidad;
+
+- no fallback;
+
+- no mutación;
+
+- Result defensivo;
+
+- no ejecución.
+
+Integración futura verificará:
+
+DeviceProfiles
+
+↓
+
+DeviceCatalog
+
+↓
+
+SystemProfile
+
+↓
+
+DeviceGraphAssembler
+
+↓
+
+DeviceGraphSnapshot
+
+↓
+
+CompositionCompiler
+
+↓
+
+CompositionPlan
+
+con RuntimeFactoryRegistry explícito.
+
+Fuera de alcance:
+
+- CompositionRuntime;
+
+- factory build;
+
+- RuntimeHost;
+
+- Dependency Value resolution;
+
+- DeviceBus activo;
+
+- lifecycle execution;
+
+- callbacks runtime;
+
+- Hardware compilation;
+
+- persistence;
+
+- provenance hash;
+
+- Registry identity;
+
+- hot reload;
+
+- scheduling SCC.
+
+Alternativas rechazadas:
+
+1. Compiler ejecuta factories.
+
+Rechazada:
+mezcla compile y runtime.
+
+2. Plan contiene factory.
+
+Rechazada:
+Plan dejaría de ser declarativo.
+
+3. Plan contiene Registry.
+
+Rechazada:
+rompe separación y estabilidad externa.
+
+4. Factory lookup aproximado.
+
+Rechazada:
+rompe reproducibilidad.
+
+5. Topological sort obligatorio.
+
+Rechazada:
+DeviceGraph permite ciclos.
+
+6. Hardware permitido con Snapshot solo.
+
+Rechazada:
+pérdida potencial de evidencia safety.
+
+7. Array[Dictionary].
+
+Rechazada:
+se usan componentes tipados.
+
+8. CompositionCompileRequest 1.0.
+
+Rechazada:
+no existe complejidad suficiente
+para justificar otro snapshot.
+
+ADR:
+
+No se requiere ADR nuevo.
+
+ADR-009 define pipeline.
+
+ADR-010 define binding y runtime construction.
+
+CompositionCompiler Design
+desarrolla ambas decisiones
+sin alterar su dirección.
+
+Estado:
+
+PROBLEMA CERRADO
+
+ANÁLISIS CERRADO
+
+DISEÑO AUTORIZADO PARA DOCUMENTACIÓN
+
+NO IMPLEMENTATION YET

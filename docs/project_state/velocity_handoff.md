@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.5 |
+| Versión | 1.6 |
 | Fecha de actualización | 02/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -731,13 +731,25 @@ RuntimeFactoryRegistry–CompositionPlan
 PASS
 ```
 
-Siguiente milestone:
+Diseño activo:
 
 ```text
-CompositionCompiler Design
+CompositionCompiler Design 1.0
 ```
 
-CompositionCompiler no está autorizado para implementación.
+Decisiones principales:
+
+- Compiler stateless;
+- cuatro inputs explícitos;
+- CompositionCompileResult;
+- Simulation-only;
+- Hardware Safety gate;
+- Device stage antes de Connection stage;
+- no Plan parcial;
+- no factory execution;
+- no service locator.
+
+Implementación comienza después del commit documental.
 
 ## 21. RuntimeFactoryRegistry 1.0
 
@@ -1065,22 +1077,25 @@ Composition Suite:
 
 ```text
 Core Architecture:
-2.17
+2.18
 
 Engineering Standards:
 1.3
 
 System Composition Pipeline Design:
-1.8
+1.9
 
 Runtime Construction Contract Design:
 1.1
 
 RuntimeFactoryRegistry Design:
-1.2
+1.3
 
 CompositionPlan Design:
-1.2
+1.3
+
+CompositionCompiler Design:
+1.0
 
 Velocity Test Dashboard Design:
 1.4
@@ -1095,10 +1110,10 @@ DeviceGraph Design:
 1.3
 
 Project Handoff:
-1.5
+1.6
 
 Resume Prompt:
-1.5
+1.6
 
 Collaboration Contract:
 1.0
@@ -1121,14 +1136,18 @@ main
 Último commit conocido:
 
 ```text
-3d62a7b
-feat(composition):
-add immutable composition plan
+f2c65de
+docs(composition):
+record composition plan 1.0 baseline
 ```
 
 Commits relevantes:
 
 ```text
+3d62a7b
+feat(composition):
+add immutable composition plan
+
 c235b6b
 docs(runtime):
 record factory registry 1.0 baseline
@@ -1334,52 +1353,42 @@ No debe escribir código en primera respuesta.
 ### Cierre documental inmediato
 
 ```text
-1. Registrar CompositionPlan Design 1.2.
+1. Registrar CompositionCompiler Design 1.0.
 
-2. Registrar Registry–Plan Integration.
+2. Actualizar System Composition Pipeline 1.9.
 
-3. Actualizar System Composition Pipeline 1.8.
+3. Actualizar Core Architecture 2.18.
 
-4. Actualizar Core Architecture 2.17.
+4. Actualizar Project State 1.6.
 
-5. Actualizar Project State 1.5.
+5. Ejecutar auditoría documental.
 
-6. Ejecutar auditoría documental.
+6. Crear commit de diseño.
 
-7. Crear commit de baseline.
-
-8. Ejecutar push a origin/main.
+7. Ejecutar push a origin/main.
 ```
 
 Commit sugerido:
 
 ```text
-docs(composition): record composition plan 1.0 baseline
+docs(composition): define composition compiler
 ```
 
-### Siguiente milestone
+### Primera implementación posterior
 
 ```text
-CompositionCompiler Design
+res://core/composition/composition_compile_result.gd
 ```
 
-Orden obligatorio:
+Prueba sucesora:
 
 ```text
-Problema
+res://test/core/composition/CompositionCompileResultTest.tscn
 
-Análisis
-
-Alternativas
-
-Diseño completo
-
-Criterios de aceptación
-
-Confirmación
+res://test/core/composition/composition_compile_result_test.gd
 ```
 
-No se implementará CompositionCompiler durante diseño abierto.
+No se implementará antes del commit de diseño.
 
 ## 35. Regla final
 
