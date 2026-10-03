@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.10 |
+| Versión | 1.11 |
 | Fecha | 03/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -63,6 +63,8 @@ Estado arquitectónico esperado:
 - CompositionRuntimeOperationResult 1.0 está implementado y verificado.
 - CompositionRuntime 1.0 está implementado y verificado.
 - Full Composition Runtime Pipeline está verificado hasta ACTIVE y SHUTDOWN.
+- Velocity Submit Tool Design 1.0 está activo y aprobado.
+- Velocity Submit Tool todavía no está implementado.
 
 Baseline esperada:
 
@@ -83,13 +85,13 @@ Composition Suite esperada:
 
 cc9a7ae feat(runtime): add transactional composition runtime
 
-Siguiente milestone recomendado:
+Milestone actual:
 
-Production Runtime Adapters
-Problema y análisis
+Velocity Submit Tool 1.0
+Diseño activo
+Implementación no iniciada
 
-No existe todavía ADR o diseño aceptado para Production Runtime Adapters.
-No escribas implementación hasta cerrar problema, análisis y diseño.
+No escribas implementación antes del commit documental de su diseño.
 
 Antes de responder:
 
@@ -378,7 +380,7 @@ RESULT: PASS
 
 ```text
 Core Architecture:                  2.22
-Engineering Standards:              1.4
+Engineering Standards:              1.5
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
@@ -388,9 +390,10 @@ RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
-Project Handoff:                    1.10
-Resume Prompt:                      1.10
-Collaboration Contract:             1.2
+Velocity Submit Tool Design:         1.0
+Project Handoff:                    1.11
+Resume Prompt:                      1.11
+Collaboration Contract:             1.3
 ```
 
 ## 9. Git
@@ -415,10 +418,17 @@ Estado esperado después del push de implementación:
 ## main...origin/main
 ```
 
-Commit documental de baseline sugerido:
+Último commit documental:
 
 ```text
+38a5ea7
 docs(runtime): record composition runtime 1.0 baseline
+```
+
+Commit de diseño de tooling sugerido:
+
+```text
+docs(tools): define manifest-driven submit
 ```
 
 ## 10. RuntimeFactoryRegistry y Plan
@@ -443,7 +453,32 @@ CompositionPlan:
 
 CompositionCompiler y CompositionRuntime utilizan la misma Registry explícita durante una activación.
 
-## 11. Ownership
+## 11. Velocity Submit Tool 1.0
+
+Diseño:
+
+```text
+docs/tools/velocity_submit_tool_design.md
+```
+
+Contrato:
+
+```text
+SUBMIT_MANIFEST.json externo
+→ validate baseline, hashes y allowlist
+→ explicit staging
+→ cached audit
+→ confirmación SUBMIT
+→ commit
+→ push
+→ sync verification
+```
+
+No utiliza `git add .`, force push o shell commands desde JSON.
+
+Implementación pendiente después del commit documental.
+
+## 12. Ownership
 
 ```text
 BORROWED
@@ -461,7 +496,7 @@ Factory limpia el request actual si build falla.
 
 Runtime libera Handles exitosos anteriores en orden inverso.
 
-## 12. Last Known Good
+## 13. Last Known Good
 
 CompositionRuntime 1.0 no reemplaza otra instancia activa.
 
@@ -471,9 +506,15 @@ Hot swap no está diseñado para 1.0.
 
 No añadirlo como parche.
 
-## 13. Siguiente milestone
+## 14. Milestone actual
 
-Recomendado:
+```text
+Velocity Submit Tool 1.0
+Diseño activo
+Implementación no iniciada
+```
+
+Siguiente después de cerrar tooling:
 
 ```text
 Production Runtime Adapters
@@ -501,7 +542,7 @@ Riesgos:
 - mezclar simulation y hardware;
 - diseñar Supervisor prematuramente.
 
-## 14. Fuera de alcance actual
+## 15. Fuera de alcance actual
 
 ```text
 Production Runtime Adapters
@@ -516,7 +557,7 @@ telemetry concreta
 automatic recovery
 ```
 
-## 15. Señales de pérdida de contexto
+## 16. Señales de pérdida de contexto
 
 Detener si un asistente propone:
 
@@ -542,7 +583,7 @@ Detener si un asistente propone:
 - archivos por fragmentos;
 - código antes de diseño.
 
-## 16. Protocolo de fallo
+## 17. Protocolo de fallo
 
 ```text
 1. Detener.
@@ -556,7 +597,7 @@ Detener si un asistente propone:
 9. Aceptar baseline solo en PASS.
 ```
 
-## 17. Protocolo Git
+## 18. Protocolo Git
 
 Antes de commit:
 
@@ -584,7 +625,7 @@ git status -sb
 
 `Submit` significa staging + commit + push.
 
-## 18. Tooling
+## 19. Tooling
 
 Velocity Test Dashboard:
 
@@ -602,7 +643,7 @@ El experimento Java VTD permanece externo.
 
 Python VTD permanece canónico.
 
-## 19. Regla final
+## 20. Regla final
 
 Un nuevo chat no necesita imitar una voz exacta.
 

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.10 |
+| Versión | 1.11 |
 | Fecha de actualización | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -678,7 +678,7 @@ Modificar la implementación después del PASS no ofrecía beneficio demostrado 
 
 ```text
 Core Architecture:                  2.22
-Engineering Standards:              1.4
+Engineering Standards:              1.5
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
@@ -688,9 +688,10 @@ RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
-Project Handoff:                    1.10
-Resume Prompt:                      1.10
-Collaboration Contract:             1.2
+Velocity Submit Tool Design:         1.0
+Project Handoff:                    1.11
+Resume Prompt:                      1.11
+Collaboration Contract:             1.3
 ```
 
 ## 24. Git
@@ -719,13 +720,11 @@ Estado confirmado después del feature push:
 ## main...origin/main
 ```
 
-Commit documental de baseline:
+Commit documental de CompositionRuntime baseline:
 
 ```text
-docs(runtime): record composition runtime 1.0 baseline
+38a5ea7 docs(runtime): record composition runtime 1.0 baseline
 ```
-
-El hash es asignado por Git al someter esta revisión documental.
 
 ## 25. Tooling
 
@@ -761,6 +760,13 @@ Tests en Other:
 
 ```text
 0
+```
+
+Velocity Submit Tool:
+
+```text
+Design 1.0 ACTIVO
+Implementación pendiente después del commit documental
 ```
 
 El Dashboard Java experimental permanece externo.
@@ -873,29 +879,49 @@ Estado sincronizado:
 
 `Submit` significa staging + commit + push.
 
-## 29. Siguiente milestone recomendado
+## 29. Milestone actual
 
 ```text
-Production Runtime Adapters
-Problema y análisis
+Velocity Submit Tool 1.0
+DISEÑO ACTIVO
+IMPLEMENTACIÓN NO INICIADA
 ```
 
-Todavía no existe ADR o diseño aceptado.
+Responsabilidad:
 
-Debe analizarse la frontera entre:
+> Validar y someter una entrega declarada por manifiesto mediante staging explícito, commit, push y verificación final.
 
-- Composition Root;
-- Godot RuntimeHost;
-- Dependency Value Resolver;
-- Lifecycle Adapter;
-- Communication Binder;
-- factories concretas.
+Arquitectura seleccionada:
 
-No implementar adapters hasta cerrar problema, análisis y diseño.
+```text
+PowerShell launcher
++
+Python engine
++
+SUBMIT_MANIFEST.json externo
+```
+
+Documento:
+
+```text
+docs/tools/velocity_submit_tool_design.md
+Versión 1.0
+```
+
+No requiere ADR porque no modifica Core.
+
+Requiere commit documental antes de implementación.
+
+Commit sugerido:
+
+```text
+docs(tools): define manifest-driven submit
+```
 
 ## 30. Trabajo futuro explícito
 
 ```text
+Velocity Submit Tool implementation
 Production Runtime Adapters
 Composition Root concreto
 CompositionRuntimeSupervisor

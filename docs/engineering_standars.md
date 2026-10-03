@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.4 |
-| Última revisión | 02/10/2026 |
+| Versión | 1.5 |
+| Última revisión | 03/10/2026 |
 | Engine | Godot Engine 4.7.1 stable |
 | Alcance | Arquitectura, implementación, pruebas, documentación y Git |
 
@@ -1295,9 +1295,22 @@ Razón:
 - reduce errores manuales;
 - mantiene una fuente canónica.
 
-### 19.7 Una entrega por archivo
+### 19.7 Entrega consolidada
 
-Cuando varios archivos extensos cambian, se entregan uno por uno.
+Cuando varios archivos cambian, se entregan completos dentro de un paquete consolidado.
+
+Estructura:
+
+```text
+repository_files/
+README.txt
+SHA256SUMS.txt
+SUBMIT_MANIFEST.json cuando Velocity Submit Tool esté disponible
+```
+
+Solo `repository_files/` entra al repositorio.
+
+README, SHA, manifest, carpeta del paquete y ZIP permanecen externos.
 
 Después se realiza auditoría conjunta.
 
@@ -1351,6 +1364,72 @@ Resultado esperado:
 ## main...origin/main
 ```
 
+### 20.5 Submit manual
+
+El flujo manual permanece como fallback canónico:
+
+```powershell
+git status --short
+git diff --check
+git add -- <rutas-explícitas>
+git diff --cached --name-status
+git diff --cached --check
+git commit -m "<mensaje>"
+git log -1 --oneline
+git status --short
+git push origin main
+git status -sb
+```
+
+`Submit` significa:
+
+```text
+staging + commit + push
+```
+
+### 20.6 Submit automatizado por manifiesto
+
+Velocity Submit Tool puede automatizar el flujo manual cuando esté implementado y verificado.
+
+Entrada:
+
+```text
+SUBMIT_MANIFEST.json
+```
+
+Debe conservar:
+
+- branch explícita;
+- base commit explícita;
+- remote explícito;
+- mensaje explícito;
+- rutas explícitas;
+- SHA-256 por archivo;
+- detección de cambios inesperados;
+- `.gd.uid` controlados;
+- `git diff --check`;
+- staging exacto;
+- cached audit;
+- una confirmación humana;
+- commit sin amend;
+- push sin force;
+- verificación de sincronización.
+
+Nunca puede usar:
+
+```text
+git add .
+git add -A
+git commit -a
+git push --force
+```
+
+Si commit falla, no ejecuta push.
+
+Si push falla, conserva el commit local y reporta estado parcial.
+
+El manifiesto es un artefacto de entrega externo al repositorio.
+
 ## 21. Anti-patterns prohibidos
 
 No se acepta:
@@ -1379,7 +1458,10 @@ No se acepta:
 - documentación desactualizada;
 - entrega de archivos mediante cirugía manual;
 - fragmentos de código como estado final;
-- commit con caché o estado local.
+- commit con caché o estado local;
+- submit automatizado sin allowlist explícita;
+- manifest ejecutable o con command strings;
+- force push automatizado.
 
 ## 22. Checklist
 
@@ -1431,6 +1513,8 @@ No se acepta:
 
 ### Git
 
+- [ ] Manifest validado cuando aplica.
+- [ ] No existen cambios inesperados.
 - [ ] Staging revisado.
 - [ ] Commit por responsabilidad.
 - [ ] Working tree limpio.

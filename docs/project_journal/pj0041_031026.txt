@@ -1,0 +1,580 @@
+PJ0041 – Velocity Submit Tool Problem and Analysis
+
+Fecha:
+
+03/10/2026
+
+Zona horaria:
+
+GMT-5
+sin DST
+
+Objetivo:
+
+Reducir la carga repetitiva
+del flujo Git de Velocity
+sin perder staging explícito,
+auditoría o seguridad.
+
+Estado previo:
+
+CompositionRuntime 1.0:
+
+IMPLEMENTADO
+
+VERIFICADO
+
+DOCUMENTADO
+
+Baseline global:
+
+69 tests
+
+2156 checks
+
+0 failures
+
+0 missing metrics
+
+Último commit:
+
+38a5ea7
+
+docs(runtime): record composition runtime 1.0 baseline
+
+Git:
+
+## main...origin/main
+
+Problema reportado:
+
+El flujo de submit exige repetir:
+
+- git status;
+
+- diff check;
+
+- listas explícitas de staging;
+
+- cached name-status;
+
+- cached check;
+
+- commit;
+
+- log;
+
+- status;
+
+- push;
+
+- sync status.
+
+La repetición es segura,
+pero consume tiempo
+y atención del usuario.
+
+Incidentes observados:
+
+1. Archivo accidental:
+
+--help
+
+2. Enlace local:
+
+vtd
+
+3. Confusión entre:
+
+staging
+
+y
+
+commit ejecutado.
+
+4. Listas de 32 archivos
+para CompositionRuntime.
+
+5. Necesidad de incluir
+`.gd.uid` generados localmente.
+
+Conclusión:
+
+La seguridad no debe reducirse.
+
+La operación repetitiva sí puede
+automatizarse.
+
+Responsabilidad seleccionada:
+
+Validar y someter
+una entrega declarada
+por manifiesto.
+
+Nombre:
+
+Velocity Submit Tool 1.0
+
+Submit conserva significado:
+
+staging
+
++
+
+commit
+
++
+
+push
+
+La herramienta no acepta
+la calidad técnica de una entrega.
+
+Pruebas continúan autoritativas
+en Godot y Dashboard.
+
+Flujo futuro:
+
+1. Copiar repository_files/.
+
+2. Refrescar Godot.
+
+3. Ejecutar tests.
+
+4. Ejecutar un comando.
+
+5. Revisar resumen.
+
+6. Escribir SUBMIT.
+
+7. Copiar resultado final.
+
+Package contract futuro:
+
+repository_files/
+
+README.txt
+
+SHA256SUMS.txt
+
+SUBMIT_MANIFEST.json
+
+Solo repository_files/
+entra al repositorio.
+
+Manifiesto:
+
+Schema:
+
+velocity-submit-manifest/v1
+
+Campos:
+
+- delivery_id;
+
+- project;
+
+- expected_branch;
+
+- expected_head;
+
+- remote;
+
+- commit_message;
+
+- godot_uid_policy;
+
+- verification_summary;
+
+- files.
+
+Cada file:
+
+- path;
+
+- sha256;
+
+- action.
+
+Action 1.0:
+
+upsert
+
+Deletion y rename
+permanecen fuera de alcance.
+
+Protección de baseline:
+
+Manifest declara
+expected HEAD.
+
+Tool exige:
+
+HEAD actual
+
+==
+
+expected HEAD
+
+También ejecuta fetch
+y exige:
+
+HEAD
+
+==
+
+origin/main
+
+antes de commit.
+
+Path safety:
+
+Se rechaza:
+
+- path absoluto;
+
+- drive letter;
+
+- backslash;
+
+- dot segment;
+
+- parent traversal;
+
+- .git;
+
+- duplicado;
+
+- case collision;
+
+- directory;
+
+- symlink;
+
+- path fuera del repo.
+
+Content safety:
+
+Cada file declarado
+tiene SHA-256.
+
+Hash mismatch aborta
+antes de staging.
+
+Working tree safety:
+
+Cambios permitidos:
+
+manifest files
+
++
+
+UID sidecars derivados
+
+Cualquier otro cambio aborta.
+
+No se elimina automáticamente.
+
+Godot UID:
+
+Por `.gd` nuevo:
+
+`<script>.gd.uid`
+
+es obligatorio.
+
+Debe contener:
+
+uid://[a-z0-9]+
+
+Para `.gd` existente:
+
+UID se incluye únicamente
+si cambió.
+
+UID extra inesperado bloquea.
+
+Staging:
+
+Solo paths explícitos.
+
+Prohibido:
+
+git add .
+
+git add -A
+
+git commit -a
+
+Auditoría:
+
+git diff --check
+
+git diff --cached --name-status
+
+git diff --cached --check
+
+Cached paths deben coincidir
+exactamente con allowlist.
+
+Confirmación:
+
+Una sola entrada:
+
+SUBMIT
+
+Otra entrada cancela.
+
+Cancelación:
+
+- no commit;
+
+- no push;
+
+- retirar staging propio;
+
+- conservar working files.
+
+Commit failure:
+
+- no push;
+
+- staging conservado;
+
+- error reportado.
+
+Push failure:
+
+- commit local conservado;
+
+- no reset;
+
+- resultado LOCAL_COMMIT_ONLY;
+
+- exit no cero.
+
+Éxito:
+
+VELOCITY SUBMIT RESULT: PASS
+
+Commit hash y subject
+
+Files count
+
+Remote synchronized
+
+Status main...origin/main
+
+Lenguaje analizado:
+
+Opción A:
+
+PowerShell monolítico.
+
+Ventaja:
+
+Nativo Windows.
+
+Costo:
+
+Menor testabilidad
+en entorno actual
+y dependencia de Pester
+o pruebas manuales extensas.
+
+Opción B:
+
+Python directo.
+
+Ventaja:
+
+Alta testabilidad.
+
+Costo:
+
+UX distinta a comando
+PowerShell acordado.
+
+Opción C seleccionada:
+
+PowerShell launcher
+
++
+
+Python engine
+
+Razones:
+
+- Python ya existe por Dashboard;
+
+- Python 3.13 disponible;
+
+- unittest disponible;
+
+- subprocess shell=False;
+
+- temp Git repos;
+
+- interfaz PowerShell preservada;
+
+- launcher simple.
+
+Archivos previstos:
+
+tools/git/
+velocity_submit.py
+
+tools/git/
+velocity_submit.ps1
+
+tools/git/
+velocity_submit.bat
+
+test/tools/
+test_velocity_submit.py
+
+docs/tools/
+velocity_submit_tool_design.md
+
+Tests previstos:
+
+Manifest:
+
+- malformed JSON;
+
+- schema mismatch;
+
+- missing fields;
+
+- invalid paths;
+
+- invalid SHA;
+
+- invalid commit message.
+
+Files:
+
+- missing;
+
+- hash mismatch;
+
+- unexpected change;
+
+- pre-staged change;
+
+- whitespace error;
+
+- Unicode path.
+
+UID:
+
+- valid new UID;
+
+- missing UID;
+
+- invalid UID;
+
+- unexpected UID;
+
+- existing unchanged UID.
+
+Git integration:
+
+working repo
+
++
+
+local bare remote
+
+Casos:
+
+- wrong branch;
+
+- HEAD mismatch;
+
+- remote ahead;
+
+- validate-only;
+
+- cancellation;
+
+- exact staging;
+
+- exact commit;
+
+- push success;
+
+- final synchronization;
+
+- push failure preserves commit.
+
+No se utiliza GitHub
+durante tests.
+
+No ADR requerido:
+
+Razón:
+
+La herramienta no cambia:
+
+- Core;
+
+- ownership runtime;
+
+- lifecycle;
+
+- modelo de dominio;
+
+- pipeline de simulación.
+
+Sí requiere:
+
+- diseño de tooling;
+
+- Engineering Standards;
+
+- Collaboration Contract;
+
+- pruebas;
+
+- journal;
+
+- baseline propia.
+
+Bootstrap:
+
+La herramienta no puede
+automatizar su instalación inicial.
+
+Será necesario un último
+submit manual.
+
+Después:
+
+los paquetes futuros incluirán
+SUBMIT_MANIFEST.json.
+
+Estado:
+
+PROBLEMA CERRADO
+
+ANALISIS CERRADO
+
+DECISION APROBADA
+
+DISEÑO 1.0 ACTIVO
+
+IMPLEMENTACION NO INICIADA
+
+Siguiente paso:
+
+Actualizar Standards
+y Project State.
+
+Después:
+
+commit documental.
+
+Luego:
+
+implementación incremental.

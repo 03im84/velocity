@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.2 |
+| Versión | 1.3 |
 | Fecha | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Idioma principal | Español |
@@ -360,6 +360,7 @@ Cuando existe uno o varios archivos, el asistente puede preparar un ZIP consolid
 repository_files/
 README.txt
 SHA256SUMS.txt
+SUBMIT_MANIFEST.json cuando la entrega soporte Velocity Submit Tool
 ```
 
 El usuario:
@@ -374,6 +375,7 @@ No se guardan dentro del repositorio:
 ```text
 README.txt
 SHA256SUMS.txt
+SUBMIT_MANIFEST.json
 nombre-del-paquete/
 archivo.zip
 ```
@@ -783,15 +785,24 @@ Journals históricos no se reescriben para alterar historia.
 
 ## 33. Git
 
+`Submit` significa:
+
+```text
+staging
++
+commit
++
+push
+```
+
+### Flujo manual de fallback
+
 Antes de commit:
 
 ```powershell
 git status --short
-
 git diff --check
-
 git diff --cached --name-status
-
 git diff --cached --check
 ```
 
@@ -801,17 +812,7 @@ No usar:
 git add .
 ```
 
-cuando existen varios cambios.
-
 Commits separados por responsabilidad.
-
-Después:
-
-```powershell
-git status --short
-```
-
-debe quedar limpio.
 
 Después de cerrar milestone:
 
@@ -819,6 +820,34 @@ Después de cerrar milestone:
 git push origin main
 git status -sb
 ```
+
+### Flujo automatizado aprobado
+
+Velocity Submit Tool 1.0 podrá reemplazar la repetición manual después de ser implementado y verificado.
+
+Entrada:
+
+```text
+SUBMIT_MANIFEST.json
+```
+
+Debe validar:
+
+- commit base;
+- branch;
+- remote;
+- hashes;
+- rutas explícitas;
+- cambios inesperados;
+- `.gd.uid` derivados;
+- diff checks;
+- staging exacto;
+- confirmación `SUBMIT`;
+- commit;
+- push;
+- sincronización final.
+
+La herramienta no acepta pruebas en nombre del usuario y no elimina archivos inesperados.
 
 ## 34. Discrepancias
 
