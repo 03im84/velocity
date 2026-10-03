@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.11 |
+| Versión | 1.12 |
 | Fecha de actualización | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -122,35 +122,37 @@ Debe interrumpirse al usuario solamente cuando sea necesario:
 
 Toda modificación se entrega como archivo completo consolidado.
 
-El flujo vigente utiliza paquetes ZIP.
+Package layout:
 
-El usuario:
+```text
+package-root/
+├── repository_files/
+├── README.txt
+├── SHA256SUMS.txt
+└── SUBMIT_MANIFEST.json
+```
 
-1. descarga el ZIP;
-2. lo extrae fuera de Velocity;
-3. copia únicamente `repository_files/` sobre la raíz del repositorio;
-4. conserva los `.gd.uid` generados por Godot;
-5. ejecuta verificaciones y pruebas.
+Mientras Velocity Submit Tool no esté implementado, el usuario copia únicamente `repository_files/`.
+
+Después de su baseline, el ZIP permanece fuera de Velocity y la herramienta ejecuta:
+
+```text
+Install
+→ tests
+→ Submit
+```
 
 Nunca se guardan dentro del repositorio:
 
 ```text
 README.txt
 SHA256SUMS.txt
+SUBMIT_MANIFEST.json
 carpeta del paquete
 archivo ZIP
 ```
 
-README y SHA son artefactos temporales de entrega.
-
-No se utilizan:
-
-- parches;
-- cirugía manual;
-- diffs como construcción;
-- fragmentos como estado final;
-- “inserta después de”;
-- “elimina esta línea”.
+No se utilizan parches, cirugía manual o fragmentos como estado final.
 
 ## 6. Metodología obligatoria
 
@@ -678,7 +680,7 @@ Modificar la implementación después del PASS no ofrecía beneficio demostrado 
 
 ```text
 Core Architecture:                  2.22
-Engineering Standards:              1.5
+Engineering Standards:              1.6
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
@@ -688,10 +690,10 @@ RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
-Velocity Submit Tool Design:         1.0
-Project Handoff:                    1.11
-Resume Prompt:                      1.11
-Collaboration Contract:             1.3
+Velocity Submit Tool Design:         1.1
+Project Handoff:                    1.12
+Resume Prompt:                      1.12
+Collaboration Contract:             1.4
 ```
 
 ## 24. Git
@@ -765,8 +767,11 @@ Tests en Other:
 Velocity Submit Tool:
 
 ```text
-Design 1.0 ACTIVO
-Implementación pendiente después del commit documental
+Design 1.1 ACTIVO
+Implementación candidata
+44 tests propios PASS
+61 tests de tooling PASS
+Windows verification pendiente
 ```
 
 El Dashboard Java experimental permanece externo.
@@ -883,39 +888,56 @@ Estado sincronizado:
 
 ```text
 Velocity Submit Tool 1.0
-DISEÑO ACTIVO
-IMPLEMENTACIÓN NO INICIADA
+IMPLEMENTACIÓN CANDIDATA
 ```
 
 Responsabilidad:
 
-> Validar y someter una entrega declarada por manifiesto mediante staging explícito, commit, push y verificación final.
+> Validar, instalar y someter una entrega externa declarada por manifiesto.
 
-Arquitectura seleccionada:
+Flujo:
 
 ```text
-PowerShell launcher
-+
-Python engine
-+
-SUBMIT_MANIFEST.json externo
+invoke tool without path
+→ native ZIP picker
+→ Validate
+→ Install transactionally
+→ authoritative tests
+→ invoke tool again
+→ Submit
 ```
 
-Documento:
+Componentes candidatos:
 
 ```text
-docs/tools/velocity_submit_tool_design.md
-Versión 1.0
+tools/git/velocity_submit_contract.py
+tools/git/velocity_submit_git.py
+tools/git/velocity_submit.py
+tools/git/velocity_submit.ps1
+tools/git/velocity_submit.bat
+test/tools/test_velocity_submit.py
 ```
 
-No requiere ADR porque no modifica Core.
-
-Requiere commit documental antes de implementación.
-
-Commit sugerido:
+Verificación local:
 
 ```text
-docs(tools): define manifest-driven submit
+44 Velocity Submit tests — PASS
+61 Python tooling tests — PASS
+```
+
+Pendiente:
+
+```text
+Windows launcher
+native Tkinter picker
+bootstrap package validation
+feature commit
+```
+
+Commit previsto:
+
+```text
+feat(tools): add guided package delivery
 ```
 
 ## 30. Trabajo futuro explícito

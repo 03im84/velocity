@@ -1,0 +1,539 @@
+PJ0042 – Velocity Submit Tool Package Installation Revision
+
+Fecha:
+
+03/10/2026
+
+Objetivo:
+
+Revisar Velocity Submit Tool 1.0
+para que el paquete externo
+también posicione los archivos.
+
+Estado previo:
+
+Velocity Submit Tool Design 1.0:
+
+ACTIVO
+
+Commit:
+
+1334675
+
+docs(tools): define manifest-driven submit
+
+Implementación candidata:
+
+Preparada externamente.
+
+Estado en repositorio del usuario:
+
+NO COPIADA
+
+NO COMMIT
+
+Insight del usuario:
+
+El mismo JSON que describe:
+
+- rutas;
+
+- hashes;
+
+- commit;
+
+- baseline;
+
+puede instalar los archivos
+en sus destinos exactos.
+
+Pregunta:
+
+¿Por qué continuar copiando
+repository_files manualmente
+si el paquete y manifest
+yacen fuera de Velocity?
+
+Evaluación:
+
+La observación es correcta.
+
+El diseño 1.0 automatizaba:
+
+staging
+
+commit
+
+push
+
+pero no automatizaba:
+
+package validation
+
+extraction
+
+file placement
+
+replace confirmation
+
+copy completeness
+
+Por tanto:
+
+resolvía solo la mitad
+de la carga operativa.
+
+Decisión revisada:
+
+Velocity Submit Tool 1.0
+será también installer
+de entregas externas.
+
+Responsabilidad revisada:
+
+Validar, instalar y someter
+una entrega externa
+declarada por manifiesto.
+
+Flujo seleccionado:
+
+External ZIP
+
+↓
+
+Validate Package
+
+↓
+
+Install
+
+↓
+
+Tests autoritativos
+
+↓
+
+Submit
+
+No se selecciona:
+
+Install
+
+↓
+
+Commit inmediato
+
+Razón:
+
+Godot, Dashboard o unittest
+deben ejecutarse entre ambos.
+
+Invocación futura:
+
+velocity_submit.ps1
+-Package package.zip
+-Install
+
+Después de tests:
+
+velocity_submit.ps1
+-Package package.zip
+-Submit
+
+El usuario solo:
+
+1. descarga ZIP fuera de Velocity;
+
+2. ejecuta Install;
+
+3. ejecuta pruebas;
+
+4. ejecuta Submit;
+
+5. confirma SUBMIT.
+
+Ya no:
+
+- extrae manualmente;
+
+- copia repository_files;
+
+- confirma reemplazos;
+
+- construye listas de staging;
+
+- ejecuta secuencia Git manual.
+
+Package layout:
+
+package-root/
+
+repository_files/
+
+README.txt
+
+SHA256SUMS.txt
+
+SUBMIT_MANIFEST.json
+
+ZIP permanece externo.
+
+Manifest actions:
+
+add
+
+replace
+
+El diseño anterior usaba:
+
+upsert
+
+Se reemplaza porque:
+
+add y replace permiten
+precondiciones diferentes
+y evitan overwrite ambiguo.
+
+Deletion y rename:
+
+FUERA DE ALCANCE 1.0
+
+Package safety:
+
+- un root;
+
+- manifest exacto;
+
+- repository_files exacto;
+
+- sin traversal;
+
+- sin absolute paths;
+
+- sin drive paths;
+
+- sin symlink entries;
+
+- sin encrypted entries;
+
+- sin duplicate entries;
+
+- sin case collisions;
+
+- máximo 10 000 entries;
+
+- máximo 128 MiB uncompressed.
+
+Archive allowlist:
+
+- manifest paths bajo repository_files;
+
+- README;
+
+- SHA;
+
+- manifest;
+
+- directories.
+
+Extra file:
+
+PACKAGE_ERROR
+
+Install preconditions:
+
+- repository Velocity;
+
+- branch exacta;
+
+- HEAD exacto;
+
+- remote sincronizado;
+
+- sin Git operation activa;
+
+- index vacío;
+
+- working tree limpio.
+
+Install transaction:
+
+1. Validar paquete completo.
+
+2. Validar manifest completo.
+
+3. Validar source hashes.
+
+4. Validar target actions.
+
+5. Crear receipt installing.
+
+6. Backup replacements.
+
+7. Preparar copias.
+
+8. Aplicar targets.
+
+9. Verificar target hashes.
+
+10. Receipt installed.
+
+Install error:
+
+- restore replacements;
+
+- remove applied adds;
+
+- no staging;
+
+- no commit;
+
+- no push.
+
+Receipt:
+
+.git/velocity-submit/
+active_delivery.json
+
+Backups:
+
+.git/velocity-submit/backups/
+
+Receipt no se versiona.
+
+No modifica .git/config.
+
+Receipt protege frontera
+entre Install y Submit.
+
+Submit preflight:
+
+- mismo ZIP;
+
+- mismo package digest;
+
+- mismo manifest digest;
+
+- receipt installed;
+
+- mismo HEAD;
+
+- targets exactos;
+
+- UID sidecars válidos;
+
+- exact worktree changes;
+
+- no staging previo.
+
+Godot UID:
+
+Install no exige UID.
+
+Después de refrescar Godot,
+Submit exige UID para
+cada `.gd` action add.
+
+Submit stages:
+
+manifest targets
+
++
+
+derived UID sidecars
+
+Tests:
+
+La herramienta no ejecuta
+command strings desde JSON.
+
+verification_summary se muestra.
+
+El usuario confirma resultados
+al escribir SUBMIT.
+
+Razón:
+
+No convertir manifest
+en superficie de ejecución.
+
+Commit y push:
+
+Se conserva diseño anterior:
+
+- explicit staging;
+
+- cached audit;
+
+- commit exacto;
+
+- no force;
+
+- local commit preserved
+  on push failure;
+
+- remote sync final.
+
+Implementación candidata anterior:
+
+CANCELADA
+
+Razón:
+
+No fue copiada por el usuario.
+
+La corrección ocurre
+antes de crear baseline.
+
+No existe migración.
+
+No existe compatibilidad
+que preservar todavía.
+
+Documento revisado:
+
+docs/tools/
+velocity_submit_tool_design.md
+
+Versión:
+
+1.0 → 1.1
+
+Metodología:
+
+No se modificará implementación
+hasta cerrar commit documental
+de esta revisión.
+
+
+Segundo insight del usuario:
+
+No debería ser necesario
+escribir o pegar package path.
+
+La herramienta puede abrir
+selector nativo de ZIP.
+
+Evaluación:
+
+APROBADO
+
+Razones:
+
+- reduce carga adicional;
+
+- evita typo de path;
+
+- mantiene ZIP externo;
+
+- el usuario concede acceso
+  únicamente al archivo elegido;
+
+- no requiere escanear carpetas;
+
+- Tkinter ya existe
+  por Dashboard.
+
+Guided mode:
+
+Primera invocación:
+
+velocity_submit.ps1
+
+↓
+
+sin receipt
+
+↓
+
+native file picker
+
+↓
+
+select ZIP
+
+↓
+
+Install
+
+Después de tests:
+
+velocity_submit.ps1
+
+↓
+
+receipt installed
+
+↓
+
+remember selected ZIP
+
+↓
+
+Submit
+
+Si ZIP fue movido:
+
+file picker vuelve a abrir.
+
+Package digest y manifest digest
+deben coincidir con receipt.
+
+Si no coinciden:
+
+abort.
+
+Fallback explícito:
+
+-Package <zip>
+
+Permanece para:
+
+- tests;
+
+- automation;
+
+- diagnóstico;
+
+- entornos sin Tkinter.
+
+Cancelación de picker:
+
+CANCELLED
+
+sin cambios.
+
+No existe acceso general
+a carpetas del usuario.
+
+No se versiona path local.
+
+Se almacena únicamente
+en receipt bajo .git.
+
+Estado:
+
+INSIGHT ACEPTADO
+
+PROBLEMA REVISADO
+
+ANALISIS REVISADO
+
+DESIGN 1.1 ACTIVO
+
+IMPLEMENTACION ANTERIOR CANCELADA
+
+IMPLEMENTACION REVISADA NO INICIADA
+
+Siguiente paso:
+
+Actualizar Standards
+y Project State.
+
+Después:
+
+commit documental.
+
+Luego:
+
+implementation revisada.

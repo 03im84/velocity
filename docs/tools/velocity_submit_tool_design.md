@@ -2,25 +2,26 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACTIVO — APROBADO PARA IMPLEMENTACIÓN DESPUÉS DEL COMMIT DOCUMENTAL |
-| Versión del documento | 1.0 |
-| Versión de la herramienta | 1.0.0 |
+| Estado | ACTIVO — IMPLEMENTACIÓN CANDIDATA |
+| Versión del documento | 1.1 |
+| Versión objetivo de la herramienta | 1.0.0 |
 | Fecha | 03/10/2026 |
 | Plataforma inicial | Windows |
-| Entrada principal | PowerShell |
+| Entrada principal | PowerShell guided mode |
+| Selector | Diálogo nativo mediante Tkinter |
 | Motor | Python 3.13 compatible |
-| Alcance | Validación de entrega, staging explícito, commit, push y verificación Git |
+| Alcance | Instalación transaccional de paquetes externos y submit Git manifest-driven |
 | Impacto en Core | Ninguno |
 
 ## 1. Propósito
 
-Velocity Submit Tool reduce la carga repetitiva y propensa a errores del submit sin eliminar las protecciones del flujo Git.
+Velocity Submit Tool reduce la carga repetitiva de aplicar y someter entregas sin reducir seguridad.
 
 Responsabilidad:
 
-> Validar y someter una entrega declarada por manifiesto mediante staging explícito, commit, push y verificación final.
+> Validar, instalar y someter una entrega externa declarada por manifiesto.
 
-`Submit` conserva su significado canónico:
+`Submit` conserva su significado:
 
 ```text
 staging
@@ -30,158 +31,244 @@ commit
 push
 ```
 
-La herramienta automatiza operación Git.
-
-No acepta arquitectura, implementación o pruebas en nombre del usuario.
-
-## 2. Problema
-
-El flujo actual exige repetir manualmente:
+La herramienta añade una fase anterior:
 
 ```text
-git status --short
-git diff --check
-staging explícito
-git diff --cached --name-status
-git diff --cached --check
-git commit
-git log -1 --oneline
-git status --short
-git push origin main
-git status -sb
+install
 ```
 
-Este flujo es seguro, pero produce:
+## 2. Problema revisado
 
-- carga operativa alta;
-- listas de staging extensas;
-- riesgo de omitir `.gd.uid`;
-- riesgo de incluir artefactos accidentales;
-- mensajes repetitivos entre usuario y asistente;
-- posibilidad de ejecutar push después de un commit fallido;
-- fatiga durante milestones grandes.
+El diseño 1.0 automatizaba Git después de que el usuario copiara manualmente `repository_files/`.
 
-La repetición no añade valor arquitectónico.
+Eso dejaba sin resolver:
 
-## 3. Restricciones
+- extracción del paquete;
+- posicionamiento de archivos;
+- confirmaciones de reemplazo;
+- omisiones al copiar;
+- riesgo de copiar README, SHA, manifest o ZIP;
+- diferencia entre paquete recibido y working tree instalado.
 
-La automatización no puede:
+El JSON ya describe rutas y hashes.
 
-- utilizar `git add .`;
-- aceptar archivos no declarados;
-- borrar archivos inesperados;
-- ejecutar código contenido en un manifiesto;
-- ocultar errores Git;
-- inventar un mensaje de commit;
-- asumir que las pruebas pasaron;
-- hacer force push;
-- resetear commits;
-- almacenar credenciales;
-- modificar `.git/config`;
-- sustituir revisión arquitectónica;
-- sustituir Dashboard o Godot.
+Por tanto, la misma herramienta puede aplicar la entrega de forma más segura que la copia manual.
+
+## 3. Insight aceptado
+
+El paquete permanece fuera de Velocity.
+
+La herramienta recibe directamente su ruta.
+
+Flujo:
+
+```text
+External ZIP
+↓
+Validate package
+↓
+Install repository_files transactionally
+↓
+Run authoritative tests
+↓
+Revalidate installed delivery
+↓
+Explicit staging
+↓
+Commit
+↓
+Push
+```
+
+La instalación y el submit son dos operaciones separadas porque las pruebas deben ejecutarse entre ambas.
 
 ## 4. Decisión
 
-Se implementará una herramienta manifest-driven con:
+Se implementará:
 
 ```text
 tools/git/velocity_submit.ps1
-```
-
-como entrada Windows y:
-
-```text
 tools/git/velocity_submit.py
-```
-
-como motor verificable.
-
-Launcher opcional:
-
-```text
 tools/git/velocity_submit.bat
-```
-
-Pruebas:
-
-```text
 test/tools/test_velocity_submit.py
 ```
 
-Cada paquete futuro incluirá fuera de `repository_files/`:
+Arquitectura:
 
 ```text
-README.txt
-SHA256SUMS.txt
+PowerShell guided launcher
++
+Python engine
++
+native ZIP file picker
++
+external ZIP
++
 SUBMIT_MANIFEST.json
++
+local installation receipt
 ```
 
-`SUBMIT_MANIFEST.json` nunca entra al repositorio.
+No se requiere ADR porque no cambia Core, dominio, runtime o hardware.
 
-## 5. Razón de PowerShell + Python
+## 5. Package contract
 
-PowerShell conserva una invocación natural en Windows.
-
-Python se selecciona como motor porque:
-
-- ya es dependencia del Dashboard canónico;
-- existe Python 3.13 en el entorno del proyecto;
-- permite parsing JSON estricto;
-- permite path validation portable;
-- permite subprocess sin shell interpolation;
-- permite pruebas unitarias e integración con `unittest`;
-- permite crear repositorios Git temporales;
-- evita depender de Pester;
-- reduce complejidad del launcher PowerShell.
-
-PowerShell no contiene lógica Git compleja.
-
-## 6. Invocación
-
-Comando principal:
-
-```powershell
-.\tools\git\velocity_submit.ps1 `
-    -Manifest "C:\ruta\al\paquete\SUBMIT_MANIFEST.json"
-```
-
-Validación sin staging:
-
-```powershell
-.\tools\git\velocity_submit.ps1 `
-    -Manifest "C:\ruta\al\paquete\SUBMIT_MANIFEST.json" `
-    -ValidateOnly
-```
-
-Launcher alternativo:
-
-```powershell
-tools\git\velocity_submit.bat `
-    "C:\ruta\al\paquete\SUBMIT_MANIFEST.json"
-```
-
-## 7. Flujo de usuario
+Cada entrega futura es un ZIP externo:
 
 ```text
-1. Extraer paquete fuera de Velocity.
-
-2. Copiar únicamente repository_files/.
-
-3. Refrescar Godot cuando corresponda.
-
-4. Ejecutar pruebas autoritativas.
-
-5. Ejecutar Velocity Submit Tool.
-
-6. Revisar resumen.
-
-7. Escribir SUBMIT una vez.
-
-8. Copiar resultado final al asistente.
+package-name/
+├── repository_files/
+├── README.txt
+├── SHA256SUMS.txt
+└── SUBMIT_MANIFEST.json
 ```
 
-## 8. Manifest schema
+Solo el contenido lógico de `repository_files/` puede instalarse en Velocity.
+
+Los otros artefactos permanecen fuera.
+
+El usuario no necesita extraer el ZIP.
+
+## 6. Invocación guiada
+
+Comando ordinario:
+
+```powershell
+.\tools\git\velocity_submit.ps1
+```
+
+No requiere path o parámetro.
+
+Si no existe receipt activo:
+
+```text
+Open native file picker
+→ user selects one .zip
+→ validate package
+→ Install
+```
+
+El selector utiliza Tkinter, ya disponible por Velocity Test Dashboard.
+
+Filtros:
+
+```text
+Velocity delivery packages (*.zip)
+All files (*.*)
+```
+
+Cancelar el diálogo produce `CANCELLED` sin modificar el repositorio.
+
+Invocación explícita preservada:
+
+```powershell
+.\tools\git\velocity_submit.ps1 `
+    -Package "C:\Downloads\package-name.zip" `
+    -Install
+```
+
+Esta forma se utiliza para tests, automatización y diagnóstico.
+
+## 7. Frontera de pruebas
+
+Después de Install, el usuario ejecuta:
+
+- Godot Dashboard;
+- Run All;
+- unittest Python;
+- otra evidencia indicada por la entrega.
+
+La herramienta muestra `verification_summary`, pero no lo interpreta como evidencia automática.
+
+El usuario confirma el PASS al ejecutar Submit.
+
+No se ejecutan command strings desde JSON.
+
+## 8. Segunda invocación — Submit
+
+Después de las pruebas, el usuario ejecuta nuevamente:
+
+```powershell
+.\tools\git\velocity_submit.ps1
+```
+
+La herramienta detecta receipt `installed` y reutiliza el package path seleccionado.
+
+Si el ZIP todavía existe y su digest coincide, continúa sin abrir selector.
+
+Si fue movido o renombrado:
+
+1. abre file picker;
+2. solicita el ZIP correspondiente;
+3. exige mismo package SHA-256 y manifest SHA-256;
+4. rechaza otro paquete.
+
+Submit:
+
+1. revalida paquete;
+2. revalida receipt;
+3. revalida HEAD, branch y remote;
+4. revalida hashes instalados;
+5. incorpora `.gd.uid` derivados;
+6. rechaza cambios inesperados;
+7. ejecuta diff checks;
+8. realiza staging explícito;
+9. muestra auditoría;
+10. solicita `SUBMIT`;
+11. crea commit;
+12. ejecuta push;
+13. verifica sincronización;
+14. elimina receipt después de éxito.
+
+Invocación explícita preservada:
+
+```powershell
+.\tools\git\velocity_submit.ps1 `
+    -Package "C:\Downloads\package-name.zip" `
+    -Submit
+```
+
+## 9. Modos explícitos y guided mode
+
+Validación sin instalación:
+
+```powershell
+.\tools\git\velocity_submit.ps1 `
+    -Package "C:\Downloads\package-name.zip" `
+    -ValidatePackage
+```
+
+Modos explícitos mutuamente excluyentes:
+
+```text
+-ValidatePackage
+-Install
+-Submit
+```
+
+Guided mode no recibe switches.
+
+State selection:
+
+```text
+no receipt
+→ select ZIP
+→ Install
+
+receipt installed
+→ use remembered ZIP
+→ Submit
+
+receipt installing
+→ block and report recovery required
+
+receipt local_commit_only
+→ offer push retry path; never create another commit
+```
+
+No existe modo que instale y haga commit sin frontera de pruebas.
+
+## 10. Manifest schema
 
 Identidad:
 
@@ -197,9 +284,9 @@ Forma:
   "delivery_id": "velocity-example-031026",
   "project": "velocity",
   "expected_branch": "main",
-  "expected_head": "38a5ea7",
+  "expected_head": "1334675",
   "remote": "origin",
-  "commit_message": "docs(tools): example delivery",
+  "commit_message": "feat(scope): description",
   "godot_uid_policy": "required_for_new_gd",
   "verification_summary": [
     "Selected test: PASS",
@@ -207,15 +294,89 @@ Forma:
   ],
   "files": [
     {
-      "path": "docs/example.md",
+      "path": "core/example.gd",
       "sha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-      "action": "upsert"
+      "action": "add"
     }
   ]
 }
 ```
 
-## 9. Campos obligatorios
+## 11. File actions
+
+Acciones 1.0:
+
+```text
+add
+replace
+```
+
+### add
+
+Exige:
+
+- target no existe;
+- target no está tracked;
+- source existe dentro de `repository_files/`.
+
+### replace
+
+Exige:
+
+- target existe;
+- target es tracked;
+- target no es symlink;
+- repository estaba limpio antes de Install.
+
+Fuera de alcance 1.0:
+
+```text
+delete
+rename
+copy
+```
+
+## 12. Package validation
+
+Antes de extraer contenido, la herramienta exige:
+
+- ZIP regular, no symlink;
+- exactamente un package root;
+- exactamente un `SUBMIT_MANIFEST.json` en root;
+- exactamente un `repository_files/`;
+- ningún path absoluto;
+- ningún drive letter;
+- ningún `..`;
+- ningún path duplicado por case-folding;
+- ningún symlink dentro del ZIP;
+- ningún entry cifrado;
+- máximo 10 000 entries;
+- máximo 128 MiB sin comprimir;
+- manifest UTF-8 JSON válido.
+
+Esto bloquea Zip Slip y paquetes no acotados.
+
+## 13. Archive allowlist
+
+Entries permitidos:
+
+```text
+package-root/repository_files/<manifest paths>
+package-root/README.txt
+package-root/SHA256SUMS.txt
+package-root/SUBMIT_MANIFEST.json
+directories necesarias
+```
+
+Un archivo adicional no declarado se rechaza.
+
+Los `.gd.uid` no vienen dentro del ZIP.
+
+Godot los genera después de Install.
+
+## 14. Manifest identity
+
+Campos obligatorios:
 
 ```text
 schema
@@ -229,188 +390,219 @@ godot_uid_policy
 files
 ```
 
-`verification_summary` puede estar vacío.
+`verification_summary` es opcional.
 
-No concede evidencia automática.
+Campos desconocidos se rechazan.
 
-Solo muestra las pruebas que el usuario debe haber ejecutado antes de confirmar.
+No existe fallback de schema.
 
-## 10. Schema
-
-Valor exacto:
-
-```text
-velocity-submit-manifest/v1
-```
-
-Otro valor se rechaza.
-
-No existe fallback a versiones desconocidas.
-
-## 11. Delivery ID
+## 15. Delivery ID
 
 Formato:
-
-```text
-lowercase letters
-numbers
-hyphen
-```
-
-Regex conceptual:
 
 ```text
 ^[a-z0-9][a-z0-9-]{2,79}$
 ```
 
-Se utiliza para observabilidad.
+Se usa para receipt, logs y observabilidad.
 
 No se ejecuta.
 
-## 12. Project
+## 16. Baseline
 
-Valor 1.0:
+`expected_head` contiene hash Git lowercase de 7 a 40 caracteres.
 
-```text
-velocity
-```
-
-La herramienta verifica:
-
-- repositorio Git válido;
-- `project.godot` presente;
-- `config/name="velocity"` presente.
-
-## 13. Expected branch
-
-Valor ordinario:
+Install y Submit exigen:
 
 ```text
-main
+HEAD == expected_head
 ```
 
-La herramienta rechaza:
-
-- detached HEAD;
-- branch distinta;
-- branch vacía.
-
-## 14. Expected HEAD
-
-`expected_head` contiene un hash Git hexadecimal de 7 a 40 caracteres.
-
-La herramienta:
-
-1. resuelve el hash mediante Git;
-2. exige que sea commit;
-3. exige que coincida con HEAD actual.
-
-Esto evita aplicar una entrega sobre una baseline inesperada.
-
-## 15. Remote
-
-Valor ordinario:
+Antes de Install se ejecuta fetch y se exige:
 
 ```text
-origin
+HEAD == remote/branch
 ```
 
-La herramienta exige que el remote exista.
+Esto evita aplicar un paquete sobre otra baseline.
 
-Antes de commit:
+## 17. Commit message
+
+El mensaje viene declarado.
+
+Debe cumplir Conventional Commit aceptado:
 
 ```text
-git fetch <remote> <branch>
+feat
+fix
+docs
+test
+refactor
+chore
+build
+ci
+perf
+revert
 ```
 
-Después exige:
-
-```text
-HEAD == <remote>/<branch>
-```
-
-Si remote está ahead, behind o diverged, aborta antes de staging.
-
-## 16. Commit message
-
-Debe ser explícito en el manifiesto.
-
-Formato Conventional Commit aceptado:
-
-```text
-feat(scope): description
-fix(scope): description
-docs(scope): description
-test(scope): description
-refactor(scope): description
-chore(scope): description
-build(scope): description
-ci(scope): description
-perf(scope): description
-revert(scope): description
-```
-
-Descripción no vacía.
-
-No se interpola en shell.
-
-## 17. File entries
-
-Cada Entry 1.0 contiene:
-
-```text
-path
-sha256
-action
-```
-
-Action 1.0 única:
-
-```text
-upsert
-```
-
-Deletion, rename y copy quedan fuera de alcance 1.0.
-
-Una operación destructiva requiere diseño y confirmación separada.
+No se concatena en shell.
 
 ## 18. Path validation
 
-Cada path debe:
+Cada target path debe:
 
-- ser relativo al repository root;
+- ser relativo;
 - usar `/`;
-- no comenzar con `/`;
-- no contener drive letter;
-- no contener `.` o `..` como componente;
 - no contener NUL;
-- no entrar en `.git`;
-- no ser duplicado;
+- no contener empty segment;
+- no contener `.` o `..`;
+- no entrar a `.git`;
+- no ser absoluto;
+- no contener drive letter;
+- no duplicarse;
 - no colisionar por case-folding;
-- resolver dentro del repository root;
-- apuntar a archivo regular;
-- no ser symlink;
-- no ser directory.
+- resolver dentro de repository root.
 
-La herramienta no usa globbing.
+No existe globbing.
 
-## 19. SHA-256
+## 19. Source hash
 
-Formato:
+Cada file contiene SHA-256 de los bytes dentro del ZIP.
+
+Antes de Install:
 
 ```text
-64 caracteres hexadecimales lowercase
+hash(extracted source) == manifest sha256
 ```
 
-La herramienta calcula SHA-256 de bytes del working file.
+Después de Install:
 
-Mismatch produce abort antes de staging.
+```text
+hash(repository target) == manifest sha256
+```
 
-Esto verifica que `repository_files/` fue copiado completamente y sin edición accidental.
+Antes de Submit se comprueba nuevamente.
 
-## 20. Godot UID policy
+## 20. Repository precondition for Install
 
-Valor 1.0:
+Install requiere:
+
+- repository Git válido;
+- project.godot de Velocity;
+- branch esperada;
+- HEAD esperada;
+- remote sincronizado;
+- sin merge, rebase, cherry-pick, revert o bisect;
+- index vacío;
+- working tree completamente limpio.
+
+Los ignored files no bloquean.
+
+Cualquier untracked no ignorado bloquea.
+
+## 21. Installation receipt
+
+Estado local:
+
+```text
+.git/velocity-submit/active_delivery.json
+```
+
+Backups:
+
+```text
+.git/velocity-submit/backups/<delivery_id>/
+```
+
+Receipt contiene:
+
+- schema interno;
+- delivery ID;
+- manifest SHA-256;
+- package SHA-256;
+- selected external package path;
+- base commit;
+- branch;
+- remote;
+- files y actions;
+- hashes previos de replacements;
+- estado `installing` o `installed`.
+
+No se versiona.
+
+No modifica `.git/config`.
+
+## 22. Transactional installation
+
+Secuencia:
+
+```text
+Validate everything
+↓
+Create receipt state=installing
+↓
+Backup every replace target
+↓
+Prepare source copies under .git/velocity-submit
+↓
+Apply add/replace targets
+↓
+Verify all target hashes
+↓
+Set receipt state=installed
+↓
+Report PASS
+```
+
+No copia un archivo antes de validar todos.
+
+## 23. Install rollback on error
+
+Si una excepción controlada ocurre durante Install:
+
+- replacements aplicados se restauran desde backups;
+- adds aplicados se eliminan;
+- working tree vuelve al estado previo;
+- receipt se elimina si rollback completa;
+- no se ejecuta Git staging.
+
+Si el proceso se interrumpe abruptamente y receipt queda `installing`, la siguiente ejecución no continúa automáticamente.
+
+Reporta recovery requerido.
+
+No sobrescribe una instalación incompleta.
+
+## 24. Repeated Install
+
+Si existe receipt `installed` para el mismo manifest y package:
+
+- no vuelve a copiar;
+- verifica targets;
+- reporta `ALREADY_INSTALLED`.
+
+Si receipt pertenece a otra entrega, aborta.
+
+Si targets cambiaron, aborta.
+
+## 25. Submit preflight
+
+Submit requiere:
+
+- receipt `installed`;
+- mismo ZIP;
+- mismo manifest digest;
+- mismo package digest;
+- mismo HEAD base;
+- misma branch;
+- remote sincronizado;
+- manifest targets con hashes exactos;
+- cambios Git exactamente iguales a manifest targets más UID sidecars válidos;
+- ningún staging previo;
+- ningún cambio inesperado.
+
+## 26. Godot UID policy
+
+Valor:
 
 ```text
 required_for_new_gd
@@ -418,128 +610,26 @@ required_for_new_gd
 
 Reglas:
 
-1. Por cada `.gd` nuevo declarado, `<path>.uid` debe existir.
-2. El sidecar debe estar nuevo o modificado.
-3. Contenido debe coincidir con:
+1. Todo `.gd` con action `add` requiere `<path>.uid` antes de Submit.
+2. UID debe contener `uid://[a-z0-9]+`.
+3. UID válido se deriva a la allowlist.
+4. `.gd` reemplazado incluye UID solo si cambió.
+5. UID inesperado bloquea.
+6. UID no aparece en el manifest porque Godot lo genera localmente.
+
+Install no exige UID.
+
+Submit sí.
+
+## 27. Staging
+
+Solo después de Submit preflight:
 
 ```text
-uid://[a-z0-9]+
+git add -- <explicit allowlist>
 ```
 
-4. Sidecar válido se añade a la allowlist de staging.
-5. Para `.gd` existente modificado, sidecar solo se incluye si cambió.
-6. Sidecar inesperado fuera de un `.gd` declarado bloquea submit.
-7. Sidecar no aparece en el manifiesto porque Godot lo genera localmente.
-
-## 21. Working tree policy
-
-Al iniciar:
-
-- no puede existir staging previo;
-- no puede existir merge;
-- no puede existir rebase;
-- no puede existir cherry-pick;
-- no puede existir revert;
-- no puede existir bisect activo.
-
-Los cambios permitidos son exactamente:
-
-```text
-manifest files
-+
-Godot UID sidecars derivados
-```
-
-Cualquier cambio adicional aborta.
-
-Ejemplos:
-
-```text
---help
-ZIP dentro del repo
-README de entrega
-vtd no ignorado
-archivo local accidental
-cambio de código ajeno
-```
-
-La herramienta no los elimina.
-
-## 22. Preflight sequence
-
-```text
-Load Manifest
-↓
-Validate Schema
-↓
-Discover Repository Root
-↓
-Validate Project Marker
-↓
-Validate Git Operation State
-↓
-Validate Branch
-↓
-Validate HEAD
-↓
-Validate Remote
-↓
-Fetch Remote Branch
-↓
-Require Local/Remote Synchronization
-↓
-Validate Paths
-↓
-Validate Hashes
-↓
-Discover Allowed UID Sidecars
-↓
-Read Git Status
-↓
-Reject Pre-staged Changes
-↓
-Reject Unexpected Changes
-↓
-Require Every Manifest File Changed
-↓
-Run git diff --check
-```
-
-No staging ocurre antes de completar preflight.
-
-## 23. Validate-only
-
-`-ValidateOnly` ejecuta todo preflight posible.
-
-No ejecuta:
-
-- git add;
-- commit;
-- push.
-
-Resultado:
-
-```text
-VELOCITY SUBMIT VALIDATION: PASS
-```
-
-o:
-
-```text
-VELOCITY SUBMIT VALIDATION: FAIL
-```
-
-## 24. Staging
-
-La herramienta ejecuta staging únicamente sobre paths validados.
-
-Conceptualmente:
-
-```text
-git add -- <explicit paths>
-```
-
-No utiliza:
+Prohibido:
 
 ```text
 git add .
@@ -547,123 +637,100 @@ git add -A
 git commit -a
 ```
 
-Después exige que staged paths sean exactamente la allowlist.
+Staged paths deben coincidir exactamente con allowlist.
 
-## 25. Cached audit
-
-Después de staging:
+## 28. Cached audit
 
 ```text
 git diff --cached --name-status
 git diff --cached --check
 ```
 
-Cualquier mismatch o whitespace error aborta.
+Mismatch o whitespace error aborta.
 
-Si la herramienta todavía no creó commit, revierte únicamente su propio staging:
+Antes de commit, la herramienta retira únicamente su staging si cancela o falla auditoría.
 
-```text
-git restore --staged -- <explicit paths>
-```
+Working files instalados permanecen para diagnóstico.
 
-Working files no se modifican.
+## 29. Confirmation
 
-## 26. Confirmation
-
-La herramienta muestra:
+Muestra:
 
 - delivery ID;
+- package;
+- base;
 - branch;
-- base commit;
 - remote;
 - commit message;
 - verification summary;
 - staged name-status;
-- cantidad de files;
-- UID sidecars derivados.
+- file count;
+- UID count.
 
-Después solicita:
+Solicita:
 
 ```text
-Escribe SUBMIT para commit y push:
+Type SUBMIT to confirm tests passed, commit and push:
 ```
 
-Cualquier otra entrada cancela.
+Otra entrada cancela commit y push.
 
-Cancelación:
-
-- no crea commit;
-- no ejecuta push;
-- retira únicamente staging creado por la herramienta;
-- conserva working files.
-
-## 27. Commit
-
-Después de confirmación exacta:
+## 30. Commit
 
 ```text
 git commit -m <manifest commit_message>
 ```
 
-No usa shell string interpolation.
+Verifica:
 
-Después verifica:
-
-- Git devolvió éxito;
+- exit code;
 - HEAD cambió;
-- subject coincide con manifest;
-- working tree no contiene cambios.
+- subject exacto;
+- working tree limpio.
 
 Si commit falla:
 
-- no ejecuta push;
-- no resetea;
-- conserva staging para diagnóstico;
-- devuelve error completo.
+- no push;
+- no reset;
+- staging se conserva;
+- receipt se conserva.
 
-## 28. Push
-
-Después de commit verificado:
+## 31. Push
 
 ```text
 git push <remote> <branch>
 ```
 
-Prohibido:
+No usa:
 
 - `--force`;
 - `--force-with-lease`;
-- push de otra ref;
-- push silencioso después de commit fallido.
+- otra ref;
+- amend;
+- rebase.
 
-## 29. Push failure
+## 32. Push failure
 
 Si push falla:
 
 - commit local se conserva;
-- no se ejecuta reset;
-- no se crea segundo commit;
-- resultado es parcial;
-- exit code es no cero;
-- se muestran HEAD y status;
-- se indica reintentar únicamente `git push` después de analizar causa.
+- receipt se conserva;
+- no reset;
+- resultado `LOCAL_COMMIT_ONLY`;
+- exit no cero;
+- se indica reintentar push después de analizar causa.
 
-Resultado:
+## 33. Success cleanup
 
-```text
-VELOCITY SUBMIT RESULT: LOCAL_COMMIT_ONLY
-```
+Después de push verificado:
 
-## 30. Success verification
+- HEAD coincide con remote branch;
+- working tree está limpio;
+- receipt se elimina;
+- backups se eliminan;
+- ZIP externo no se modifica.
 
-Después de push:
-
-- fetch no es necesario si push actualizó tracking ref;
-- HEAD debe coincidir con remote branch;
-- working tree debe estar limpio;
-- branch debe permanecer correcta.
-
-Salida canónica:
+Salida:
 
 ```text
 VELOCITY SUBMIT RESULT: PASS
@@ -674,16 +741,36 @@ Remote: synchronized
 Status: ## main...origin/main
 ```
 
-Este bloque es suficiente para continuar colaboración.
+## 34. File picker safety
 
-## 31. Error model
+El selector:
 
-Categorías:
+- se abre solo en guided mode cuando necesita package;
+- permite seleccionar un archivo;
+- no escanea Downloads u otras carpetas;
+- no concede paths adicionales;
+- no copia antes de validar;
+- no ejecuta el ZIP;
+- no recuerda path fuera del receipt local;
+- no versiona información de la máquina.
+
+Si Tkinter o display no están disponibles:
+
+- guided mode falla de forma clara;
+- no modifica el repositorio;
+- indica usar `-Package` explícito.
+
+El path elegido se normaliza y debe apuntar a un ZIP regular, no symlink.
+
+## 35. Error categories
 
 ```text
+PACKAGE_ERROR
 MANIFEST_ERROR
 REPOSITORY_ERROR
 BASELINE_ERROR
+INSTALL_STATE_ERROR
+INSTALL_ERROR
 WORKTREE_ERROR
 HASH_ERROR
 UID_ERROR
@@ -694,82 +781,52 @@ FINAL_STATE_ERROR
 CANCELLED
 ```
 
-Cada error incluye:
-
-- categoría;
-- mensaje;
-- contexto mínimo;
-- siguiente acción segura.
+Cada error incluye acción segura.
 
 No imprime stack trace por defecto.
 
-Modo test puede conservar excepción original.
+## 36. Subprocess safety
 
-## 32. Exit codes
-
-```text
-0  PASS o VALIDATION PASS
-2  MANIFEST_ERROR
-3  REPOSITORY_ERROR
-4  BASELINE_ERROR
-5  WORKTREE_ERROR
-6  HASH_ERROR
-7  UID_ERROR
-8  STAGING_ERROR
-9  COMMIT_ERROR
-10 PUSH_ERROR
-11 FINAL_STATE_ERROR
-12 CANCELLED
-```
-
-## 33. Subprocess safety
-
-Python utiliza:
+Python usa:
 
 ```text
 subprocess.run([...], shell=False)
 ```
 
-Cada argumento Git se entrega por separado.
-
-No utiliza:
+No usa:
 
 - `shell=True`;
-- `eval`;
-- `exec`;
-- `Invoke-Expression`;
-- command strings desde JSON.
+- eval;
+- exec;
+- Invoke-Expression;
+- command strings desde manifest.
 
-## 34. Encoding
+## 37. Zip safety
 
-Manifest:
+Python usa `zipfile` únicamente después de validar metadata de todos los entries.
 
-```text
-UTF-8
-```
+Rechaza:
 
-Paths Git se procesan mediante `-z` cuando la salida contiene nombres.
+- Zip Slip;
+- symlink entries;
+- encrypted entries;
+- case collisions;
+- duplicate entries;
+- límites excedidos.
 
-La herramienta debe soportar:
+Extrae a temporary directory fuera del repository root.
 
-- espacios;
-- guion largo;
-- nombres Unicode válidos.
+## 38. Authentication
 
-## 35. Authentication
+Hereda autenticación Git existente.
 
-La herramienta hereda autenticación Git existente.
+No lee, solicita o almacena tokens propios.
 
-No:
+No modifica credential helper.
 
-- solicita token propio;
-- lee credenciales;
-- guarda secretos;
-- modifica credential helper.
+## 39. Network
 
-## 36. Network
-
-Operaciones de red permitidas:
+Operaciones permitidas:
 
 ```text
 git fetch
@@ -780,259 +837,273 @@ Solo contra remote declarado.
 
 No realiza HTTP directo.
 
-## 37. Test strategy — manifest
+## 40. Test strategy — Package
 
 Verifica:
 
-- JSON inválido;
-- schema desconocido;
-- campo faltante;
-- delivery ID inválido;
-- project inválido;
-- branch inválida;
-- HEAD inválido;
-- commit message inválido;
-- files vacío;
-- action desconocida;
-- SHA inválido;
-- path duplicado;
-- path case-fold duplicate;
-- path traversal;
-- `.git` path;
-- backslash path;
-- absolute path.
+- ZIP faltante;
+- ZIP inválido;
+- varios roots;
+- manifest faltante;
+- repository_files faltante;
+- Zip Slip;
+- absolute path;
+- drive path;
+- duplicate path;
+- case collision;
+- symlink entry;
+- encrypted entry;
+- file count limit;
+- uncompressed size limit;
+- extra archive file;
+- source hash mismatch;
+- picker cancel;
+- picker selects non-ZIP;
+- moved ZIP with matching digest;
+- moved ZIP with different digest.
 
-## 38. Test strategy — files
-
-Verifica:
-
-- archivo faltante;
-- directory;
-- symlink;
-- hash mismatch;
-- archivo unchanged;
-- cambio inesperado;
-- staging previo;
-- whitespace error;
-- UTF-8 y path con espacios;
-- path con guion largo.
-
-## 39. Test strategy — Godot UID
+## 41. Test strategy — Install
 
 Verifica:
 
-- `.gd` nuevo con UID válido;
-- `.gd` nuevo sin UID;
-- UID inválido;
-- UID extra inesperado;
-- `.gd` existente con UID unchanged;
-- `.gd` existente con UID modificado.
+- clean add;
+- clean replace;
+- wrong action;
+- add target existente;
+- replace target faltante;
+- untracked collision;
+- dirty repository;
+- pre-staged state;
+- baseline mismatch;
+- remote ahead;
+- backup creation;
+- rollback after partial error;
+- installed target hashes;
+- receipt installed;
+- repeated install;
+- conflicting receipt.
 
-## 40. Test strategy — Git integration
+## 42. Test strategy — Submit
 
-Repositorios temporales:
+Verifica:
+
+- receipt faltante;
+- package mismatch;
+- manifest mismatch;
+- target drift;
+- unexpected change;
+- UID handling;
+- exact staging;
+- cancellation;
+- commit success;
+- push success;
+- push failure;
+- receipt cleanup;
+- remote sync.
+
+## 43. Test repositories
+
+Pruebas de integración utilizan:
 
 ```text
-working repository
+temporary working repository
 +
 local bare remote
++
+temporary external ZIP
 ```
 
-Verifica:
+Nunca utilizan GitHub.
 
-- branch incorrecta;
-- HEAD mismatch;
-- remote ahead;
-- successful validation-only;
-- cancellation sin commit;
-- staging exacto;
-- commit exacto;
-- push a bare remote;
-- sync final;
-- push failure conserva commit local.
+## 44. Windows launchers y UX
 
-Las pruebas nunca usan GitHub.
+PowerShell es interfaz principal.
 
-## 41. Test command
+Uso ordinario:
 
 ```powershell
-python -m unittest `
-    test/tools/test_velocity_submit.py
+.\tools\git\velocity_submit.ps1
 ```
 
-Resultado esperado se definirá después de implementar la suite.
-
-No se hardcodea conteo antes de crear las pruebas.
-
-## 42. Bootstrap
-
-Velocity Submit Tool no puede automatizar su propia instalación inicial.
-
-El milestone requiere un último submit manual:
+BAT permite doble clic o consola:
 
 ```text
-tooling implementation
-+
-tests
-+
-documentation baseline
+tools\git\velocity_submit.bat
 ```
 
-Después de ese commit, paquetes ordinarios utilizarán manifest.
+Cuando se ejecuta sin argumentos, BAT conserva la ventana abierta al finalizar para que el resultado pueda leerse.
 
-## 43. Package contract futuro
-
-Cada ZIP generado por el asistente contendrá:
+Python discovery:
 
 ```text
-nombre-del-paquete/
-├── repository_files/
-├── README.txt
-├── SHA256SUMS.txt
-└── SUBMIT_MANIFEST.json
+python.exe
+py.exe -3
 ```
 
-Solo `repository_files/` entra al repositorio.
+File picker:
 
-README, SHA, manifest, carpeta y ZIP permanecen externos.
+```text
+tkinter.filedialog.askopenfilename
+```
 
-## 44. Alternatives
+El launcher no depende de current working directory.
 
-### Git alias
+`-Package` y modos explícitos permanecen disponibles.
 
-Rechazado como solución principal.
+## 45. Bootstrap
 
-No valida hashes, baseline, unexpected files o UID sidecars.
+La herramienta aún no puede instalarse a sí misma desde un ZIP porque no existe en la baseline actual.
 
-### `git add .`
+Su implementación inicial requiere:
 
-Rechazado.
+1. copiar manualmente una última vez;
+2. ejecutar tests;
+3. ejecutar `-ValidatePackage` o tests del motor;
+4. realizar último submit manual;
+5. registrar baseline.
 
-Puede incluir artefactos y cambios ajenos.
+Después de ese commit, ningún paquete ordinario requiere copia manual.
 
-### Git hooks solamente
+## 46. Alternatives revisadas
 
-Rechazado como solución completa.
+### Copia manual + submit automático
 
-No resuelve staging, manifest, commit o push.
+Rechazada después de revisión del usuario.
 
-Hooks locales tampoco son portables por defecto.
+Automatizaba solo Git y conservaba carga operativa evitable.
 
-### Git GUI
+### Install y commit inmediatos
 
-Rechazado como contrato canónico.
+Rechazada.
 
-Reduce comandos pero no verifica una entrega reproducible.
+Eliminaría la frontera autoritativa de pruebas.
 
-### PowerShell monolítico
+### Ejecutar comandos de test desde JSON
 
-No seleccionado.
+Rechazada 1.0.
 
-Es viable, pero reduce testabilidad en el entorno actual y requeriría Pester o integración manual extensa.
+Convertiría manifest en superficie de ejecución.
 
-### Python directo sin launcher
+### Extraer o escribir path manualmente
 
-No seleccionado como UX principal.
+No seleccionado como flujo ordinario.
 
-Permanece disponible para diagnóstico, pero PowerShell conserva la interfaz Windows acordada.
+Guided mode usa selector nativo y la herramienta valida y extrae con mayor seguridad.
 
-### Submit completamente no interactivo
+`-Package` permanece como fallback explícito.
 
-Rechazado.
+### Git alias o GUI
 
-Commit y push requieren una confirmación humana explícita.
+Insuficientes para package hashes, instalación transaccional y receipt.
 
-## 45. Criterios de aceptación
+## 47. Criterios de aceptación
 
-1. Manifest schema exacto.
-2. Base commit explícita.
-3. Branch explícita.
-4. Remote explícito.
-5. Commit message explícito.
-6. File paths explícitos.
-7. SHA-256 por file.
-8. No path traversal.
-9. No `.git` access.
-10. No symlink files.
-11. No pre-staged changes.
-12. No unexpected changes.
-13. Godot UID sidecars controlados.
-14. `git diff --check`.
-15. Staging explícito.
-16. Cached path equality.
-17. `git diff --cached --check`.
-18. Una confirmación `SUBMIT`.
-19. Cancelación limpia.
-20. Commit subject exacto.
-21. Push sin force.
-22. Push failure conserva commit.
-23. Working tree limpio en éxito.
-24. Local y remote sincronizados.
-25. Salida canónica.
-26. Sin credenciales propias.
-27. Sin shell execution.
-28. Pruebas unitarias PASS.
-29. Integración con bare remote PASS.
-30. Bootstrap manual documentado.
+1. ZIP permanece externo.
+2. Guided mode abre selector nativo.
+3. Usuario no escribe path en flujo ordinario.
+4. Usuario no extrae manualmente.
+5. Package layout exacto.
+6. Zip Slip bloqueado.
+7. Límites de archive.
+8. Manifest schema exacto.
+9. Branch explícita.
+10. HEAD explícita.
+11. Remote explícito.
+12. Commit message explícito.
+13. Paths explícitos.
+14. Actions add/replace.
+15. SHA-256 source y target.
+16. Clean repository antes de Install.
+17. Transactional install.
+18. Backups para replace.
+19. Rollback de install error.
+20. Receipt local con package path y digest.
+21. Frontera manual de pruebas.
+22. Segunda invocación detecta Submit.
+23. ZIP movido se re-selecciona y valida por digest.
+24. Submit revalida package y receipt.
+25. UID sidecars derivados.
+26. Cambios inesperados bloqueados.
+27. Staging explícito.
+28. Cached audit.
+29. Confirmación `SUBMIT`.
+30. Commit exacto.
+31. Push sin force.
+32. Push failure conserva commit.
+33. Receipt cleanup solo en éxito.
+34. Sync final.
+35. Fallback `-Package` explícito.
+36. Unittest PASS.
+37. Temp Git integration PASS.
+38. Windows launcher y picker PASS.
+39. Bootstrap manual documentado.
 
-## 46. Fuera de alcance
+## 48. Fuera de alcance
 
 - ejecutar Godot;
 - interpretar Dashboard;
-- decidir si pruebas son suficientes;
-- generar código;
-- generar manifest dentro del repositorio;
+- command strings desde manifest;
 - deletion;
 - rename;
-- copy;
 - force push;
 - amend;
-- squash;
 - rebase;
 - merge;
 - tag;
-- release GitHub;
-- pull automático;
-- resolver conflictos;
-- limpiar archivos inesperados;
-- modificar `.git/config`;
-- almacenar credenciales;
-- operación no interactiva de producción;
-- UI gráfica.
+- GitHub release;
+- conflict resolution;
+- cleanup de archivos ajenos;
+- modificación de `.git/config`;
+- credenciales propias;
+- UI gráfica completa de gestión;
+- install-and-submit sin test boundary.
 
-## 47. Estado
+## 49. Estado
 
 ```text
-VELOCITY SUBMIT TOOL DESIGN 1.0
+VELOCITY SUBMIT TOOL DESIGN 1.1
 ACTIVO
 ```
 
-Decisión:
+Revisión:
 
 ```text
-APROBADA
+PACKAGE INSTALLATION EXTERNA
++
+GUIDED ZIP FILE PICKER
+APROBADOS
 ```
 
-Implementación:
+Implementación candidata:
 
 ```text
-NO INICIADA
+Python contract engine
+Python Git engine
+Python guided orchestrator
+PowerShell launcher
+BAT launcher
+44 tests
 ```
 
-Siguiente paso:
+Verificación local:
 
 ```text
-Commit documental
-↓
-Implementar Python engine
-↓
-Implementar PowerShell launcher
-↓
-Implementar BAT launcher
-↓
-Crear unittest e integración temporal
-↓
-Ejecutar bootstrap submit manual
-↓
-Usar manifest en entregas futuras
+Velocity Submit Tool:
+Ran 44 tests
+OK
+
+Python Tooling Regression:
+Ran 61 tests
+OK
 ```
+
+Pendiente:
+
+```text
+Windows Python 3.13
+PowerShell parser y launcher
+Tkinter native picker
+bootstrap ZIP validation
+```
+
+No existe baseline aceptada hasta completar verificación Windows y feature commit.

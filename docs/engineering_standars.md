@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.5 |
+| Versión | 1.6 |
 | Última revisión | 03/10/2026 |
 | Engine | Godot Engine 4.7.1 stable |
 | Alcance | Arquitectura, implementación, pruebas, documentación y Git |
@@ -1302,15 +1302,24 @@ Cuando varios archivos cambian, se entregan completos dentro de un paquete conso
 Estructura:
 
 ```text
-repository_files/
-README.txt
-SHA256SUMS.txt
-SUBMIT_MANIFEST.json cuando Velocity Submit Tool esté disponible
+package-root/
+├── repository_files/
+├── README.txt
+├── SHA256SUMS.txt
+└── SUBMIT_MANIFEST.json
 ```
 
-Solo `repository_files/` entra al repositorio.
+Antes de la baseline de Velocity Submit Tool, el usuario copia únicamente `repository_files/`.
 
-README, SHA, manifest, carpeta del paquete y ZIP permanecen externos.
+Después de la baseline de la herramienta, el ZIP permanece externo y `-Install` aplica `repository_files/` transaccionalmente.
+
+Nunca entran al repositorio:
+
+- README;
+- SHA;
+- manifest;
+- carpeta del paquete;
+- ZIP.
 
 Después se realiza auditoría conjunta.
 
@@ -1387,28 +1396,64 @@ git status -sb
 staging + commit + push
 ```
 
-### 20.6 Submit automatizado por manifiesto
+### 20.6 Install y Submit automatizados por manifiesto
 
-Velocity Submit Tool puede automatizar el flujo manual cuando esté implementado y verificado.
+Velocity Submit Tool puede automatizar instalación y Git después de ser implementado y verificado.
 
-Entrada:
+Entrada externa:
 
 ```text
-SUBMIT_MANIFEST.json
+package.zip
 ```
 
-Debe conservar:
+Flujo ordinario:
 
-- branch explícita;
-- base commit explícita;
-- remote explícito;
-- mensaje explícito;
-- rutas explícitas;
-- SHA-256 por archivo;
-- detección de cambios inesperados;
+```text
+invocar herramienta sin path
+→ selector nativo de ZIP
+→ Install
+→ tests
+→ segunda invocación
+→ Submit
+```
+
+`-Package` permanece como fallback explícito.
+
+Fases obligatorias:
+
+```text
+Install
+→ authoritative tests
+→ Submit
+```
+
+Install debe conservar:
+
+- ZIP fuera del repositorio;
+- file picker sin escaneo de carpetas;
+- cancelación sin efectos;
+- package layout exacto;
+- protección Zip Slip;
+- límites de count y size;
+- branch y base commit explícitos;
+- remote sincronizado;
+- working tree limpio;
+- paths y actions explícitos;
+- SHA-256 source y target;
+- backups de replacements;
+- rollback ante error;
+- receipt local en `.git/velocity-submit/`;
+- cero staging.
+
+Submit debe conservar:
+
+- mismo package y manifest;
+- misma baseline;
+- hashes instalados;
 - `.gd.uid` controlados;
+- cambios exactos;
 - `git diff --check`;
-- staging exacto;
+- staging explícito;
 - cached audit;
 - una confirmación humana;
 - commit sin amend;
@@ -1424,11 +1469,13 @@ git commit -a
 git push --force
 ```
 
+No se permite install-and-submit sin frontera de pruebas.
+
+El manifiesto no contiene command strings ejecutables.
+
 Si commit falla, no ejecuta push.
 
 Si push falla, conserva el commit local y reporta estado parcial.
-
-El manifiesto es un artefacto de entrega externo al repositorio.
 
 ## 21. Anti-patterns prohibidos
 
@@ -1460,6 +1507,8 @@ No se acepta:
 - fragmentos de código como estado final;
 - commit con caché o estado local;
 - submit automatizado sin allowlist explícita;
+- copia manual obligatoria después de existir installer verificado;
+- install-and-submit sin frontera de pruebas;
 - manifest ejecutable o con command strings;
 - force push automatizado.
 

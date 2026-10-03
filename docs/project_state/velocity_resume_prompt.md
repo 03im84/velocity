@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.11 |
+| Versión | 1.12 |
 | Fecha | 03/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -63,8 +63,12 @@ Estado arquitectónico esperado:
 - CompositionRuntimeOperationResult 1.0 está implementado y verificado.
 - CompositionRuntime 1.0 está implementado y verificado.
 - Full Composition Runtime Pipeline está verificado hasta ACTIVE y SHUTDOWN.
-- Velocity Submit Tool Design 1.0 está activo y aprobado.
-- Velocity Submit Tool todavía no está implementado.
+- Velocity Submit Tool Design 1.1 está activo y aprobado.
+- Package installation externa está incorporada al diseño.
+- La implementación candidata anterior fue cancelada antes de copiarse.
+- La implementación guiada revisada es candidata.
+- 44 tests propios y 61 tests de tooling pasan localmente.
+- Verificación Windows está pendiente.
 
 Baseline esperada:
 
@@ -88,8 +92,8 @@ cc9a7ae feat(runtime): add transactional composition runtime
 Milestone actual:
 
 Velocity Submit Tool 1.0
-Diseño activo
-Implementación no iniciada
+Implementación candidata
+Windows verification pendiente
 
 No escribas implementación antes del commit documental de su diseño.
 
@@ -111,9 +115,9 @@ Antes de responder:
 
 8. No uses parches, diffs, fragmentos, inserciones parciales o cirugía manual.
 
-9. Los paquetes se extraen fuera de Velocity y solo repository_files/ entra al repositorio.
+9. Antes de instalar Velocity Submit Tool, los paquetes se extraen fuera de Velocity y solo repository_files/ entra al repositorio.
 
-10. README.txt, SHA256SUMS.txt, la carpeta del paquete y el ZIP no entran al repositorio.
+10. Después de su baseline, el ZIP permanece externo y guided mode ejecuta Install; README.txt, SHA256SUMS.txt, SUBMIT_MANIFEST.json, carpeta y ZIP nunca entran al repositorio.
 
 11. Si una prueba falla, solicita el primer error completo con ruta y línea.
 
@@ -380,7 +384,7 @@ RESULT: PASS
 
 ```text
 Core Architecture:                  2.22
-Engineering Standards:              1.5
+Engineering Standards:              1.6
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
@@ -390,10 +394,10 @@ RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
-Velocity Submit Tool Design:         1.0
-Project Handoff:                    1.11
-Resume Prompt:                      1.11
-Collaboration Contract:             1.3
+Velocity Submit Tool Design:         1.1
+Project Handoff:                    1.12
+Resume Prompt:                      1.12
+Collaboration Contract:             1.4
 ```
 
 ## 9. Git
@@ -428,7 +432,7 @@ docs(runtime): record composition runtime 1.0 baseline
 Commit de diseño de tooling sugerido:
 
 ```text
-docs(tools): define manifest-driven submit
+docs(tools): add package installation phase
 ```
 
 ## 10. RuntimeFactoryRegistry y Plan
@@ -459,24 +463,39 @@ Diseño:
 
 ```text
 docs/tools/velocity_submit_tool_design.md
+Versión 1.1
+```
+
+Implementación candidata:
+
+```text
+velocity_submit_contract.py
+velocity_submit_git.py
+velocity_submit.py
+velocity_submit.ps1
+velocity_submit.bat
+test_velocity_submit.py
 ```
 
 Contrato:
 
 ```text
-SUBMIT_MANIFEST.json externo
-→ validate baseline, hashes y allowlist
-→ explicit staging
-→ cached audit
-→ confirmación SUBMIT
-→ commit
-→ push
-→ sync verification
+invoke tool without path
+→ native ZIP picker
+→ Install
+→ authoritative tests
+→ invoke tool again
+→ Submit
 ```
 
-No utiliza `git add .`, force push o shell commands desde JSON.
+Verificación local:
 
-Implementación pendiente después del commit documental.
+```text
+44 own tests PASS
+61 Python tooling tests PASS
+```
+
+Todavía requiere verificación Windows y bootstrap manual antes de aceptar baseline.
 
 ## 12. Ownership
 
@@ -510,8 +529,20 @@ No añadirlo como parche.
 
 ```text
 Velocity Submit Tool 1.0
-Diseño activo
-Implementación no iniciada
+Implementación candidata
+Windows verification pendiente
+```
+
+Resultado esperado:
+
+```text
+Ran 44 tests
+OK
+
+Ran 61 tests
+OK
+
+VELOCITY PACKAGE VALIDATION: PASS
 ```
 
 Siguiente después de cerrar tooling:
@@ -520,27 +551,6 @@ Siguiente después de cerrar tooling:
 Production Runtime Adapters
 Problema y análisis
 ```
-
-Debe definir límites entre:
-
-```text
-Composition Root
-Godot RuntimeHost
-Dependency Value Resolver
-Lifecycle Adapter
-Communication Binder
-RuntimeFactory concreta
-```
-
-Riesgos:
-
-- convertir Resolver en service locator;
-- mezclar factory con lifecycle;
-- adjuntar Nodes desde factory;
-- descubrir SceneTree globalmente;
-- introducir autoload por comodidad;
-- mezclar simulation y hardware;
-- diseñar Supervisor prematuramente.
 
 ## 15. Fuera de alcance actual
 

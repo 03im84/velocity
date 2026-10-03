@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.3 |
+| Versión | 1.4 |
 | Fecha | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Idioma principal | Español |
@@ -363,12 +363,24 @@ SHA256SUMS.txt
 SUBMIT_MANIFEST.json cuando la entrega soporte Velocity Submit Tool
 ```
 
-El usuario:
+Antes de instalar Velocity Submit Tool, el usuario:
 
 1. extrae el paquete fuera de Velocity;
-2. copia únicamente `repository_files/` sobre la raíz del repositorio;
-3. conserva los `.gd.uid` generados por Godot;
-4. ejecuta las verificaciones indicadas.
+2. copia únicamente `repository_files/`;
+3. conserva `.gd.uid`;
+4. ejecuta verificaciones.
+
+Después de su baseline, el usuario:
+
+1. deja el ZIP fuera de Velocity;
+2. invoca la herramienta sin escribir path;
+3. selecciona el ZIP en diálogo nativo;
+4. la herramienta ejecuta Install;
+5. ejecuta pruebas autoritativas;
+6. invoca nuevamente la herramienta;
+7. confirma `SUBMIT` una vez.
+
+La frontera `Install → Tests → Submit` es obligatoria.
 
 No se guardan dentro del repositorio:
 
@@ -783,7 +795,7 @@ Journals nuevos se entregan completos.
 
 Journals históricos no se reescriben para alterar historia.
 
-## 33. Git
+## 33. Git y entregas automatizadas
 
 `Submit` significa:
 
@@ -797,57 +809,47 @@ push
 
 ### Flujo manual de fallback
 
-Antes de commit:
-
 ```powershell
 git status --short
 git diff --check
 git diff --cached --name-status
 git diff --cached --check
-```
-
-No usar:
-
-```powershell
-git add .
-```
-
-Commits separados por responsabilidad.
-
-Después de cerrar milestone:
-
-```powershell
+git commit
 git push origin main
 git status -sb
 ```
 
+No usar `git add .`.
+
 ### Flujo automatizado aprobado
 
-Velocity Submit Tool 1.0 podrá reemplazar la repetición manual después de ser implementado y verificado.
+Velocity Submit Tool 1.0 recibe un ZIP externo.
 
-Entrada:
+Flujo ordinario:
 
-```text
-SUBMIT_MANIFEST.json
+```powershell
+velocity_submit.ps1
 ```
 
-Debe validar:
+Primera invocación abre selector e instala.
 
-- commit base;
-- branch;
-- remote;
-- hashes;
-- rutas explícitas;
-- cambios inesperados;
-- `.gd.uid` derivados;
-- diff checks;
-- staging exacto;
-- confirmación `SUBMIT`;
-- commit;
-- push;
-- sincronización final.
+Segunda invocación, después de pruebas, detecta receipt y prepara Submit.
 
-La herramienta no acepta pruebas en nombre del usuario y no elimina archivos inesperados.
+`-Package`, `-Install` y `-Submit` permanecen como fallback explícito.
+
+Install valida paquete, baseline, hashes y paths antes de aplicar archivos transaccionalmente.
+
+Submit revalida receipt, archivos, UID, cambios exactos, staging, commit, push y sincronización.
+
+La herramienta:
+
+- no ejecuta tests declarados como command strings;
+- no elimina cambios inesperados;
+- no usa force push;
+- no hace commit inmediatamente después de Install;
+- no sustituye aprobación técnica.
+
+El ZIP, README, SHA y manifest permanecen externos.
 
 ## 34. Discrepancias
 

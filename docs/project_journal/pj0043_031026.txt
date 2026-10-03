@@ -1,0 +1,588 @@
+PJ0043 – Velocity Submit Tool 1.0 Implementation Candidate
+
+Fecha:
+
+03/10/2026
+
+Objetivo:
+
+Implementar Velocity Submit Tool 1.0
+según Design 1.1 aprobado.
+
+Directiva del usuario:
+
+Nada se implementa
+hasta indicar:
+
+implementar
+
+Autorización recibida:
+
+IMPLEMENTAR
+
+Diseño final:
+
+External ZIP
+
+↓
+
+Native file picker
+
+↓
+
+Validate bounded package
+
+↓
+
+Extract to private TEMP
+
+↓
+
+Transactional Install
+
+↓
+
+Always clean TEMP
+
+↓
+
+Authoritative tests
+
+↓
+
+Second invocation
+
+↓
+
+Submit
+
+↓
+
+Optional original ZIP cleanup
+
+Componentes implementados:
+
+tools/git/
+velocity_submit_contract.py
+
+tools/git/
+velocity_submit_git.py
+
+tools/git/
+velocity_submit.py
+
+tools/git/
+velocity_submit.ps1
+
+tools/git/
+velocity_submit.bat
+
+test/tools/
+test_velocity_submit.py
+
+Responsabilidades:
+
+velocity_submit_contract.py:
+
+- manifest contract;
+
+- receipt contract;
+
+- package bounds;
+
+- ZIP validation;
+
+- Zip Slip defense;
+
+- archive allowlist;
+
+- hash validation;
+
+- TEMP extraction;
+
+- receipt serialization.
+
+velocity_submit_git.py:
+
+- repository discovery;
+
+- project marker;
+
+- Git operation gate;
+
+- branch y HEAD gate;
+
+- remote fetch y sync;
+
+- status parsing con NUL;
+
+- exact worktree gate;
+
+- UID derivation;
+
+- staging explícito;
+
+- cached audit;
+
+- commit;
+
+- push;
+
+- push retry.
+
+velocity_submit.py:
+
+- guided state selection;
+
+- native file picker;
+
+- transactional installer;
+
+- backups;
+
+- rollback;
+
+- receipt lifecycle;
+
+- Install output;
+
+- Submit confirmation;
+
+- optional ZIP deletion;
+
+- CLI orchestration.
+
+PowerShell launcher:
+
+- no path required;
+
+- guided mode default;
+
+- explicit Package fallback;
+
+- Install switch;
+
+- Submit switch;
+
+- ValidatePackage switch;
+
+- Python discovery;
+
+- repository root stable.
+
+BAT launcher:
+
+- double-click guided mode;
+
+- explicit modes;
+
+- readable pause.
+
+Package limits:
+
+10 000 entries maximum.
+
+128 MiB uncompressed maximum.
+
+1 MiB manifest maximum.
+
+ZIP defenses:
+
+- regular file only;
+
+- .zip extension;
+
+- no symlink package;
+
+- one package root;
+
+- no absolute paths;
+
+- no drive paths;
+
+- no backslashes;
+
+- no empty segments;
+
+- no dot segments;
+
+- no duplicate entries;
+
+- no case collisions;
+
+- no archive symlinks;
+
+- no encrypted entries;
+
+- exact file allowlist;
+
+- source SHA-256.
+
+Manifest actions:
+
+add
+
+replace
+
+No upsert.
+
+No delete.
+
+No rename.
+
+Install preflight:
+
+- Velocity repository;
+
+- no Git operation active;
+
+- branch exacta;
+
+- expected HEAD;
+
+- remote synchronized;
+
+- working tree clean;
+
+- ZIP outside repository;
+
+- action preconditions.
+
+Transactional Install:
+
+1. Prepare sources under Git-local state.
+
+2. Backup replacements.
+
+3. Write receipt installing.
+
+4. Apply files atomically.
+
+5. Verify target hashes.
+
+6. Write receipt installed.
+
+7. Remove prepared copies.
+
+Error:
+
+- restore replacements;
+
+- remove adds;
+
+- remove empty created directories;
+
+- remove receipt when rollback succeeds;
+
+- preserve evidence if rollback fails.
+
+TEMP extraction:
+
+TemporaryDirectory.
+
+Cleanup occurs in context finally.
+
+TEMP no permanece
+después de validation,
+Install o Submit.
+
+Receipt:
+
+.git/velocity-submit/
+active_delivery.json
+
+Contiene:
+
+- delivery ID;
+
+- canonical manifest digest;
+
+- package digest;
+
+- selected package path;
+
+- base commit;
+
+- branch;
+
+- remote;
+
+- commit message;
+
+- verification summary;
+
+- file actions;
+
+- previous hashes;
+
+- state;
+
+- local commit hash cuando aplica.
+
+Guided mode:
+
+No receipt:
+
+file picker
+
+→ Install
+
+Receipt installed:
+
+remember package
+
+→ Submit
+
+Package moved:
+
+file picker
+
+→ require same digest
+
+Receipt local_commit_only:
+
+PUSH confirmation
+
+→ retry same commit
+
+Receipt installing:
+
+block
+
+→ recovery required
+
+Godot UID:
+
+Add `.gd` requiere
+`.gd.uid` antes de Submit.
+
+UID content:
+
+uid://[a-z0-9]+
+
+Replace `.gd` incluye UID
+solo si cambió.
+
+UID extra bloquea.
+
+Submit:
+
+- same package;
+
+- same manifest;
+
+- same base;
+
+- exact target hashes;
+
+- exact changes;
+
+- no pre-staging;
+
+- git diff --check;
+
+- explicit git add paths;
+
+- staged equality;
+
+- cached check;
+
+- SUBMIT confirmation;
+
+- exact commit subject;
+
+- push without force;
+
+- final synchronization.
+
+Push failure:
+
+LOCAL_COMMIT_ONLY
+
+Commit local preservado.
+
+Receipt preservado.
+
+Guided retry no crea
+segundo commit.
+
+ZIP original:
+
+No se elimina en Install.
+
+Después de submit PASS:
+
+pregunta:
+
+Delete original ZIP now? [y/N]
+
+Default:
+
+NO
+
+Antes de borrar:
+
+- regular file;
+
+- no symlink;
+
+- fuera de repository;
+
+- .zip;
+
+- same SHA-256.
+
+Fallo de cleanup:
+
+warning
+
+submit permanece válido.
+
+Tests implementados:
+
+ManifestTests:
+
+10
+
+PackageTests:
+
+11
+
+InstallTests:
+
+10
+
+SubmitTests:
+
+9
+
+GuidedAndCleanupTests:
+
+4
+
+Total Velocity Submit Tool:
+
+44 tests
+
+Resultado local:
+
+Ran 44 tests
+
+OK
+
+Tooling regression:
+
+Velocity Submit Tool:
+
+44
+
+Dashboard Logic:
+
+17
+
+Total:
+
+61 tests
+
+Resultado local:
+
+Ran 61 tests
+
+OK
+
+Pruebas usan:
+
+- temporary working repositories;
+
+- local bare remotes;
+
+- external temporary ZIPs;
+
+- no GitHub;
+
+- no repository real mutation.
+
+Cobertura especial:
+
+- picker cancellation;
+
+- TEMP cleanup;
+
+- partial install rollback;
+
+- package moved;
+
+- wrong package;
+
+- UID missing;
+
+- UID success;
+
+- unexpected --help;
+
+- remote ahead;
+
+- push failure;
+
+- push retry;
+
+- ZIP keep default;
+
+- ZIP delete success;
+
+- changed ZIP not deleted.
+
+Autoridad pendiente:
+
+Windows Python 3.13
+
++
+
+PowerShell launcher
+
++
+
+native Tkinter picker
+
++
+
+bootstrap package validation
+
+La implementación no se acepta
+hasta recibir:
+
+Ran 44 tests
+OK
+
+Ran 61 tests
+OK
+
+VELOCITY PACKAGE VALIDATION: PASS
+
+Bootstrap:
+
+La herramienta no puede
+instalarse a sí misma.
+
+Su paquete inicial requiere
+una última copia manual
+y un último submit manual.
+
+Después del feature commit:
+
+la baseline documental
+será el primer paquete
+instalado y sometido
+por guided mode real.
+
+Estado:
+
+IMPLEMENTACION CANDIDATA
+
+LOCAL UNITTEST PASS
+
+LOCAL INTEGRATION PASS
+
+WINDOWS VERIFICATION PENDIENTE
+
+NO COMMIT TODAVIA
