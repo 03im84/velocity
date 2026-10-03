@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.12 |
+| Versión | 1.13 |
 | Fecha | 03/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -63,12 +63,10 @@ Estado arquitectónico esperado:
 - CompositionRuntimeOperationResult 1.0 está implementado y verificado.
 - CompositionRuntime 1.0 está implementado y verificado.
 - Full Composition Runtime Pipeline está verificado hasta ACTIVE y SHUTDOWN.
-- Velocity Submit Tool Design 1.1 está activo y aprobado.
-- Package installation externa está incorporada al diseño.
-- La implementación candidata anterior fue cancelada antes de copiarse.
-- La implementación guiada revisada es candidata.
-- 44 tests propios y 61 tests de tooling pasan localmente.
-- Verificación Windows está pendiente.
+- Velocity Submit Tool 1.0.0 está implementado y verificado.
+- Guided ZIP picker, transactional Install y Submit están activos.
+- 44 tests propios y 61 tests de tooling pasan.
+- Windows launcher, process Bypass y Tkinter picker están verificados.
 
 Baseline esperada:
 
@@ -91,11 +89,10 @@ cc9a7ae feat(runtime): add transactional composition runtime
 
 Milestone actual:
 
-Velocity Submit Tool 1.0
-Implementación candidata
-Windows verification pendiente
+Velocity Submit Tool 1.0.0
+IMPLEMENTADO Y VERIFICADO
 
-No escribas implementación antes del commit documental de su diseño.
+No implementes Production Runtime Adapters antes de cerrar problema, análisis y diseño.
 
 Antes de responder:
 
@@ -384,7 +381,7 @@ RESULT: PASS
 
 ```text
 Core Architecture:                  2.22
-Engineering Standards:              1.6
+Engineering Standards:              1.7
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
@@ -394,10 +391,10 @@ RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
-Velocity Submit Tool Design:         1.1
-Project Handoff:                    1.12
-Resume Prompt:                      1.12
-Collaboration Contract:             1.4
+Velocity Submit Tool Design:         1.2
+Project Handoff:                    1.13
+Resume Prompt:                      1.13
+Collaboration Contract:             1.5
 ```
 
 ## 9. Git
@@ -457,45 +454,45 @@ CompositionPlan:
 
 CompositionCompiler y CompositionRuntime utilizan la misma Registry explícita durante una activación.
 
-## 11. Velocity Submit Tool 1.0
+## 11. Velocity Submit Tool 1.0.0
 
-Diseño:
+Estado:
 
 ```text
-docs/tools/velocity_submit_tool_design.md
-Versión 1.1
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Implementación candidata:
+Entrada principal:
 
 ```text
-velocity_submit_contract.py
-velocity_submit_git.py
-velocity_submit.py
-velocity_submit.ps1
-velocity_submit.bat
-test_velocity_submit.py
+tools\git\velocity_submit.bat
 ```
 
 Contrato:
 
 ```text
-invoke tool without path
-→ native ZIP picker
+native ZIP picker
 → Install
 → authoritative tests
-→ invoke tool again
+→ second invocation
 → Submit
 ```
 
-Verificación local:
+Baseline:
 
 ```text
 44 own tests PASS
-61 Python tooling tests PASS
+17 Dashboard Logic PASS
+61 total tooling PASS
+Windows launcher PASS
+Tkinter picker PASS
 ```
 
-Todavía requiere verificación Windows y bootstrap manual antes de aceptar baseline.
+Commit:
+
+```text
+f7bd176 feat(tools): add guided package delivery
+```
 
 ## 12. Ownership
 
@@ -525,32 +522,16 @@ Hot swap no está diseñado para 1.0.
 
 No añadirlo como parche.
 
-## 14. Milestone actual
-
-```text
-Velocity Submit Tool 1.0
-Implementación candidata
-Windows verification pendiente
-```
-
-Resultado esperado:
-
-```text
-Ran 44 tests
-OK
-
-Ran 61 tests
-OK
-
-VELOCITY PACKAGE VALIDATION: PASS
-```
-
-Siguiente después de cerrar tooling:
+## 14. Siguiente milestone
 
 ```text
 Production Runtime Adapters
 Problema y análisis
 ```
+
+Velocity Submit Tool está cerrado.
+
+Los paquetes futuros se instalan y someten mediante guided mode.
 
 ## 15. Fuera de alcance actual
 

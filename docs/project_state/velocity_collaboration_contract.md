@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.4 |
+| Versión | 1.5 |
 | Fecha | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Idioma principal | Español |
@@ -373,7 +373,7 @@ Antes de instalar Velocity Submit Tool, el usuario:
 Después de su baseline, el usuario:
 
 1. deja el ZIP fuera de Velocity;
-2. invoca la herramienta sin escribir path;
+2. invoca `tools\git\velocity_submit.bat` sin escribir path;
 3. selecciona el ZIP en diálogo nativo;
 4. la herramienta ejecuta Install;
 5. ejecuta pruebas autoritativas;
@@ -828,12 +828,14 @@ Velocity Submit Tool 1.0 recibe un ZIP externo.
 Flujo ordinario:
 
 ```powershell
-velocity_submit.ps1
+tools\git\velocity_submit.bat
 ```
 
 Primera invocación abre selector e instala.
 
 Segunda invocación, después de pruebas, detecta receipt y prepara Submit.
+
+BAT aplica Execution Policy Bypass únicamente al proceso temporal.
 
 `-Package`, `-Install` y `-Submit` permanecen como fallback explícito.
 

@@ -2,12 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACTIVO — IMPLEMENTACIÓN CANDIDATA |
-| Versión del documento | 1.1 |
+| Estado | ACTIVO — COMPLETO Y VERIFICADO |
+| Versión del documento | 1.2 |
 | Versión objetivo de la herramienta | 1.0.0 |
 | Fecha | 03/10/2026 |
 | Plataforma inicial | Windows |
-| Entrada principal | PowerShell guided mode |
+| Entrada principal | BAT guided launcher |
 | Selector | Diálogo nativo mediante Tkinter |
 | Motor | Python 3.13 compatible |
 | Alcance | Instalación transaccional de paquetes externos y submit Git manifest-driven |
@@ -131,13 +131,22 @@ El usuario no necesita extraer el ZIP.
 
 ## 6. Invocación guiada
 
-Comando ordinario:
+Comando ordinario recomendado:
 
 ```powershell
-.\tools\git\velocity_submit.ps1
+.\tools\git\velocity_submit.bat
 ```
 
-No requiere path o parámetro.
+También puede ejecutarse mediante doble clic.
+
+BAT inicia PowerShell con:
+
+```text
+-NoProfile
+-ExecutionPolicy Bypass
+```
+
+El bypass aplica únicamente al proceso temporal y no modifica políticas de usuario o sistema.
 
 Si no existe receipt activo:
 
@@ -150,24 +159,24 @@ Open native file picker
 
 El selector utiliza Tkinter, ya disponible por Velocity Test Dashboard.
 
-Filtros:
-
-```text
-Velocity delivery packages (*.zip)
-All files (*.*)
-```
-
 Cancelar el diálogo produce `CANCELLED` sin modificar el repositorio.
+
+PowerShell directo permanece disponible para diagnóstico:
+
+```powershell
+powershell.exe `
+    -NoProfile `
+    -ExecutionPolicy Bypass `
+    -File ".\tools\git\velocity_submit.ps1"
+```
 
 Invocación explícita preservada:
 
 ```powershell
-.\tools\git\velocity_submit.ps1 `
-    -Package "C:\Downloads\package-name.zip" `
-    -Install
+.\tools\git\velocity_submit.bat `
+    "C:\Downloads\package-name.zip" `
+    install
 ```
-
-Esta forma se utiliza para tests, automatización y diagnóstico.
 
 ## 7. Frontera de pruebas
 
@@ -189,7 +198,7 @@ No se ejecutan command strings desde JSON.
 Después de las pruebas, el usuario ejecuta nuevamente:
 
 ```powershell
-.\tools\git\velocity_submit.ps1
+.\tools\git\velocity_submit.bat
 ```
 
 La herramienta detecta receipt `installed` y reutiliza el package path seleccionado.
@@ -917,21 +926,24 @@ Nunca utilizan GitHub.
 
 ## 44. Windows launchers y UX
 
-PowerShell es interfaz principal.
-
-Uso ordinario:
+BAT es la entrada principal:
 
 ```powershell
-.\tools\git\velocity_submit.ps1
+.\tools\git\velocity_submit.bat
 ```
 
-BAT permite doble clic o consola:
+Razón:
 
-```text
-tools\git\velocity_submit.bat
-```
+Windows puede bloquear scripts `.ps1` descargados o no firmados mediante Execution Policy.
 
-Cuando se ejecuta sin argumentos, BAT conserva la ventana abierta al finalizar para que el resultado pueda leerse.
+BAT ejecuta el wrapper PowerShell con bypass de proceso, sin modificar:
+
+- LocalMachine;
+- CurrentUser;
+- registry;
+- políticas persistentes.
+
+PowerShell wrapper permanece como adapter interno y fallback explícito.
 
 Python discovery:
 
@@ -948,7 +960,13 @@ tkinter.filedialog.askopenfilename
 
 El launcher no depende de current working directory.
 
-`-Package` y modos explícitos permanecen disponibles.
+El primer bootstrap verificó exitosamente:
+
+- Python 3.10 en Windows;
+- PowerShell con process-scoped Bypass;
+- Tkinter native picker;
+- external ZIP selection;
+- package validation.
 
 ## 45. Bootstrap
 
@@ -1061,49 +1079,64 @@ Insuficientes para package hashes, instalación transaccional y receipt.
 ## 49. Estado
 
 ```text
-VELOCITY SUBMIT TOOL DESIGN 1.1
-ACTIVO
+VELOCITY SUBMIT TOOL 1.0.0
+IMPLEMENTADO
+VERIFICADO
+BASELINE ACEPTADA
 ```
 
-Revisión:
+Componentes:
 
 ```text
-PACKAGE INSTALLATION EXTERNA
-+
-GUIDED ZIP FILE PICKER
-APROBADOS
+velocity_submit_contract.py
+velocity_submit_git.py
+velocity_submit.py
+velocity_submit.ps1
+velocity_submit.bat
+test_velocity_submit.py
 ```
 
-Implementación candidata:
+Baseline propia:
 
 ```text
-Python contract engine
-Python Git engine
-Python guided orchestrator
-PowerShell launcher
-BAT launcher
-44 tests
-```
-
-Verificación local:
-
-```text
-Velocity Submit Tool:
 Ran 44 tests
 OK
-
-Python Tooling Regression:
-Ran 61 tests
-OK
+skipped=1 esperado por symlink restriction de Windows
 ```
 
-Pendiente:
+Tooling regression:
 
 ```text
-Windows Python 3.13
-PowerShell parser y launcher
-Tkinter native picker
-bootstrap ZIP validation
+Velocity Submit Tool: 44
+Dashboard Logic:      17
+Total:                61
+RESULT: OK
 ```
 
-No existe baseline aceptada hasta completar verificación Windows y feature commit.
+Windows verification:
+
+```text
+PowerShell launcher:        PASS
+Process-scoped Bypass:      PASS
+Tkinter native file picker: PASS
+Bootstrap ZIP validation:   PASS
+Manifest files:             13
+Dirty-worktree safety gate: PASS
+```
+
+Commit:
+
+```text
+f7bd176
+feat(tools): add guided package delivery
+```
+
+Entrada principal:
+
+```text
+tools\git\velocity_submit.bat
+```
+
+El milestone queda cerrado.
+
+Production Runtime Adapters vuelve a ser el siguiente problema recomendado.

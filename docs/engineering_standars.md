@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.6 |
+| Versión | 1.7 |
 | Última revisión | 03/10/2026 |
 | Engine | Godot Engine 4.7.1 stable |
 | Alcance | Arquitectura, implementación, pruebas, documentación y Git |
@@ -1409,13 +1409,18 @@ package.zip
 Flujo ordinario:
 
 ```text
-invocar herramienta sin path
+invocar `tools\git\velocity_submit.bat`
+→ process-scoped PowerShell Bypass
 → selector nativo de ZIP
 → Install
 → tests
 → segunda invocación
 → Submit
 ```
+
+BAT guided mode es la entrada principal.
+
+PowerShell directo requiere process-scoped Bypass cuando Execution Policy bloquea scripts no firmados.
 
 `-Package` permanece como fallback explícito.
 

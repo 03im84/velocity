@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.12 |
+| Versión | 1.13 |
 | Fecha de actualización | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -680,7 +680,7 @@ Modificar la implementación después del PASS no ofrecía beneficio demostrado 
 
 ```text
 Core Architecture:                  2.22
-Engineering Standards:              1.6
+Engineering Standards:              1.7
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
@@ -690,10 +690,10 @@ RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
-Velocity Submit Tool Design:         1.1
-Project Handoff:                    1.12
-Resume Prompt:                      1.12
-Collaboration Contract:             1.4
+Velocity Submit Tool Design:         1.2
+Project Handoff:                    1.13
+Resume Prompt:                      1.13
+Collaboration Contract:             1.5
 ```
 
 ## 24. Git
@@ -726,6 +726,12 @@ Commit documental de CompositionRuntime baseline:
 
 ```text
 38a5ea7 docs(runtime): record composition runtime 1.0 baseline
+```
+
+Último commit de tooling:
+
+```text
+f7bd176 feat(tools): add guided package delivery
 ```
 
 ## 25. Tooling
@@ -767,11 +773,11 @@ Tests en Other:
 Velocity Submit Tool:
 
 ```text
-Design 1.1 ACTIVO
-Implementación candidata
+Version 1.0.0
+IMPLEMENTADO Y VERIFICADO
 44 tests propios PASS
 61 tests de tooling PASS
-Windows verification pendiente
+Windows launcher y picker PASS
 ```
 
 El Dashboard Java experimental permanece externo.
@@ -884,66 +890,56 @@ Estado sincronizado:
 
 `Submit` significa staging + commit + push.
 
-## 29. Milestone actual
+## 29. Último milestone completado
 
 ```text
-Velocity Submit Tool 1.0
-IMPLEMENTACIÓN CANDIDATA
+Velocity Submit Tool 1.0.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
 Responsabilidad:
 
 > Validar, instalar y someter una entrega externa declarada por manifiesto.
 
-Flujo:
+Flujo vigente:
 
 ```text
-invoke tool without path
+velocity_submit.bat
 → native ZIP picker
 → Validate
 → Install transactionally
 → authoritative tests
-→ invoke tool again
+→ velocity_submit.bat
 → Submit
 ```
 
-Componentes candidatos:
+Baseline:
 
 ```text
-tools/git/velocity_submit_contract.py
-tools/git/velocity_submit_git.py
-tools/git/velocity_submit.py
-tools/git/velocity_submit.ps1
-tools/git/velocity_submit.bat
-test/tools/test_velocity_submit.py
+44 own tests PASS
+17 Dashboard Logic tests PASS
+61 total tooling tests PASS
+Windows launcher PASS
+Tkinter picker PASS
+ZIP validation PASS
 ```
 
-Verificación local:
+Commit:
 
 ```text
-44 Velocity Submit tests — PASS
-61 Python tooling tests — PASS
+f7bd176 feat(tools): add guided package delivery
 ```
 
-Pendiente:
+Siguiente milestone:
 
 ```text
-Windows launcher
-native Tkinter picker
-bootstrap package validation
-feature commit
-```
-
-Commit previsto:
-
-```text
-feat(tools): add guided package delivery
+Production Runtime Adapters
+Problema y análisis
 ```
 
 ## 30. Trabajo futuro explícito
 
 ```text
-Velocity Submit Tool implementation
 Production Runtime Adapters
 Composition Root concreto
 CompositionRuntimeSupervisor
