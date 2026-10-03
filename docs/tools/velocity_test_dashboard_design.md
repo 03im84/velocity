@@ -3,11 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Estado | APROBADO |
-| Versión del documento | 1.4 |
+| Versión del documento | 1.5 |
 | Versión del Dashboard | 0.4.0 |
 | Fecha | 04/09/2026 |
 | Estado de implementación | COMPLETO Y VERIFICADO |
-| Última verificación | 04/09/2026 |
+| Última verificación | 03/10/2026 |
 | Lenguaje | Python 3.13 |
 | UI | Tkinter 8.6 |
 | Backend | run_godot_tests.ps1 |
@@ -1207,11 +1207,25 @@ Dashboard continúa siendo un adaptador visual de infraestructura de pruebas.
 
 ```text
 VELOCITY TEST DASHBOARD 0.4.0
-COMPLETADO Y VERIFICADO
+IMPLEMENTADO
+VERIFICADO
+LAST KNOWN GOOD
 ```
 
-Siguiente evolución:
+Sucesor aprobado:
 
 ```text
-solo ante necesidad verificable
+VELOCITY TOOLING DASHBOARD 0.5.0
+Python local web backend
+HTML/CSS/JavaScript vanilla
+Delivery integration
+Light/Dark/Reading themes
 ```
+
+Documento sucesor:
+
+```text
+docs/tools/velocity_tooling_dashboard_web_design.md
+```
+
+Tkinter 0.4.0 no se retira antes de parity tests y aceptación explícita.

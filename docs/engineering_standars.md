@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.7 |
+| Versión | 1.8 |
 | Última revisión | 03/10/2026 |
 | Engine | Godot Engine 4.7.1 stable |
 | Alcance | Arquitectura, implementación, pruebas, documentación y Git |
@@ -1481,6 +1481,23 @@ El manifiesto no contiene command strings ejecutables.
 Si commit falla, no ejecuta push.
 
 Si push falla, conserva el commit local y reporta estado parcial.
+
+### 20.7 Local web tooling
+
+Un servidor de tooling local debe:
+
+- bind únicamente a `127.0.0.1`;
+- rechazar `0.0.0.0`;
+- usar session token;
+- validar Origin y CSRF;
+- servir assets por allowlist;
+- prohibir directory listing;
+- no exponer arbitrary command execution;
+- no almacenar credenciales;
+- detenerse coordinadamente;
+- preservar CLI/BAT fallback.
+
+Frontend web no redefine lógica de dominio o Git.
 
 ## 21. Anti-patterns prohibidos
 

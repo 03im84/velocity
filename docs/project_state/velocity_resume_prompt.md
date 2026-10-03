@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.15 |
+| Versión | 1.16 |
 | Fecha | 03/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -386,7 +386,7 @@ RESULT: PASS
 
 ```text
 Core Architecture:                  2.24
-Engineering Standards:              1.7
+Engineering Standards:              1.8
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
@@ -398,9 +398,10 @@ CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
+Velocity Tooling Dashboard Web:      1.0
 Managed Runtime Adapter Design:      1.1
-Project Handoff:                    1.15
-Resume Prompt:                      1.15
+Project Handoff:                    1.16
+Resume Prompt:                      1.16
 Collaboration Contract:             1.5
 ```
 
@@ -536,20 +537,41 @@ Hot swap no está diseñado para 1.0.
 
 No añadirlo como parche.
 
-## 14. Siguiente milestone
+## 14. Milestone actual
 
 ```text
-Distance Sensor Runtime Slice 1.0
-Problema y análisis
+Velocity Tooling Dashboard 0.5.0
+Web Design 1.0 ACTIVO
+Implementación autorizada
 ```
 
-Managed Runtime Adapter Boundary está cerrado.
+Stack:
 
-No implementar Distance Sensor Slice hasta autorización explícita.
+```text
+Python stdlib local server
+HTML/CSS/JavaScript vanilla
+SSE
+```
+
+Requisitos confirmados:
+
+```text
+light / dark / reading
+browser select + custom path
+JSON persistence
+configurable port
+Shutdown button + delayed server stop
+Delivery integration
+```
+
+Tkinter 0.4.0 permanece Last Known Good.
+
+Distance Sensor Runtime Slice se pospone hasta cerrar tooling.
 
 ## 15. Fuera de alcance actual
 
 ```text
+Velocity Tooling Dashboard 0.5.0 implementation
 Distance Sensor Runtime Slice
 CompositionRuntimeSupervisor
 Last Known Good manager

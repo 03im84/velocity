@@ -1,0 +1,351 @@
+PJ0047 – Velocity Tooling Dashboard Web 0.5.0 Problem and Design
+
+Fecha:
+
+03/10/2026
+
+Objetivo:
+
+Definir sucesor web local
+de Velocity Test Dashboard 0.4.0.
+
+Requisito visual:
+
+Interfaz terminal moderna
+inspirada en referencia adjunta.
+
+Requisitos funcionales:
+
+- una sola interfaz;
+
+- Tests;
+
+- Delivery;
+
+- History;
+
+- Settings;
+
+- terminal central;
+
+- sidebar Plan/Progress/Environment;
+
+- temas light/dark/reading;
+
+- browser select;
+
+- custom browser executable;
+
+- JSON persistence;
+
+- configurable port;
+
+- shutdown button;
+
+- delayed server shutdown.
+
+Estado previo:
+
+VTD 0.4.0:
+
+Tkinter
+
+IMPLEMENTADO Y VERIFICADO
+
+Velocity Submit Tool 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+Problema:
+
+Tkinter dashboard posee
+2041 lines en un único UI file.
+
+Agregar Delivery y temas
+aumentaría monolito.
+
+Python + web básica
+permite separación clara.
+
+Alternativa Tkinter restyle:
+
+Viable,
+pero no seleccionada.
+
+Razón:
+
+- menor flexibilidad visual;
+
+- layout menos adaptable;
+
+- más dificultad para Delivery panels;
+
+- monolito existente.
+
+Alternativa web framework:
+
+No seleccionada 0.5.0.
+
+No Flask.
+
+No FastAPI.
+
+No React.
+
+No npm.
+
+Decisión:
+
+Python standard library backend
+
++
+
+HTML
+
++
+
+CSS
+
++
+
+JavaScript vanilla
+
++
+
+HTTP JSON
+
++
+
+Server-Sent Events
+
+Producto:
+
+Velocity Tooling Dashboard
+
+Acrónimo:
+
+VTD
+
+Versión objetivo:
+
+0.5.0
+
+Last Known Good:
+
+Tkinter 0.4.0 permanece.
+
+No se retira
+hasta parity PASS.
+
+Backend:
+
+- local only;
+
+- 127.0.0.1;
+
+- no 0.0.0.0;
+
+- ThreadingHTTPServer;
+
+- session token;
+
+- HttpOnly cookie;
+
+- SameSite Strict;
+
+- CSRF;
+
+- Origin check;
+
+- CSP;
+
+- assets allowlist.
+
+Streaming:
+
+SSE.
+
+No WebSocket necesario.
+
+Browser select:
+
+HTML select con:
+
+system default
+
+Edge
+
+Chrome
+
+Firefox
+
+custom
+
+Custom muestra:
+
+- selected path;
+
+- Browse;
+
+- Test;
+
+- Reset.
+
+Browser path:
+
+native helper picker.
+
+Persistence:
+
+test_dashboard.local.json
+
+Browser launch:
+
+subprocess list
+
+shell false
+
+No arbitrary args.
+
+Window modes:
+
+tab
+
+application
+
+Application mode:
+
+Edge/Chrome recognized only.
+
+Browser process compartido
+nunca se termina.
+
+Port:
+
+0 auto
+
+o
+
+1024–65535 explicit
+
+Explicit conflict:
+
+error
+
+No fallback silencioso.
+
+Host:
+
+fixed 127.0.0.1
+
+Single instance:
+
+server.json
+
+PID
+
+port
+
+session ID
+
+started_at
+
+Shutdown:
+
+UI sends request
+
+server validates
+
+202 response
+
+UI closes best effort
+
+delay 750 ms default
+
+flush
+
+remove state
+
+server shutdown
+
+Test active:
+
+stop and wait.
+
+Install/commit/push active:
+
+shutdown disabled.
+
+Themes:
+
+Dark:
+
+terminal reference.
+
+Light:
+
+neutral high contrast.
+
+Reading:
+
+warm sepia,
+larger line-height,
+lower saturation.
+
+Theme implementation:
+
+CSS variables
+
+localStorage
+
+local JSON sync
+
+Delivery integration:
+
+VTD UI
+
+↓
+
+Velocity Submit Tool API
+
+No duplicate validation.
+
+Submit must separate:
+
+prepare staged preview
+
+from
+
+confirm commit/push
+
+Migration:
+
+1. application services;
+
+2. HTTP/SSE;
+
+3. frontend;
+
+4. Delivery;
+
+5. parity;
+
+6. successor acceptance.
+
+Implementation authorization:
+
+User explicitly wrote:
+
+implementa
+
+Estado:
+
+PROBLEMA CERRADO
+
+ANALISIS CERRADO
+
+WEB DESIGN 1.0 ACTIVO
+
+IMPLEMENTACION AUTORIZADA
+
+COMMIT DOCUMENTAL PENDIENTE

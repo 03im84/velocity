@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.15 |
+| Versión | 1.16 |
 | Fecha de actualización | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -681,7 +681,7 @@ Modificar la implementación después del PASS no ofrecía beneficio demostrado 
 
 ```text
 Core Architecture:                  2.24
-Engineering Standards:              1.7
+Engineering Standards:              1.8
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
@@ -693,9 +693,10 @@ CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
+Velocity Tooling Dashboard Web:      1.0
 Managed Runtime Adapter Design:      1.1
-Project Handoff:                    1.15
-Resume Prompt:                      1.15
+Project Handoff:                    1.16
+Resume Prompt:                      1.16
 Collaboration Contract:             1.5
 ```
 
@@ -894,59 +895,46 @@ Estado sincronizado:
 
 `Submit` significa staging + commit + push.
 
-## 29. Último milestone completado
+## 29. Milestone actual
 
 ```text
-Managed Runtime Adapter Boundary 1.0
-IMPLEMENTADO Y VERIFICADO
+Velocity Tooling Dashboard 0.5.0
+LOCAL WEB UI
+DELIVERY INTEGRATION
+THEMES
+IMPLEMENTACIÓN AUTORIZADA
 ```
 
-Componentes:
+Stack:
 
 ```text
-RuntimeDependencyValue
-ScopedRuntimeDependencyResolver
-ManagedRuntimeLifecycleAdapter
-RuntimeSourceFilteredSubscription
-ManagedRuntimeCommunicationBinder
-GodotNodeRuntimeHost
+Python standard library backend
+HTTP JSON + SSE
+HTML/CSS/JavaScript vanilla
 ```
 
-Baseline:
+Requisitos:
+
+- terminal-style UI;
+- Tests/Delivery/History/Settings;
+- light/dark/reading themes;
+- browser select;
+- custom browser path;
+- local JSON persistence;
+- configurable port;
+- coordinated Shutdown;
+- Tkinter 0.4.0 preserved as LKG.
+
+Commit previsto:
 
 ```text
-7 tests
-106 checks
-0 failures
-
-Runtime Suite:
-17 tests
-420 checks
-
-Run All:
-76 tests
-2262 checks
-RESULT: PASS
+docs(tools): define web tooling dashboard
 ```
-
-Commit:
-
-```text
-236e031 feat(runtime): add managed runtime adapters
-```
-
-Siguiente milestone:
-
-```text
-Distance Sensor Runtime Slice 1.0
-Problema y análisis
-```
-
-Implementación no autorizada todavía.
 
 ## 30. Trabajo futuro explícito
 
 ```text
+Velocity Tooling Dashboard 0.5.0 implementation
 Distance Sensor Runtime Slice
 Composition Root concreto
 CompositionRuntimeSupervisor
