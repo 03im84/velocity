@@ -2,8 +2,8 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACEPTADO |
-| Versión | 1.0 |
+| Estado | ACEPTADO — IMPLEMENTADO — VERIFICADO |
+| Versión | 1.1 |
 | Fecha | 03/10/2026 |
 | Componentes | DistanceSensorRuntimeUnit, DistanceSensorRuntimeFactory, DistanceSensorDevice, Distance Provider, DeviceConfiguration |
 | Alcance | Primer Device concreto activado mediante el pipeline runtime completo |
@@ -308,11 +308,25 @@ No seleccionado. BORROWED demuestra integración sin introducir destrucción esp
 ## 19. Estado
 
 ```text
-ADR-013
+ADR-013 1.1
 ACEPTADO
+IMPLEMENTADO
+VERIFICADO
 ```
 
+Baseline:
+
 ```text
-IMPLEMENTACIÓN AUTORIZADA
-PENDIENTE DEL COMMIT DOCUMENTAL
+Slice: 3 tests / 55 checks
+Runtime Suite: 20 tests / 475 checks
+Run All: 79 tests / 2317 checks
+Failures: 0
+Missing Metrics: 0
+RESULT: PASS
+```
+
+Commit:
+
+```text
+53ffe1d feat(runtime): add distance sensor runtime slice
 ```

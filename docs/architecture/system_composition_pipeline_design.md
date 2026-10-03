@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.15 |
+| Versión | 1.16 |
 | Fecha | 03/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback; ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries; ADR-013 — Distance Sensor Simulation Runtime Slice and Configuration Fidelity |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
@@ -1206,7 +1206,7 @@ RESULT: PASS
 Diseño activo:
 
 ```text
-Distance Sensor Runtime Slice Design 1.0
-ADR-013 ACEPTADO
-IMPLEMENTACIÓN AUTORIZADA
+Distance Sensor Runtime Slice 1.0
+IMPLEMENTADO Y VERIFICADO
+3 tests / 55 checks
 ```

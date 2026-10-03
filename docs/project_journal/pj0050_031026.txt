@@ -1,0 +1,81 @@
+PJ0050 – Distance Sensor Runtime Slice 1.0 Baseline
+
+Fecha: 03/10/2026
+
+Componentes:
+
+DistanceSensorRuntimeUnit
+DistanceSensorRuntimeFactory
+
+Decisiones:
+
+Simulation-only.
+Configuration efectiva mínima:
+distance_measurement.
+Health no implementado se rechaza.
+distance_provider es BORROWED.
+Factory es construct-only.
+RuntimeUnit implementa managed lifecycle.
+Godot Host adjunta Sensor Node.
+Factory libera Sensor después de detach.
+Provider permanece vivo.
+
+Pipeline verificado:
+
+Builtin Profile
+→ Catalog
+→ SystemProfile
+→ DeviceGraph
+→ Factory Registry
+→ CompositionCompiler
+→ CompositionPlan
+→ CompositionRuntime
+→ ACTIVE
+→ BusMessage + DistanceMeasurement
+→ SHUTDOWN
+→ release
+
+Baselines:
+
+DistanceSensorRuntimeUnitTest:
+20 checks PASS
+
+DistanceSensorRuntimeFactoryTest:
+16 checks PASS
+
+DistanceSensorRuntimePipelineIntegrationTest:
+19 checks PASS
+
+Slice:
+3 tests
+55 checks
+0 failures
+
+Runtime Suite:
+20 tests
+475 checks
+0 failures
+
+Run All:
+79 tests
+2317 checks
+0 failures
+0 timeout
+0 engine errors
+0 missing metrics
+Plan ExitCode: 0
+RESULT: PASS
+
+Initial static expectations were corrected by authoritative Dashboard counts:
+Unit 17 → 20.
+Integration 17 → 19.
+
+Feature commit:
+
+53ffe1d feat(runtime): add distance sensor runtime slice
+
+Estado:
+
+ADR-013 IMPLEMENTADO Y VERIFICADO
+DISTANCE SENSOR RUNTIME SLICE 1.0 CLOSED
+BASELINE DOCUMENTAL PENDIENTE

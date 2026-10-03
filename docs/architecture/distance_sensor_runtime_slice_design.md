@@ -3,11 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 03/10/2026 |
 | ADR | ADR-013 — Distance Sensor Simulation Runtime Slice and Configuration Fidelity |
 | Alcance | RuntimeUnit, Factory y full pipeline de Distance Sensor Simulation |
-| Implementación | AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL |
+| Implementación | COMPLETA Y VERIFICADA |
 
 ## 1. Propósito
 
@@ -354,8 +354,24 @@ Conteos se fijan después de implementar pruebas.
 ## 23. Estado
 
 ```text
-DISTANCE SENSOR RUNTIME SLICE DESIGN 1.0
-ACTIVO
-IMPLEMENTACIÓN AUTORIZADA
-PENDIENTE DEL COMMIT DOCUMENTAL
+DISTANCE SENSOR RUNTIME SLICE 1.0
+IMPLEMENTADO
+VERIFICADO
+BASELINE ACEPTADA
+```
+
+```text
+DistanceSensorRuntimeUnitTest: 20 checks
+DistanceSensorRuntimeFactoryTest: 16 checks
+DistanceSensorRuntimePipelineIntegrationTest: 19 checks
+Total: 3 tests / 55 checks
+Runtime Suite: 20 / 475
+Run All: 79 / 2317
+RESULT: PASS
+```
+
+Commit:
+
+```text
+53ffe1d feat(runtime): add distance sensor runtime slice
 ```
