@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.2 |
+| Versión | 1.3 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Compilación transaccional de DeviceGraphSnapshot a CompositionPlan |
@@ -1368,10 +1368,14 @@ Problema y análisis están cerrados.
 
 Todos los criterios de aceptación fueron satisfechos.
 
-Siguiente milestone:
+CompositionRuntime Problem and Analysis está cerrado.
+
+ADR-011 está aceptado.
+
+CompositionRuntime Design 1.0 está activo.
+
+Siguiente implementación después del commit documental:
 
 ```text
-CompositionRuntime Problem and Analysis
+CompositionRuntimeOperationResult
 ```
-
-CompositionRuntime no está diseñado o implementado.

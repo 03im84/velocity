@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.10 |
+| Versión | 1.11 |
 | Fecha | 02/10/2026 |
-| ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
+| ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
 
 ## 1. Propósito
@@ -30,10 +30,17 @@ CompositionPlan 1.0
 CompositionCompiler 1.0
 ```
 
-Siguiente milestone:
+Diseño activo:
 
 ```text
-CompositionRuntime Problem and Analysis
+CompositionRuntime Design 1.0
+ADR-011 ACEPTADO
+```
+
+Siguiente implementación después del commit:
+
+```text
+CompositionRuntimeOperationResult
 ```
 
 ## 2. Pipeline completo
@@ -152,10 +159,18 @@ CompositionCompiler
 SystemCompositionCompilerIntegrationTest
 ```
 
+### Diseñado
+
+```text
+CompositionRuntimeOperationResult
+
+CompositionRuntime
+```
+
 ### Futuro
 
 ```text
-CompositionRuntime
+CompositionRuntimeSupervisor
 ```
 
 ## 4. Estructura implementada
@@ -201,9 +216,15 @@ core/runtime/
 
 ## 5. Estructura siguiente
 
-CompositionRuntime permanece pendiente de problema, análisis y diseño.
+Después del commit documental:
 
-No existe estructura de implementación autorizada.
+```text
+core/composition/
+├── composition_runtime_operation_result.gd
+└── composition_runtime.gd
+```
+
+Production adapters y Supervisor permanecen futuros.
 
 ## 6. SystemProfile
 
@@ -868,23 +889,32 @@ Hardware queda bloqueado con HARDWARE_SAFETY_ERROR.
 
 No ejecuta runtime.
 
-## 39. CompositionRuntime futuro
+## 39. CompositionRuntime Design
 
-Entradas:
+Documento activo:
 
-- CompositionPlan;
-- Registry;
-- dependency values;
-- RuntimeHost.
+```text
+docs/architecture/composition_runtime_design.md
+Versión 1.0
+```
 
-Posee:
+ADR:
 
-- DeviceBus;
-- Handles;
-- attach state;
-- lifecycle;
-- rollback;
-- shutdown.
+```text
+ADR-011 ACEPTADO
+```
+
+Runtime 1.0 será:
+
+- Simulation-only;
+- one-shot;
+- owner de DeviceBus y Handles;
+- transaccional;
+- phase-barriered;
+- rollback inverso;
+- shutdown explícito.
+
+Last Known Good y hot swap pertenecen a Supervisor futuro.
 
 ## 40. Rollback
 
@@ -1084,7 +1114,19 @@ Automatic suites:
     PASS — 65 tests, 1970 checks.
 
 27. CompositionRuntime Problem and Analysis.
+    COMPLETADO.
+
+28. ADR-011.
+    ACEPTADO.
+
+29. CompositionRuntime Design 1.0.
+    COMPLETADO.
+
+30. Commit de diseño.
     SIGUIENTE.
+
+31. CompositionRuntimeOperationResult.
+    POSTERIOR AL COMMIT.
 ```
 
 ## 45. Baselines preservadas
@@ -1185,10 +1227,27 @@ COMPOSITIONCOMPILER 1.0
 IMPLEMENTADO Y VERIFICADO
 ```
 
+```text
+COMPOSITIONRUNTIME DESIGN 1.0
+ACTIVO
+```
+
+ADR-011:
+
+```text
+ACEPTADO
+```
+
 Siguiente milestone:
 
 ```text
-CompositionRuntime Problem and Analysis
+CompositionRuntime Design Commit
 ```
 
-CompositionRuntime no está diseñado o implementado.
+Primera implementación posterior:
+
+```text
+CompositionRuntimeOperationResult
+```
+
+CompositionRuntime no está implementado.

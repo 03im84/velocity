@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.8 |
+| Versión | 1.9 |
 | Fecha de actualización | 02/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -287,6 +287,8 @@ ADR-008 — Device Definitions, Profiles and Configuration
 ADR-009 — System Composition Pipeline
 
 ADR-010 — Runtime Construction and Factory Binding
+
+ADR-011 — Composition Runtime Activation, Ownership and Rollback
 ```
 
 Todos aceptados.
@@ -778,13 +780,27 @@ DeviceCatalog
 → CompositionPlan
 ```
 
-Siguiente milestone:
+Diseño activo:
 
 ```text
-CompositionRuntime Problem and Analysis
+CompositionRuntime Design 1.0
+ADR-011 ACEPTADO
 ```
 
-CompositionRuntime no está diseñado o implementado.
+Decisiones principales:
+
+- Simulation-only;
+- one-shot runtime;
+- DeviceBus owned;
+- collaborators explícitos;
+- phase barriers;
+- rollback inverso;
+- cleanup best effort;
+- shutdown explícito;
+- Last Known Good en Supervisor futuro;
+- sin hot swap en 1.0.
+
+CompositionRuntime no está implementado.
 
 ## 21. RuntimeFactoryRegistry 1.0
 
@@ -1119,7 +1135,7 @@ CompositionCompiler:
 
 ```text
 Core Architecture:
-2.20
+2.21
 
 Engineering Standards:
 1.4
@@ -1136,8 +1152,11 @@ ADR-007:
 ADR-010:
 1.1
 
+ADR-011:
+1.0
+
 System Composition Pipeline Design:
-1.10
+1.11
 
 Runtime Construction Contract Design:
 1.1
@@ -1149,7 +1168,10 @@ CompositionPlan Design:
 1.4
 
 CompositionCompiler Design:
-1.2
+1.3
+
+CompositionRuntime Design:
+1.0
 
 Velocity Test Dashboard Design:
 1.4
@@ -1164,10 +1186,10 @@ DeviceGraph Design:
 1.3
 
 Project Handoff:
-1.8
+1.9
 
 Resume Prompt:
-1.8
+1.9
 
 Collaboration Contract:
 1.1
@@ -1190,14 +1212,18 @@ main
 Último commit conocido:
 
 ```text
-4f36fee
-feat(composition):
-add composition compiler
+cfb42f1
+docs(composition):
+record composition compiler 1.0 baseline
 ```
 
 Commits relevantes:
 
 ```text
+4f36fee
+feat(composition):
+add composition compiler
+
 4c9394e
 docs(architecture):
 clarify simulator integrity and restore ADR-010
@@ -1419,19 +1445,19 @@ No debe escribir código en primera respuesta.
 ### Cierre documental inmediato
 
 ```text
-1. Registrar CompositionCompiler Design 1.2.
+1. Registrar ADR-011.
 
-2. Registrar SystemCompositionCompilerIntegration.
+2. Registrar CompositionRuntime Design 1.0.
 
-3. Actualizar System Composition Pipeline 1.10.
+3. Actualizar System Composition Pipeline 1.11.
 
-4. Actualizar Core Architecture 2.20.
+4. Actualizar Core Architecture 2.21.
 
-5. Actualizar Project State 1.8.
+5. Actualizar Project State 1.9.
 
 6. Ejecutar auditoría documental.
 
-7. Crear commit de baseline.
+7. Crear commit de diseño.
 
 8. Ejecutar push a origin/main.
 ```
@@ -1439,16 +1465,16 @@ No debe escribir código en primera respuesta.
 Commit sugerido:
 
 ```text
-docs(composition): record composition compiler 1.0 baseline
+docs(runtime): define composition runtime activation
 ```
 
-### Siguiente milestone
+### Primera implementación posterior
 
 ```text
-CompositionRuntime Problem and Analysis
+res://core/composition/composition_runtime_operation_result.gd
 ```
 
-No se escribirá CompositionRuntime durante problema o análisis abierto.
+No se implementará antes del commit de ADR y diseño.
 
 ## 35. Regla final
 

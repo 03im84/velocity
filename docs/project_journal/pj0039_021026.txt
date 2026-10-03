@@ -1,0 +1,750 @@
+PJ0039 – CompositionRuntime Problem and Analysis
+
+Fecha:
+
+02/10/2026
+
+Objetivo:
+
+Definir la responsabilidad,
+fronteras y transacciones de:
+
+CompositionRuntime
+
+antes de cualquier implementación.
+
+Estado previo:
+
+Runtime Construction Contract 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+RuntimeFactoryRegistry 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+CompositionPlan 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+CompositionCompiler 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+Baseline global:
+
+65 tests
+
+1970 checks
+
+0 failures
+
+0 missing metrics
+
+Problema:
+
+CompositionPlan describe:
+
+- qué construir;
+
+- qué factories resolver;
+
+- qué dependencias declarar;
+
+- qué comunicación enlazar;
+
+- qué Dispatch Policy aplicar;
+
+- qué órdenes de lifecycle usar.
+
+Plan no ejecuta.
+
+Falta un owner runtime que:
+
+- cree DeviceBus;
+
+- resuelva Dependency Values;
+
+- construya Requests;
+
+- invoque factories;
+
+- conserve Handles;
+
+- adjunte Host Objects;
+
+- enlace comunicación;
+
+- coordine lifecycle;
+
+- haga rollback;
+
+- ejecute shutdown;
+
+- conserve estado observable.
+
+Límites detectados:
+
+1. Primary Runtime Object es Object.
+
+No existe garantía de que sea Device
+o que exponga lifecycle directamente.
+
+2. Device.initialize() no recibe DeviceBus.
+
+La entrega de Bus necesita adapter explícito.
+
+3. Connection Directive no contiene callback.
+
+Runtime necesita binder explícito.
+
+4. Dependency Spec no contiene Value.
+
+Runtime necesita resolver explícito.
+
+5. Plan no contiene Registry.
+
+Runtime recibe Registry aparte.
+
+6. Hot swap no está diseñado.
+
+Construir candidato mientras otro runtime
+permanece activo puede provocar conflictos
+de host, hardware o dependencies TRANSFERRED.
+
+7. Hardware continúa bloqueado.
+
+No existe evidencia safety completa
+para activar hardware.
+
+Decisión principal:
+
+CompositionRuntime 1.0 será:
+
+- Simulation-only;
+
+- stateful;
+
+- owner de recursos;
+
+- one-shot;
+
+- transaccional;
+
+- sin hot swap;
+
+- sin singleton;
+
+- sin service locator.
+
+One-shot significa:
+
+Una instancia puede realizar
+una activación candidata.
+
+Después queda:
+
+ACTIVE
+
+SHUTDOWN
+
+o
+
+FAILED
+
+No se reutiliza para otro Plan.
+
+Last Known Good:
+
+No pertenece a una instancia one-shot.
+
+Pertenecerá a un Supervisor futuro.
+
+Modelo futuro:
+
+Active Runtime A
+
++
+
+Candidate Runtime B
+
+↓ B activa completamente
+
+Supervisor commit
+
+↓
+
+B se vuelve activo
+
+↓
+
+A shutdown
+
+Si B falla:
+
+A permanece activo.
+
+No se implementa Supervisor en 1.0.
+
+Colaboradores explícitos:
+
+RuntimeFactoryRegistry
+
+RuntimeDependencyValueResolver behavior
+
+RuntimeHost behavior
+
+RuntimeLifecycleAdapter behavior
+
+RuntimeCommunicationBinder behavior
+
+RuntimeDependencyValueResolver:
+
+has_value(
+	device_id,
+	dependency_id
+)
+→ bool
+
+get_value(
+	device_id,
+	dependency_id
+)
+→ Object
+
+Runtime solo consulta Specs declaradas.
+
+No permite lookup arbitrario.
+
+Runtime crea RuntimeDependencyBinding
+utilizando Ownership de Spec.
+
+Resolver no decide Ownership.
+
+RuntimeLifecycleAdapter:
+
+initialize(
+	handle,
+	device_bus
+)
+→ ValidationReport
+
+set_ready(
+	handle
+)
+→ ValidationReport
+
+start(
+	handle
+)
+→ ValidationReport
+
+shutdown(
+	handle
+)
+→ ValidationReport
+
+Razón:
+
+Primary Runtime Object permanece Object.
+
+Adapter conoce implementación concreta
+y entrega DeviceBus cuando corresponda.
+
+RuntimeCommunicationBinder:
+
+bind(
+	directive,
+	source_handle,
+	target_handle,
+	device_bus
+)
+→ ValidationReport
+
+unbind(
+	directive,
+	source_handle,
+	target_handle,
+	device_bus
+)
+→ ValidationReport
+
+Razón:
+
+Plan no contiene callback.
+
+Binder resuelve endpoint concreto,
+source filtering y subscription.
+
+RuntimeHost:
+
+attach(handle)
+→ ValidationReport
+
+detach(handle)
+→ ValidationReport
+
+Ya definido por ADR-010.
+
+DeviceBus ownership:
+
+Cada CompositionRuntime crea
+exactamente un DeviceBus candidato.
+
+Configura Policy antes de dispatch.
+
+No es autoload.
+
+No es singleton.
+
+No se comparte entre runtimes candidatos.
+
+Activation pipeline:
+
+1. Preflight.
+
+2. Crear DeviceBus.
+
+3. Configurar Dispatch Policy.
+
+4. Resolver dependencies por Entry.
+
+5. Crear RuntimeConstructionRequest.
+
+6. Build de todos los Handles.
+
+7. Attach de todos los Handles.
+
+8. Bind de todas las Directives.
+
+9. Initialize de todos los Handles.
+
+10. set_ready de todos los Handles.
+
+11. start de todos los Handles.
+
+12. Commit ACTIVE.
+
+Phase barriers:
+
+Todos construidos antes de attach.
+
+Todos attached antes de bind.
+
+Toda comunicación enlazada
+antes de initialize.
+
+Todos initialized antes de ready.
+
+Todos ready antes de start.
+
+Todos started antes de ACTIVE.
+
+Factory resolution:
+
+Por Entry:
+
+- Key exacta;
+
+- Descriptor exacto;
+
+- factory Object viva;
+
+- misma Registry explícita;
+
+- no fallback.
+
+Preflight verifica que Registry
+satisface todas las Entries
+y que Specs coinciden.
+
+Dependency resolution:
+
+Por cada RuntimeDependencySpec:
+
+- consultar availability;
+
+- obtener Object;
+
+- validar instance;
+
+- crear Binding con Ownership de Spec.
+
+No se permiten dependencies extra
+porque Runtime itera Specs del Plan.
+
+BORROWED:
+
+Resolver conserva ownership.
+
+TRANSFERRED:
+
+Transferencia comienza al invocar
+factory.build(request).
+
+Build failure:
+
+Factory limpia recursos locales
+y TRANSFERRED del request actual.
+
+Runtime no ejecuta segundo cleanup
+del request fallido.
+
+Handles anteriores:
+
+Runtime ejecuta release inverso.
+
+Attach failure:
+
+RuntimeHost revierte attach parcial
+del Handle actual.
+
+Runtime ejecuta:
+
+- detach anteriores inverso;
+
+- release Handles inverso.
+
+Bind failure:
+
+Binder revierte bind parcial actual
+por contrato o devuelve error.
+
+Runtime ejecuta:
+
+- unbind anteriores inverso;
+
+- detach inverso;
+
+- release inverso.
+
+Lifecycle failure:
+
+Si initialize actual falla:
+
+- shutdown best effort del Handle actual;
+
+- shutdown de Handles inicializados anteriores en orden inverso.
+
+Si ready o start fallan:
+
+- shutdown de todos los Handles initialized en orden inverso.
+
+Después:
+
+- unbind inverso;
+
+- detach inverso;
+
+- release inverso.
+
+Rollback continúa aunque
+una operación de cleanup falle.
+
+Todos los Issues se agregan.
+
+El simulador no pierde control
+por un fallo de cleanup.
+
+Shutdown activo:
+
+1. shutdown reverse order.
+
+2. unbind reverse order.
+
+3. detach reverse order.
+
+4. release reverse order.
+
+5. DeviceBus.clear().
+
+6. State SHUTDOWN si cleanup completo.
+
+Si cleanup reporta errores:
+
+State FAILED.
+
+Runtime conserva observabilidad
+de recursos no confirmados.
+
+Estados seleccionados:
+
+CREATED
+
+ACTIVATING
+
+ACTIVE
+
+SHUTTING_DOWN
+
+SHUTDOWN
+
+FAILED
+
+Operaciones:
+
+activate(plan)
+
+shutdown()
+
+Activation permitida solo desde CREATED.
+
+Shutdown permitido desde ACTIVE.
+
+FAILED es terminal en 1.0.
+
+SHUTDOWN es terminal.
+
+Operation Result:
+
+CompositionRuntimeOperationResult
+
+Contiene:
+
+- success bool;
+
+- operation StringName;
+
+- ValidationReport.
+
+Operaciones canónicas:
+
+activate
+
+shutdown
+
+Runtime state API:
+
+get_state()
+
+is_active()
+
+get_active_plan()
+
+get_device_bus()
+
+get_handles()
+
+get_handle(device_id)
+
+Getters de Arrays devuelven copias.
+
+No se exponen setters.
+
+Simulation-only:
+
+Plan Hardware produce:
+
+HARDWARE_SAFETY_ERROR
+
+No DeviceBus candidato.
+
+No factory build.
+
+No host attach.
+
+No lifecycle.
+
+No runtime activo.
+
+Registry identity:
+
+Plan no contiene Registry.
+
+Runtime recibe Registry por constructor.
+
+Preflight revalida:
+
+- cada Key existe;
+
+- Descriptor válido;
+
+- Specs coinciden.
+
+No puede demostrar identidad histórica
+del Registry usado por Compiler
+porque no existe Registry ID.
+
+Composition Root debe entregar
+la misma instancia.
+
+Runtime verifica equivalencia observable
+como defensa adicional.
+
+Communication order:
+
+bind usa orden de Directives.
+
+unbind usa orden inverso.
+
+Lifecycle order:
+
+Plan forward orders para:
+
+- build;
+
+- attach;
+
+- initialize;
+
+- ready;
+
+- start.
+
+Plan reverse orders para:
+
+- shutdown;
+
+- rollback.
+
+Runtime no calcula topological sort.
+
+Ciclos:
+
+permitidos en Simulation.
+
+Toda comunicación se enlaza
+antes de start.
+
+Empty Plan:
+
+Activation válida.
+
+Crea Bus configurado.
+
+No construye Handles.
+
+Commit ACTIVE.
+
+Shutdown limpia Bus
+y termina SHUTDOWN.
+
+Runtime Safety:
+
+CompositionRuntime no ejecuta loop.
+
+Expone DeviceBus y último report.
+
+Supervisor futuro observará:
+
+DeviceBusDispatchReport
+
+Health
+
+lifecycle
+
+No se añade watcher interno
+sin necesidad concreta.
+
+Bounded behavior:
+
+Todos los loops recorren Arrays
+acotados por Plan.
+
+No recursión.
+
+No queue propia.
+
+No threads.
+
+No IO.
+
+No filesystem.
+
+No red.
+
+Componentes propuestos:
+
+composition_runtime_operation_result.gd
+
+composition_runtime.gd
+
+Behaviors auxiliares:
+
+No requieren clases base 1.0.
+
+Se validan mediante has_method
+y pruebas de integración.
+
+Test doubles previstos:
+
+runtime_test_dependency_value_resolver.gd
+
+runtime_test_lifecycle_adapter.gd
+
+runtime_test_communication_binder.gd
+
+RuntimeTestFactory y RuntimeTestHost
+se reutilizan.
+
+Pruebas previstas:
+
+CompositionRuntimeOperationResultTest
+
+CompositionRuntimeTest
+
+CompositionRuntimeIntegrationTest
+
+FullCompositionRuntimePipelineIntegrationTest
+
+ADR:
+
+Se requiere ADR-011.
+
+Razón:
+
+Esta decisión introduce:
+
+- resource ownership activo;
+
+- lifecycle orchestration;
+
+- collaborator behaviors;
+
+- rollback global;
+
+- one-shot runtime;
+
+- boundary de Last Known Good.
+
+Fuera de alcance:
+
+- Runtime Supervisor;
+
+- hot swap;
+
+- multiple active runtimes;
+
+- Hardware activation;
+
+- production host;
+
+- production factories;
+
+- production communication binder;
+
+- production dependency resolver;
+
+- scheduling SCC;
+
+- async runtime;
+
+- threads;
+
+- persistence;
+
+- telemetry;
+
+- automatic restart.
+
+Estado:
+
+PROBLEMA CERRADO
+
+ANALISIS CERRADO
+
+ADR-011 ACEPTADO
+
+DISEÑO ACTIVO
+
+IMPLEMENTACION AUTORIZADA DESPUES DEL COMMIT DOCUMENTAL

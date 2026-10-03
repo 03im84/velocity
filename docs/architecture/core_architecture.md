@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.20 |
+| Versión | 2.21 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 02/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -215,7 +215,9 @@ SceneTree no define Core.
 | CompositionPlan | Instrucciones runtime inmutables y no ejecutables | Implementado y verificado |
 | CompositionCompileResult | Contener Plan y ValidationReport | Implementado y verificado |
 | CompositionCompiler | Compilar Snapshot y Registry a Plan | Implementado y verificado |
-| CompositionRuntime | Ejecutar Plan y poseer recursos activos | Pendiente |
+| CompositionRuntimeOperationResult | Describir activate o shutdown | Diseño 1.0 activo; siguiente implementación |
+| CompositionRuntime | Ejecutar Plan y poseer recursos activos | Diseño 1.0 activo; implementación pendiente |
+| CompositionRuntimeSupervisor | Preservar Last Known Good y hot swap | Futuro |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
 ## 6. DeviceBus
@@ -1085,27 +1087,42 @@ No:
 
 ## 30. CompositionRuntime
 
-Futuro.
+Definido por:
 
-Recibirá:
+```text
+ADR-011
 
-- CompositionPlan;
+CompositionRuntime Design 1.0
+```
+
+Estado:
+
+```text
+DISEÑO ACTIVO
+```
+
+Será Simulation-only y one-shot.
+
+Recibirá explícitamente:
+
 - RuntimeFactoryRegistry;
-- dependency values resueltos;
-- RuntimeHost.
-
-Resolverá nuevamente cada RuntimeFactoryKey en el mismo Registry snapshot antes de construir.
+- Dependency Value Resolver behavior;
+- RuntimeHost behavior;
+- Lifecycle Adapter behavior;
+- Communication Binder behavior.
 
 Poseerá:
 
+- CompositionPlan activo;
 - DeviceBus;
 - RuntimeDeviceHandles;
 - host attachment state;
-- lifecycle;
-- phase barriers;
-- rollback inverso;
-- shutdown;
-- Runtime Safety observation.
+- communication bindings;
+- lifecycle state;
+- rollback;
+- shutdown.
+
+Last Known Good y hot swap pertenecen a Supervisor futuro.
 
 ## 31. Reglas de dependencia
 
@@ -1346,24 +1363,26 @@ Velocity Test Runner
 Velocity Test Dashboard 0.4.0
 ```
 
-## 37. Siguiente milestone
+## 37. Diseño activo
 
 ```text
-CompositionRuntime Problem and Analysis
+CompositionRuntime Design 1.0
 ```
 
-CompositionRuntime no está diseñado o implementado.
+ADR-011 está aceptado.
 
-No existe implementación autorizada.
+Implementación comienza únicamente después del commit documental.
 
 ## 38. Pendiente
 
 ```text
-CompositionRuntime Problem and Analysis
-
-CompositionRuntime Design
+CompositionRuntimeOperationResult
 
 CompositionRuntime Implementation
+
+Production Runtime Adapters
+
+CompositionRuntimeSupervisor
 
 RuntimeHost concreto
 
@@ -1474,6 +1493,8 @@ ADR-008
 ADR-009
 
 ADR-010
+
+ADR-011
 ```
 
 ## 43. Regla de evolución
@@ -1492,33 +1513,44 @@ Toda modificación se entrega como archivo completo.
 
 ## 44. Siguiente paso
 
-Iniciar CompositionRuntime con metodología completa:
+Cerrar el commit documental de ADR-011 y CompositionRuntime Design 1.0.
+
+Después implementar:
 
 ```text
-1. Problema.
-
-2. Análisis.
-
-3. ADR nuevo o ampliación explícita.
-
-4. Diseño completo.
-
-5. Criterios de aceptación.
-
-6. Confirmación antes de implementación.
+res://core/composition/composition_runtime_operation_result.gd
 ```
 
-Responsabilidades futuras candidatas:
+Primera prueba sucesora:
 
-- ownership de DeviceBus;
-- resolución de Dependency Values;
-- construcción de Requests;
-- factory build;
-- host attach;
-- lifecycle por phase barriers;
-- rollback inverso;
-- shutdown;
-- Last Known Good;
-- Runtime Safety observation.
+```text
+res://test/core/composition/CompositionRuntimeOperationResultTest.tscn
 
-No se implementará CompositionRuntime durante diseño abierto.
+res://test/core/composition/composition_runtime_operation_result_test.gd
+```
+
+Orden posterior:
+
+```text
+CompositionRuntimeOperationResult
+
+Test collaborator behaviors
+
+CompositionRuntime preflight
+
+Activation stages
+
+Rollback
+
+Shutdown
+
+Runtime integration
+
+Full pipeline integration
+
+Composition Suite
+
+Run All
+```
+
+No se implementará antes del commit de diseño.

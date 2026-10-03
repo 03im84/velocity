@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.8 |
+| Versión | 1.9 |
 | Fecha | 02/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -58,8 +58,9 @@ Estado arquitectónico esperado:
 - Registry–Plan Integration está verificada.
 - CompositionCompiler 1.0 está implementado y verificado.
 - SystemCompositionCompilerIntegration está verificada.
-- El pipeline lógico produce CompositionPlan.
-- El siguiente milestone es CompositionRuntime Problem and Analysis.
+- ADR-011 está aceptado.
+- CompositionRuntime Design 1.0 está activo.
+- CompositionRuntime no está implementado.
 
 Baseline esperada:
 
@@ -119,7 +120,7 @@ Antes de responder:
 
 23. No rediseñes RuntimeFactoryRegistry 1.0 o CompositionPlan 1.0 por intuición.
 
-24. No implementes CompositionCompiler antes de completar e integrar Registry y Plan.
+24. No implementes CompositionRuntime antes de aceptar ADR-011, cerrar su diseño y confirmar el commit documental.
 
 25. RuntimeDependencySpec declara Dependency ID y Ownership, pero no contiene Value activo.
 
@@ -234,16 +235,17 @@ RuntimeDeviceHandle
 RuntimeFactoryBuildResult
 ```
 
-Siguiente milestone:
+Diseño activo:
 
 ```text
-CompositionRuntime Problem and Analysis
+CompositionRuntime Design 1.0
+ADR-011 ACEPTADO
 ```
 
 Documentos canónicos del milestone:
 
 ```text
-Core Architecture 2.20
+Core Architecture 2.21
 
 Engineering Standards 1.4
 
@@ -251,23 +253,27 @@ Project Decision VP-002 2.0
 
 ADR-010 1.1
 
-System Composition Pipeline Design 1.10
+ADR-011 1.0
+
+System Composition Pipeline Design 1.11
 
 RuntimeFactoryRegistry Design 1.4
 
 CompositionPlan Design 1.4
 
-CompositionCompiler Design 1.2
+CompositionCompiler Design 1.3
 
-Project Handoff 1.8
+CompositionRuntime Design 1.0
 
-Resume Prompt 1.8
+Project Handoff 1.9
+
+Resume Prompt 1.9
 ```
 
-Siguiente milestone:
+Siguiente implementación después del commit documental:
 
 ```text
-CompositionRuntime Problem and Analysis
+CompositionRuntimeOperationResult
 ```
 
 ## 4. Baseline global
@@ -506,9 +512,15 @@ CompositionCompiler 1.0
 IMPLEMENTADO Y VERIFICADO
 ```
 
-Compiler 1.0 es Simulation-only.
+Diseño activo:
 
-CompositionRuntime permanece futuro y sin diseño.
+```text
+CompositionRuntime Design 1.0
+```
+
+CompositionRuntime será Simulation-only y one-shot.
+
+CompositionRuntime no está implementado.
 
 ## 15. RuntimeFactoryRegistry 1.0
 
@@ -805,17 +817,17 @@ Alternativas rechazadas:
 
 ## 20. Protocolo Git
 
-Base commit antes del cierre de CompositionCompiler 1.0:
+Base commit antes de CompositionRuntime Design:
 
 ```text
-4f36fee
-feat(composition): add composition compiler
+cfb42f1
+docs(composition): record composition compiler 1.0 baseline
 ```
 
 Commit sugerido para el paquete actual:
 
 ```text
-docs(composition): record composition compiler 1.0 baseline
+docs(runtime): define composition runtime activation
 ```
 
 Antes del commit:
@@ -885,13 +897,21 @@ CompositionCompiler 1.0
 
 IMPLEMENTADO Y VERIFICADO
 
-Siguiente milestone:
+Diseño activo:
 
-CompositionRuntime Problem and Analysis
+CompositionRuntime Design 1.0
+
+ADR-011:
+
+ACEPTADO
 
 CompositionRuntime:
 
-NO DISEÑADO, NO IMPLEMENTADO
+DISEÑADO, NO IMPLEMENTADO
+
+Siguiente implementación:
+
+CompositionRuntimeOperationResult
 ```
 
 No debe escribir código hasta recibir confirmación y comprobar que el paquete documental está cerrado.
