@@ -32,3 +32,7 @@ const HEALTH_REPORT: StringName = (
 const PROPULSION_COMMAND: StringName = (
 	&"propulsion_command"
 )
+
+const VEHICLE_CONTROL_COMMAND: StringName = (
+	&"vehicle_control_command"
+)
