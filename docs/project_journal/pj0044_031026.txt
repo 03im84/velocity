@@ -1,0 +1,354 @@
+PJ0044 – Velocity Submit Tool 1.0 Baseline
+
+Fecha:
+
+03/10/2026
+
+Objetivo:
+
+Cerrar la implementación,
+verificación Windows
+y baseline de:
+
+Velocity Submit Tool 1.0.0
+
+Estado previo:
+
+Feature commit:
+
+f7bd176
+
+feat(tools): add guided package delivery
+
+Git:
+
+## main...origin/main
+
+Componentes versionados:
+
+velocity_submit_contract.py
+
+velocity_submit_git.py
+
+velocity_submit.py
+
+velocity_submit.ps1
+
+velocity_submit.bat
+
+test_velocity_submit.py
+
+Baseline propia autoritativa:
+
+Ran 44 tests
+
+OK
+
+Skipped:
+
+1
+
+Razón:
+
+Windows no permitió crear
+symlink de test.
+
+El skip está contenido
+y esperado.
+
+Dashboard Logic preservado:
+
+Ran 17 tests
+
+OK
+
+Tooling total:
+
+44
+
++
+
+17
+
+=
+
+61 tests
+
+RESULT:
+
+OK
+
+Verificación Windows:
+
+Python:
+
+3.10
+
+Resultado:
+
+PASS
+
+Nota:
+
+El diseño era compatible
+con Python 3.10+
+aunque la baseline de Dashboard
+había usado Python 3.13.
+
+Unittest invocation discovery:
+
+El comando file-path entregado
+fue interpretado por Python 3.10
+como module name:
+
+test.tools
+
+Resultado:
+
+ImportError de invocación.
+
+No fue defecto de tests
+o herramienta.
+
+Comando compatible:
+
+python -m unittest discover
+-s test/tools
+-p test_velocity_submit.py
+-v
+
+Dashboard suite se ejecutó
+directamente por discovery pattern.
+
+Package layout incident:
+
+Durante bootstrap manual,
+repository_files fue copiado
+como directory dentro de Velocity.
+
+Safety diagnosis:
+
+tools/git path faltante.
+
+Se verificó:
+
+velocity/repository_files/tools/git
+
+existía.
+
+Corrección:
+
+copiar contenido completo
+de repository_files
+a repository root.
+
+Después:
+
+- 13 files en rutas correctas;
+
+- directory duplicado eliminado;
+
+- no modificación parcial de files.
+
+PowerShell Execution Policy:
+
+Invocación directa de `.ps1`
+fue bloqueada porque el script
+no estaba firmado.
+
+Clasificación:
+
+Windows policy gate.
+
+No parser.
+
+No behavior defect.
+
+Verificación aislada:
+
+powershell.exe
+-NoProfile
+-ExecutionPolicy Bypass
+-File velocity_submit.ps1
+-ValidatePackage
+
+Bypass:
+
+- process scoped;
+
+- no LocalMachine change;
+
+- no CurrentUser change;
+
+- no persistent policy change.
+
+Resultado:
+
+PASS
+
+Conclusión UX:
+
+BAT es entrada principal.
+
+BAT aplica process-scoped Bypass
+automáticamente.
+
+PowerShell permanece wrapper interno
+y fallback explícito.
+
+Native file picker:
+
+Tkinter dialog abierto
+correctamente en Windows.
+
+ZIP seleccionado:
+
+velocity-submit-tool-bootstrap-031026.zip
+
+Resultado:
+
+VELOCITY PACKAGE VALIDATION: PASS
+
+Delivery:
+
+velocity-submit-tool-bootstrap-031026
+
+Package SHA-256:
+
+39b0d765f54a75539f939d444c8733ed060e170f6cf29855bd322938e77cac6c
+
+Manifest files:
+
+13
+
+Package validation comprobó:
+
+- external ZIP;
+
+- one package root;
+
+- exact manifest;
+
+- exact archive allowlist;
+
+- no Zip Slip;
+
+- no symlink entries;
+
+- limits;
+
+- source SHA-256;
+
+- add/replace actions.
+
+Dirty-worktree safety gate:
+
+Después de copiar bootstrap,
+se invocó guided mode ordinario.
+
+La herramienta detectó
+13 cambios existentes
+y rechazó Install:
+
+WORKTREE_ERROR
+
+Resultado:
+
+PASS DE SEGURIDAD
+
+No staging.
+
+No overwrite.
+
+No commit.
+
+No push.
+
+Razón:
+
+Bootstrap no puede
+instalarse a sí mismo.
+
+Se completó último submit manual.
+
+Feature commit:
+
+f7bd176
+
+feat(tools): add guided package delivery
+
+Estado remoto:
+
+## main...origin/main
+
+Refactor audit:
+
+Se revisó:
+
+- package contract;
+
+- path validation;
+
+- ZIP bounds;
+
+- receipt lifecycle;
+
+- transactional install;
+
+- rollback;
+
+- UID derivation;
+
+- staging exacto;
+
+- commit boundary;
+
+- push failure;
+
+- original ZIP cleanup;
+
+- launcher UX.
+
+Corrección documental seleccionada:
+
+BAT como entrada principal.
+
+No se detectó cambio
+de producción obligatorio
+posterior a la verificación.
+
+Baseline:
+
+Velocity Submit Tool 1.0.0
+
+IMPLEMENTADO
+
+VERIFICADO
+
+PUBLICADO
+
+Siguiente validación live:
+
+Este paquete documental
+debe ser el primer ZIP
+instalado mediante:
+
+velocity_submit.bat
+
+Primera invocación:
+
+Install
+
+Segunda invocación:
+
+Submit
+
+Después:
+
+pregunta de cleanup del ZIP.
+
+Siguiente milestone arquitectónico:
+
+Production Runtime Adapters
+
+Problema y análisis
