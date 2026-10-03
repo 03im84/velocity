@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.23 |
+| Versión | 2.24 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 03/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -223,12 +223,12 @@ SceneTree no define Core.
 | CompositionCompiler | Compilar Snapshot y Registry a Plan | Implementado y verificado |
 | CompositionRuntimeOperationResult | Describir activate o shutdown | Implementado y verificado |
 | CompositionRuntime | Ejecutar Plan y poseer recursos activos | Implementado y verificado |
-| RuntimeDependencyValue | Asociar Device, Dependency ID y Object scoped | Diseño 1.0 activo |
-| ScopedRuntimeDependencyResolver | Resolver Values exactos por activación | Diseño 1.0 activo |
-| ManagedRuntimeLifecycleAdapter | Delegar lifecycle a Primary managed behavior | Diseño 1.0 activo |
-| RuntimeSourceFilteredSubscription | Filtrar BusMessage por Source y Topic | Diseño 1.0 activo |
-| ManagedRuntimeCommunicationBinder | Resolver endpoints y poseer subscriptions | Diseño 1.0 activo |
-| GodotNodeRuntimeHost | Adjuntar Host Objects Node bajo parent explícito | Diseño 1.0 activo |
+| RuntimeDependencyValue | Asociar Device, Dependency ID y Object scoped | Implementado y verificado |
+| ScopedRuntimeDependencyResolver | Resolver Values exactos por activación | Implementado y verificado |
+| ManagedRuntimeLifecycleAdapter | Delegar lifecycle a Primary managed behavior | Implementado y verificado |
+| RuntimeSourceFilteredSubscription | Filtrar BusMessage por Source y Topic | Implementado y verificado |
+| ManagedRuntimeCommunicationBinder | Resolver endpoints y poseer subscriptions | Implementado y verificado |
+| GodotNodeRuntimeHost | Adjuntar Host Objects Node bajo parent explícito | Implementado y verificado |
 | CompositionRuntimeSupervisor | Preservar Last Known Good y hot swap | Futuro |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
@@ -1434,35 +1434,31 @@ ADR-011 1.1 está aceptado, implementado y verificado.
 
 Full pipeline alcanza `ACTIVE → SHUTDOWN` con identidades y ownership preservados.
 
-## 38. Diseño activo y trabajo pendiente
-
-Diseño activo:
+## 38. Último milestone y trabajo pendiente
 
 ```text
-Managed Runtime Adapter Boundary Design 1.0
-ADR-012 ACEPTADO
+Managed Runtime Adapter Boundary 1.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Componentes diseñados:
+Baseline:
 
 ```text
-RuntimeDependencyValue
-ScopedRuntimeDependencyResolver
-ManagedRuntimeLifecycleAdapter
-RuntimeSourceFilteredSubscription
-ManagedRuntimeCommunicationBinder
-GodotNodeRuntimeHost
+7 tests / 106 checks
+Runtime Suite: 17 / 420
+Run All: 76 / 2262
+RESULT: PASS
 ```
 
-Pendiente posterior:
+Pendiente siguiente:
 
 ```text
-Distance Sensor Runtime Slice
+Distance Sensor Runtime Slice 1.0
 Composition Root concreto
 CompositionRuntimeSupervisor
 Last Known Good manager
 Hot swap
-Factories de producción
+Factories de producción adicionales
 Measurement Identity
 Provenance
 Temporal Boundaries
@@ -1474,15 +1470,15 @@ AdaptationPolicy
 RuntimeAllocation
 ```
 
-Distance Sensor factory no comienza hasta reconciliar Profile, Configuration y runtime Manifest.
+Distance Sensor Slice debe reconciliar Profile, Configuration y runtime Manifest.
 
 ## 39. Baseline global
 
 Dashboard 0.4.0 confirma:
 
 ```text
-Tests: 69
-Checks: 2156
+Tests: 76
+Checks: 2262
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1491,20 +1487,20 @@ Plan ExitCode: 0
 RESULT: PASS
 ```
 
-Composition Suite:
+Runtime Suite:
 
 ```text
-Tests: 16
-Checks: 702
+Tests: 17
+Checks: 420
 Failures: 0
 RESULT: PASS
 ```
 
-CompositionRuntime propia:
+Managed Runtime Adapter Boundary:
 
 ```text
-Tests: 4
-Checks: 186
+Tests: 7
+Checks: 106
 Failures: 0
 RESULT: PASS
 ```
@@ -1598,25 +1594,20 @@ Toda modificación se entrega como archivo completo.
 
 ## 44. Siguiente paso
 
-Cerrar commit documental de:
+Abrir únicamente problema y análisis de:
 
 ```text
-ADR-012
-Managed Runtime Adapter Boundary Design 1.0
+Distance Sensor Runtime Slice 1.0
 ```
 
-Después implementar, en orden incremental:
+Debe resolver antes de implementación:
 
-```text
-RuntimeDependencyValue
-ScopedRuntimeDependencyResolver
-ManagedRuntimeLifecycleAdapter
-RuntimeSourceFilteredSubscription
-ManagedRuntimeCommunicationBinder
-GodotNodeRuntimeHost
-ManagedRuntimeAdapterIntegrationTest
-```
+- DeviceConfiguration como autoridad;
+- effective DeviceManifest;
+- health_reporting gap;
+- Provider ownership;
+- runtime unit lifecycle;
+- concrete factory release;
+- integration con adapters verificados.
 
-La implementación está autorizada por el usuario.
-
-Distance Sensor Runtime Slice permanece posterior.
+No implementar hasta autorización explícita del usuario.

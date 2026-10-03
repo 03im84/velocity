@@ -1,0 +1,446 @@
+PJ0046 – Managed Runtime Adapter Boundary 1.0 Baseline
+
+Fecha:
+
+03/10/2026
+
+Objetivo:
+
+Registrar implementación,
+corrección, integración
+y baseline de:
+
+Managed Runtime Adapter Boundary 1.0
+
+Estado previo:
+
+ADR-012:
+
+ACEPTADO
+
+Design 1.0:
+
+ACTIVO
+
+Baseline global previa:
+
+69 tests
+
+2156 checks
+
+0 failures
+
+Componentes implementados:
+
+RuntimeDependencyValue
+
+ScopedRuntimeDependencyResolver
+
+ManagedRuntimeLifecycleAdapter
+
+RuntimeSourceFilteredSubscription
+
+ManagedRuntimeCommunicationBinder
+
+GodotNodeRuntimeHost
+
+RuntimeDependencyValue:
+
+- Device ID;
+
+- Dependency ID;
+
+- Object;
+
+- no Ownership;
+
+- liveness validation;
+
+- no setters.
+
+Scoped Resolver:
+
+- exact Device + Dependency lookup;
+
+- immutable source Array copy;
+
+- empty valid;
+
+- duplicate invalid;
+
+- no overwrite;
+
+- no fallback;
+
+- no mutation API;
+
+- no service locator API.
+
+Managed Lifecycle Adapter:
+
+Delegates:
+
+runtime_initialize
+
+runtime_set_ready
+
+runtime_start
+
+runtime_shutdown
+
+Primary Runtime Object
+retains concrete behavior.
+
+Adapter retains no type switch,
+Profile switch or Registry.
+
+Correction r1:
+
+Initial invalid-return test
+returned bool.
+
+GDScript attempted assignment
+of non-object Variant
+to ValidationReport typed variable.
+
+First error:
+
+managed_runtime_lifecycle_adapter.gd:98
+
+Classification:
+
+behavior defensivo
+Variant type gate
+
+Correction:
+
+if not (
+	result_value is ValidationReport
+):
+
+then create:
+
+managed_runtime_lifecycle_report_missing
+
+PLATFORM_SAFETY_ERROR
+
+No test was modified.
+
+Expected checks remained 15.
+
+Revised result:
+
+PASS
+
+RuntimeSourceFilteredSubscription:
+
+- BusMessage only;
+
+- valid envelope;
+
+- exact Source ID;
+
+- exact Topic;
+
+- same message reference;
+
+- invalid endpoint safe no-op.
+
+Managed Communication Binder:
+
+- endpoint behavior by Port ID;
+
+- no method-name derivation;
+
+- no callback in Plan;
+
+- exact subscribe;
+
+- exact unsubscribe;
+
+- source-filter wrapper ownership;
+
+- duplicate binding blocked;
+
+- failed unsubscribe preserves state;
+
+- no endpoint Registry;
+
+- no service locator.
+
+GodotNodeRuntimeHost:
+
+- explicit parent Node;
+
+- no SceneTree discovery;
+
+- Node Host Objects only;
+
+- attach order;
+
+- duplicate attach blocked;
+
+- reverse detach;
+
+- cycle detection;
+
+- parent mismatch detection;
+
+- Host does not free Nodes;
+
+- factory retains destruction ownership.
+
+Integration:
+
+CompositionRuntime real
+
++
+
+production Resolver
+
++
+
+production Lifecycle Adapter
+
++
+
+production Binder
+
++
+
+production Godot Host
+
++
+
+controlled managed runtime units
+
+Result:
+
+ACTIVE
+
+matching BusMessage forwarded
+
+wrong source filtered
+
+SHUTDOWN
+
+reverse cleanup
+
+factory release
+
+Pruebas:
+
+RuntimeDependencyValueTest:
+
+11 checks
+
+PASS
+
+ScopedRuntimeDependencyResolverTest:
+
+17 checks
+
+PASS
+
+ManagedRuntimeLifecycleAdapterTest:
+
+15 checks
+
+PASS
+
+RuntimeSourceFilteredSubscriptionTest:
+
+8 checks
+
+PASS
+
+ManagedRuntimeCommunicationBinderTest:
+
+21 checks
+
+PASS
+
+GodotNodeRuntimeHostTest:
+
+16 checks
+
+PASS
+
+ManagedRuntimeAdapterIntegrationTest:
+
+18 checks
+
+PASS
+
+Total propio:
+
+7 tests
+
+106 checks
+
+0 failures
+
+0 missing metrics
+
+Runtime Suite:
+
+17 tests
+
+420 checks
+
+0 failures
+
+0 timeout
+
+0 engine errors
+
+0 missing metrics
+
+RESULT: PASS
+
+Run All:
+
+76 tests
+
+2262 checks
+
+0 failures
+
+0 timeout
+
+0 engine errors
+
+0 not run
+
+0 check failures
+
+0 missing metrics
+
+Plan ExitCode: 0
+
+RESULT: PASS
+
+Incremento:
+
+69 → 76 tests
+
+2156 → 2262 checks
+
++7 tests
+
++106 checks
+
+Suite classification:
+
+ScopedRuntimeDependencyResolverTest
+apareció inicialmente sin categoría
+visual en VTD abierto.
+
+Después de refresh:
+
+Runtime Suite
+
+17 tests
+
+420 checks
+
+Confirmación:
+
+clasificación automática correcta.
+
+Feature package:
+
+velocity-managed-runtime-adapters-r1-031026.zip
+
+Package SHA-256:
+
+4e1c003ded6e4546460a06be45b587067d555870fe6a7f470dce73613f06ccf8
+
+Feature commit:
+
+236e031
+
+feat(runtime): add managed runtime adapters
+
+Git:
+
+## main...origin/main
+
+Ownership final:
+
+CompositionRuntime:
+
+DeviceBus y Handles.
+
+Factory:
+
+Primary y Host Objects.
+
+Lifecycle Adapter:
+
+ninguno.
+
+Godot Host:
+
+attachment state.
+
+Communication Binder:
+
+subscription wrappers.
+
+Scoped Resolver:
+
+activation-scoped references.
+
+Refactor audit:
+
+Se revisaron:
+
+- responsibility;
+
+- type switches;
+
+- Registry duplication;
+
+- cleanup;
+
+- endpoint ownership;
+
+- host ownership;
+
+- source filtering;
+
+- report propagation;
+
+- mutation APIs.
+
+Resultado:
+
+SIN REFACTOR OBLIGATORIO
+
+Distance Sensor discrepancy
+permanece separada.
+
+ADR-012 1.1:
+
+ACEPTADO
+
+IMPLEMENTADO
+
+VERIFICADO
+
+Design 1.1:
+
+COMPLETO
+
+VERIFICADO
+
+Siguiente milestone:
+
+Distance Sensor Runtime Slice 1.0
+
+Problema y análisis
+
+Implementación:
+
+NO AUTORIZADA TODAVIA

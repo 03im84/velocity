@@ -3,11 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 03/10/2026 |
 | ADR relacionado | ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries |
 | Alcance | Resolver scoped, lifecycle delegation, source-filtered communication y Godot Node host |
-| Estado de implementación | NO INICIADO — AUTORIZADO DESPUÉS DEL COMMIT DOCUMENTAL |
+| Estado de implementación | COMPLETO Y VERIFICADO |
 
 ## 1. Propósito
 
@@ -894,19 +894,75 @@ Además:
 ## 55. Estado
 
 ```text
-MANAGED RUNTIME ADAPTER BOUNDARY DESIGN 1.0
-ACTIVO
+MANAGED RUNTIME ADAPTER BOUNDARY 1.0
+IMPLEMENTADO
+VERIFICADO
+BASELINE ACEPTADA
 ```
 
-ADR:
+Componentes:
 
 ```text
-ADR-012 ACEPTADO
+RuntimeDependencyValue
+ScopedRuntimeDependencyResolver
+ManagedRuntimeLifecycleAdapter
+RuntimeSourceFilteredSubscription
+ManagedRuntimeCommunicationBinder
+GodotNodeRuntimeHost
 ```
 
-Implementación:
+Baseline propia:
 
 ```text
-AUTORIZADA POR EL USUARIO
-PENDIENTE DEL COMMIT DOCUMENTAL
+RuntimeDependencyValueTest               11
+ScopedRuntimeDependencyResolverTest      17
+ManagedRuntimeLifecycleAdapterTest       15
+RuntimeSourceFilteredSubscriptionTest     8
+ManagedRuntimeCommunicationBinderTest    21
+GodotNodeRuntimeHostTest                 16
+ManagedRuntimeAdapterIntegrationTest     18
+                                         ---
+                                         106 checks
+```
+
+Runtime Suite:
+
+```text
+17 tests
+420 checks
+0 failures
+RESULT: PASS
+```
+
+Global:
+
+```text
+76 tests
+2262 checks
+0 failures
+0 missing metrics
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+Corrección durante implementación:
+
+```text
+ManagedRuntimeLifecycleAdapter valida
+result_value is ValidationReport
+antes de asignación tipada.
+```
+
+Commit:
+
+```text
+236e031
+feat(runtime): add managed runtime adapters
+```
+
+Siguiente milestone recomendado:
+
+```text
+Distance Sensor Runtime Slice 1.0
+Problema y análisis
 ```

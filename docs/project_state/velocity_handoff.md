@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.14 |
+| Versión | 1.15 |
 | Fecha de actualización | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -680,21 +680,22 @@ Modificar la implementación después del PASS no ofrecía beneficio demostrado 
 ## 23. Documentos vigentes
 
 ```text
-Core Architecture:                  2.23
+Core Architecture:                  2.24
 Engineering Standards:              1.7
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
-System Composition Pipeline Design: 1.13
+ADR-012:                            1.1
+System Composition Pipeline Design: 1.14
 Runtime Construction Contract:      1.1
 RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
-Managed Runtime Adapter Design:      1.0
-Project Handoff:                    1.14
-Resume Prompt:                      1.14
+Managed Runtime Adapter Design:      1.1
+Project Handoff:                    1.15
+Resume Prompt:                      1.15
 Collaboration Contract:             1.5
 ```
 
@@ -893,45 +894,59 @@ Estado sincronizado:
 
 `Submit` significa staging + commit + push.
 
-## 29. Milestone actual
+## 29. Último milestone completado
 
 ```text
 Managed Runtime Adapter Boundary 1.0
-ADR-012 ACEPTADO
-DESIGN 1.0 ACTIVO
-IMPLEMENTACIÓN AUTORIZADA
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Decisión principal:
+Componentes:
 
 ```text
-managed Primary Runtime Object behaviors
-+
+RuntimeDependencyValue
 ScopedRuntimeDependencyResolver
-+
 ManagedRuntimeLifecycleAdapter
-+
 RuntimeSourceFilteredSubscription
-+
 ManagedRuntimeCommunicationBinder
-+
-GodotNodeRuntimeHost with explicit parent
+GodotNodeRuntimeHost
 ```
 
-No se modifican RuntimeDeviceHandle o CompositionRuntime 1.0.
-
-DistanceSensorDevice no define esta frontera porque su runtime Manifest diverge del Profile canónico.
-
-Commit previsto:
+Baseline:
 
 ```text
-docs(runtime): define managed adapter boundary
+7 tests
+106 checks
+0 failures
+
+Runtime Suite:
+17 tests
+420 checks
+
+Run All:
+76 tests
+2262 checks
+RESULT: PASS
 ```
+
+Commit:
+
+```text
+236e031 feat(runtime): add managed runtime adapters
+```
+
+Siguiente milestone:
+
+```text
+Distance Sensor Runtime Slice 1.0
+Problema y análisis
+```
+
+Implementación no autorizada todavía.
 
 ## 30. Trabajo futuro explícito
 
 ```text
-Managed Runtime Adapter Boundary implementation
 Distance Sensor Runtime Slice
 Composition Root concreto
 CompositionRuntimeSupervisor

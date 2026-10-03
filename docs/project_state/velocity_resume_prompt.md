@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.14 |
+| Versión | 1.15 |
 | Fecha | 03/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -69,7 +69,9 @@ Estado arquitectónico esperado:
 - Windows launcher, process Bypass y Tkinter picker están verificados.
 - ADR-012 está aceptado.
 - Managed Runtime Adapter Boundary Design 1.0 está activo.
-- La implementación fue autorizada después del commit documental.
+- Managed Runtime Adapter Boundary 1.0 está implementado y verificado.
+- Runtime Suite: 17 tests / 420 checks PASS.
+- Run All: 76 tests / 2262 checks PASS.
 
 Baseline esperada:
 
@@ -383,21 +385,22 @@ RESULT: PASS
 ## 8. Documentos canónicos
 
 ```text
-Core Architecture:                  2.23
+Core Architecture:                  2.24
 Engineering Standards:              1.7
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
-System Composition Pipeline Design: 1.13
+ADR-012:                            1.1
+System Composition Pipeline Design: 1.14
 Runtime Construction Contract:      1.1
 RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
-Managed Runtime Adapter Design:      1.0
-Project Handoff:                    1.14
-Resume Prompt:                      1.14
+Managed Runtime Adapter Design:      1.1
+Project Handoff:                    1.15
+Resume Prompt:                      1.15
 Collaboration Contract:             1.5
 ```
 
@@ -533,27 +536,16 @@ Hot swap no está diseñado para 1.0.
 
 No añadirlo como parche.
 
-## 14. Milestone actual
+## 14. Siguiente milestone
 
 ```text
-Managed Runtime Adapter Boundary 1.0
-ADR-012 ACEPTADO
-Design 1.0 ACTIVO
-Implementación autorizada
+Distance Sensor Runtime Slice 1.0
+Problema y análisis
 ```
 
-Decisión:
+Managed Runtime Adapter Boundary está cerrado.
 
-```text
-managed Primary behaviors
-no type switches
-no Adapter Registry 1.0
-explicit Node parent
-source-filtered BusMessage endpoints
-scoped dependency values
-```
-
-Distance Sensor Runtime Slice permanece posterior por discrepancia entre Profile y runtime Manifest.
+No implementar Distance Sensor Slice hasta autorización explícita.
 
 ## 15. Fuera de alcance actual
 

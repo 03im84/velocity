@@ -2,8 +2,8 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACEPTADO |
-| Versión | 1.0 |
+| Estado | ACEPTADO — IMPLEMENTADO — VERIFICADO |
+| Versión | 1.1 |
 | Fecha | 03/10/2026 |
 | Componentes | ScopedRuntimeDependencyResolver, ManagedRuntimeLifecycleAdapter, ManagedRuntimeCommunicationBinder, RuntimeSourceFilteredSubscription, GodotNodeRuntimeHost |
 | Alcance | Frontera entre CompositionRuntime, objetos runtime administrados, DeviceBus y Godot Node host |
@@ -687,19 +687,55 @@ Estas consecuencias son aceptadas.
 ## 40. Estado
 
 ```text
-ADR-012
+ADR-012 1.1
 ACEPTADO
+IMPLEMENTADO
+VERIFICADO
 ```
 
 Implementación:
 
 ```text
-AUTORIZADA POR EL USUARIO
-PENDIENTE DEL COMMIT DOCUMENTAL
+RuntimeDependencyValue
+ScopedRuntimeDependencyResolver
+ManagedRuntimeLifecycleAdapter
+RuntimeSourceFilteredSubscription
+ManagedRuntimeCommunicationBinder
+GodotNodeRuntimeHost
 ```
 
-Diseño relacionado:
+Pruebas sucesoras:
 
 ```text
-Managed Runtime Adapter Boundary Design 1.0
+7 tests
+106 checks
+0 failures
+0 missing metrics
 ```
+
+Runtime Suite:
+
+```text
+17 tests
+420 checks
+RESULT: PASS
+```
+
+Global:
+
+```text
+76 tests
+2262 checks
+0 failures
+0 missing metrics
+RESULT: PASS
+```
+
+Commit:
+
+```text
+236e031
+feat(runtime): add managed runtime adapters
+```
+
+Distance Sensor Runtime Slice permanece como decisión sucesora.

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.13 |
+| Versión | 1.14 |
 | Fecha | 03/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback; ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
@@ -44,11 +44,11 @@ DeviceProfiles
 Diseño activo:
 
 ```text
-Managed Runtime Adapter Boundary Design 1.0
-ADR-012 ACEPTADO
+Managed Runtime Adapter Boundary 1.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Implementación autorizada después del commit documental.
+Baseline: 7 tests, 106 checks, PASS.
 
 ## 2. Pipeline completo
 
@@ -1182,31 +1182,30 @@ RUNTIMEFACTORYREGISTRY 1.0
 COMPOSITIONPLAN 1.0
 COMPOSITIONCOMPILER 1.0
 COMPOSITIONRUNTIME 1.0
+MANAGED RUNTIME ADAPTER BOUNDARY 1.0
 
 IMPLEMENTADOS Y VERIFICADOS
-```
-
-```text
-MANAGED RUNTIME ADAPTER BOUNDARY 1.0
-ADR-012 ACEPTADO
-DESIGN ACTIVO
-IMPLEMENTACIÓN AUTORIZADA
 ```
 
 Baseline vigente:
 
 ```text
-Composition Suite: 16 tests / 702 checks
-Run All: 69 tests / 2156 checks
+Runtime Suite: 17 tests / 420 checks
+Run All: 76 tests / 2262 checks
 Failures: 0
 Missing Metrics: 0
 RESULT: PASS
 ```
 
-Siguiente paso:
+Último feature commit:
 
 ```text
-docs(runtime): define managed adapter boundary
+236e031 feat(runtime): add managed runtime adapters
 ```
 
-Después comienza implementación incremental.
+Siguiente milestone:
+
+```text
+Distance Sensor Runtime Slice 1.0
+Problema y análisis
+```
