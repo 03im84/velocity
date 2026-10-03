@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.7 |
+| Versión | 1.8 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
@@ -24,18 +24,14 @@ DeviceGraphAssembler 1.0
 Runtime Construction Contract 1.0
 
 RuntimeFactoryRegistry 1.0
-```
 
-Diseño activo:
-
-```text
 CompositionPlan 1.0
 ```
 
-Siguiente implementación:
+Siguiente milestone:
 
 ```text
-CompositionDeviceEntry
+CompositionCompiler Design
 ```
 
 CompositionCompiler permanece posterior a Registry y Plan.
@@ -140,16 +136,20 @@ RuntimeFactoryRegistry
 RuntimeFactoryRegistryCompileResult
 
 RuntimeFactoryRegistryCompiler
-```
 
-### Diseñado
-
-```text
 CompositionDeviceEntry
 
 CompositionConnectionDirective
 
 CompositionPlan
+
+CompositionPlanRuntimeFactoryRegistryIntegrationTest
+```
+
+### Pendiente de diseño
+
+```text
+CompositionCompiler
 ```
 
 ### Futuro
@@ -170,7 +170,10 @@ core/composition/
 ├── system_profile_compile_result.gd
 ├── system_profile_compiler.gd
 ├── device_graph_assembly_result.gd
-└── device_graph_assembler.gd
+├── device_graph_assembler.gd
+├── composition_device_entry.gd
+├── composition_connection_directive.gd
+└── composition_plan.gd
 ```
 
 ```text
@@ -198,14 +201,9 @@ core/runtime/
 
 ## 5. Estructura siguiente
 
-### CompositionPlan
+CompositionCompiler permanece pendiente de diseño.
 
-```text
-core/composition/
-├── composition_device_entry.gd
-├── composition_connection_directive.gd
-└── composition_plan.gd
-```
+No existe estructura de implementación autorizada todavía.
 
 ## 6. SystemProfile
 
@@ -936,11 +934,25 @@ Runtime Suite:
 314 checks
 ```
 
+CompositionPlan:
+
+```text
+4 tests
+141 checks
+```
+
+Composition Suite:
+
+```text
+9 tests
+397 checks
+```
+
 Global:
 
 ```text
-58 tests
-1710 checks
+62 tests
+1851 checks
 0 failures
 0 missing metrics
 ```
@@ -1000,23 +1012,31 @@ Automatic suites:
     PASS.
 
 11. CompositionDeviceEntry.
-    SIGUIENTE.
+    COMPLETADO.
 
 12. CompositionDeviceEntryTest.
+    PASS — 38 checks.
 
 13. CompositionConnectionDirective.
+    COMPLETADO.
 
 14. CompositionConnectionDirectiveTest.
+    PASS — 31 checks.
 
 15. CompositionPlan.
+    COMPLETADO.
 
 16. CompositionPlanTest.
+    PASS — 49 checks.
 
 17. Registry–Plan Integration.
+    PASS — 23 checks.
 
 18. Run All.
+    PASS — 62 tests, 1851 checks.
 
 19. CompositionCompiler Design.
+    SIGUIENTE.
 ```
 
 ## 45. Baselines preservadas
@@ -1109,11 +1129,13 @@ RUNTIMEFACTORYREGISTRY 1.0
 IMPLEMENTADO Y VERIFICADO
 
 COMPOSITIONPLAN 1.0
-DISEÑO ACTIVO
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Siguiente implementación:
+Siguiente milestone:
 
 ```text
-CompositionDeviceEntry
+CompositionCompiler Design
 ```
+
+CompositionCompiler no está implementado.

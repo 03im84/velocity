@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.4 |
+| Versión | 1.5 |
 | Fecha de actualización | 02/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -465,6 +465,24 @@ Sin latest, fallback u overwrite.
 
 No ejecución de factories.
 
+### CompositionPlan
+
+```text
+CompositionDeviceEntry
+
+CompositionConnectionDirective
+
+CompositionPlan
+```
+
+Plan inmutable y no ejecutable.
+
+Dispatch Policy explícita.
+
+Órdenes forward y reverse derivados.
+
+Registry–Plan Integration verificada.
+
 ## 12. Runtime Construction Contract
 
 Estado:
@@ -641,6 +659,8 @@ DeviceGraphSnapshot
 Runtime Construction Contracts
 
 RuntimeFactoryRegistry 1.0
+
+CompositionPlan 1.0
 ```
 
 ## 19. Pipeline futuro
@@ -700,27 +720,20 @@ CompositionRuntime poseerá:
 Último milestone completado:
 
 ```text
-RuntimeFactoryRegistry 1.0
+CompositionPlan 1.0
 IMPLEMENTADO Y VERIFICADO
 ```
 
-Diseño activo:
+Integración completada:
 
 ```text
-CompositionPlan 1.0
+RuntimeFactoryRegistry–CompositionPlan
+PASS
 ```
 
-Orden siguiente:
+Siguiente milestone:
 
 ```text
-CompositionPlan 1.0
-
-↓
-
-Registry–Plan Integration
-
-↓
-
 CompositionCompiler Design
 ```
 
@@ -827,14 +840,12 @@ feat(runtime): add immutable factory registry
 Estado:
 
 ```text
-DISEÑO ACTIVO
+IMPLEMENTADO Y VERIFICADO
 ```
 
-RuntimeFactoryRegistry 1.0 está completo.
+RuntimeFactoryRegistry 1.0 está completo e integrado con Plan.
 
-CompositionPlan 1.0 está autorizado para implementación incremental.
-
-Componentes diseñados:
+Componentes implementados:
 
 ```text
 CompositionDeviceEntry
@@ -900,6 +911,29 @@ Plan no contiene:
 - Plan ID;
 - Plan Version.
 
+Baseline propia:
+
+```text
+4 tests
+141 checks
+0 failures
+```
+
+Composition Suite:
+
+```text
+9 tests
+397 checks
+0 failures
+```
+
+Commit:
+
+```text
+3d62a7b
+feat(composition): add immutable composition plan
+```
+
 ## 23. Tooling
 
 ### Runner
@@ -947,15 +981,15 @@ OK
 ## 24. Baseline global
 
 ```text
-Planned: 58
-Completed: 58
-Passed: 58
+Planned: 62
+Completed: 62
+Passed: 62
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 58
-Checks: 1710
+Total Runs: 62
+Checks: 1851
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
@@ -1013,26 +1047,40 @@ Runtime Suite:
 314 checks
 ```
 
+CompositionPlan:
+
+```text
+4 tests
+141 checks
+```
+
+Composition Suite:
+
+```text
+9 tests
+397 checks
+```
+
 ## 26. Documentos vigentes
 
 ```text
 Core Architecture:
-2.16
+2.17
 
 Engineering Standards:
 1.3
 
 System Composition Pipeline Design:
-1.7
+1.8
 
 Runtime Construction Contract Design:
 1.1
 
 RuntimeFactoryRegistry Design:
-1.1
+1.2
 
 CompositionPlan Design:
-1.1
+1.2
 
 Velocity Test Dashboard Design:
 1.4
@@ -1047,10 +1095,10 @@ DeviceGraph Design:
 1.3
 
 Project Handoff:
-1.4
+1.5
 
 Resume Prompt:
-1.4
+1.5
 
 Collaboration Contract:
 1.0
@@ -1073,14 +1121,18 @@ main
 Último commit conocido:
 
 ```text
-257103a
-chore(editor):
-remove unused lore plugin
+3d62a7b
+feat(composition):
+add immutable composition plan
 ```
 
 Commits relevantes:
 
 ```text
+c235b6b
+docs(runtime):
+record factory registry 1.0 baseline
+
 2a7f9a7
 chore(editor):
 add custom theme switcher
@@ -1282,58 +1334,52 @@ No debe escribir código en primera respuesta.
 ### Cierre documental inmediato
 
 ```text
-1. Registrar RuntimeFactoryRegistry Design 1.1.
+1. Registrar CompositionPlan Design 1.2.
 
-2. Actualizar System Composition Pipeline 1.7.
+2. Registrar Registry–Plan Integration.
 
-3. Actualizar Core Architecture 2.16.
+3. Actualizar System Composition Pipeline 1.8.
 
-4. Actualizar Project State 1.4.
+4. Actualizar Core Architecture 2.17.
 
-5. Ejecutar auditoría documental.
+5. Actualizar Project State 1.5.
 
-6. Crear commit de baseline.
+6. Ejecutar auditoría documental.
 
-7. Ejecutar push a origin/main.
+7. Crear commit de baseline.
+
+8. Ejecutar push a origin/main.
 ```
 
 Commit sugerido:
 
 ```text
-docs(runtime): record factory registry 1.0 baseline
+docs(composition): record composition plan 1.0 baseline
 ```
 
-### Primera implementación posterior
+### Siguiente milestone
 
 ```text
-res://core/composition/composition_device_entry.gd
-```
-
-Prueba sucesora:
-
-```text
-res://test/core/composition/CompositionDeviceEntryTest.tscn
-
-res://test/core/composition/composition_device_entry_test.gd
-```
-
-Orden posterior:
-
-```text
-CompositionDeviceEntry
-
-CompositionConnectionDirective
-
-CompositionPlan
-
-Registry–Plan Integration
-
-Run All
-
 CompositionCompiler Design
 ```
 
-No se implementará CompositionCompiler antes de completar e integrar Registry y Plan.
+Orden obligatorio:
+
+```text
+Problema
+
+Análisis
+
+Alternativas
+
+Diseño completo
+
+Criterios de aceptación
+
+Confirmación
+```
+
+No se implementará CompositionCompiler durante diseño abierto.
 
 ## 35. Regla final
 

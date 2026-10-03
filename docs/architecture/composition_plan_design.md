@@ -3,11 +3,12 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.1 |
+| Versión | 1.2 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Directivas runtime inmutables, orden por fases, comunicación y Runtime Safety |
 | Prerrequisito | RuntimeFactoryRegistry 1.0 implementado y verificado |
+| Estado de implementación | COMPLETO Y VERIFICADO |
 
 ## 1. Propósito
 
@@ -1065,28 +1066,39 @@ Plan utiliza pruebas sucesoras.
 ## 43. Orden de implementación
 
 ```text
-1. Implementar CompositionDeviceEntry.
+1. CompositionDeviceEntry.
+   COMPLETADO.
 
-2. Ejecutar CompositionDeviceEntryTest.
+2. CompositionDeviceEntryTest.
+   PASS — 38 checks.
 
-3. Implementar CompositionConnectionDirective.
+3. CompositionConnectionDirective.
+   COMPLETADO.
 
-4. Ejecutar CompositionConnectionDirectiveTest.
+4. CompositionConnectionDirectiveTest.
+   PASS — 31 checks.
 
-5. Implementar CompositionPlan.
+5. CompositionPlan.
+   COMPLETADO.
 
-6. Ejecutar CompositionPlanTest.
+6. CompositionPlanTest.
+   PASS — 49 checks.
 
-7. Integrar con RuntimeFactoryRegistry.
+7. CompositionPlanRuntimeFactoryRegistryIntegrationTest.
+   PASS — 23 checks.
 
-8. Ejecutar Run All.
+8. Composition Suite.
+   PASS — 9 tests, 397 checks.
 
-9. Registrar baseline.
+9. Run All.
+   PASS — 62 tests, 1851 checks.
 
-10. Diseñar CompositionCompiler.
+10. Registrar baseline.
+    COMPLETADO.
+
+11. Diseñar CompositionCompiler.
+    SIGUIENTE.
 ```
-
-La implementación de Plan comenzará después de completar RuntimeFactoryRegistry 1.0.
 
 ## 44. Criterios de aceptación
 
@@ -1227,15 +1239,62 @@ Estas consecuencias son aceptadas.
 ## 49. Estado
 
 ```text
-DISEÑO ACTIVO
+COMPOSITIONPLAN 1.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
-RuntimeFactoryRegistry 1.0 está implementado y verificado.
-
-CompositionPlan 1.0 está autorizado para implementación incremental.
-
-Primer componente y siguiente implementación inmediata:
+Baseline propia:
 
 ```text
-CompositionDeviceEntry
+Tests: 4
+Checks: 141
+Failures: 0
+Missing Metrics: 0
+RESULT: PASS
 ```
+
+Composition Suite:
+
+```text
+Tests: 9
+Checks: 397
+Failures: 0
+Missing Metrics: 0
+RESULT: PASS
+```
+
+Baseline global:
+
+```text
+Tests: 62
+Checks: 1851
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+Commit de implementación:
+
+```text
+3d62a7b
+feat(composition): add immutable composition plan
+```
+
+RuntimeFactoryRegistry–CompositionPlan Integration:
+
+```text
+PASS — 23 checks
+```
+
+Todos los criterios de aceptación fueron satisfechos.
+
+Siguiente milestone:
+
+```text
+CompositionCompiler Design
+```
+
+CompositionCompiler no está implementado.

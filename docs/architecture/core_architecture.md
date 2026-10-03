@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.16 |
+| Versión | 2.17 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 02/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -210,10 +210,10 @@ SceneTree no define Core.
 | RuntimeFactoryRegistryCompiler | Validar Draft y producir Registry | Implementado y verificado |
 | RuntimeFactoryRegistry | Resolver factories mediante Key exacta | Implementado y verificado |
 | RuntimeFactoryRegistryCompileResult | Contener Registry y ValidationReport | Implementado y verificado |
-| CompositionDeviceEntry | Describir construcción declarativa de un Device | Diseño 1.0 activo; siguiente implementación |
-| CompositionConnectionDirective | Describir wiring sin callbacks activos | Diseño 1.0 activo; implementación pendiente |
-| CompositionPlan | Instrucciones runtime inmutables y no ejecutables | Diseño 1.0 activo; implementación pendiente |
-| CompositionCompiler | Compilar Snapshot y Registry a Plan | Diseño pendiente |
+| CompositionDeviceEntry | Describir construcción declarativa de un Device | Implementado y verificado |
+| CompositionConnectionDirective | Describir wiring sin callbacks activos | Implementado y verificado |
+| CompositionPlan | Instrucciones runtime inmutables y no ejecutables | Implementado y verificado |
+| CompositionCompiler | Compilar Snapshot y Registry a Plan | Siguiente diseño |
 | CompositionRuntime | Ejecutar Plan y poseer recursos activos | Pendiente |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
@@ -735,6 +735,8 @@ DeviceGraphSnapshot
 Runtime Construction Contracts
 
 RuntimeFactoryRegistry 1.0
+
+CompositionPlan 1.0
 ```
 
 ## 26. Pipeline futuro
@@ -788,7 +790,7 @@ CompositionRuntime
 Definido por:
 
 ```text
-RuntimeFactoryRegistry Design 1.0
+RuntimeFactoryRegistry Design 1.2
 ```
 
 Estado:
@@ -895,18 +897,39 @@ feat(runtime): add immutable factory registry
 Definido por:
 
 ```text
-CompositionPlan Design 1.1
+CompositionPlan Design 1.2
 ```
 
 Estado:
 
 ```text
-DISEÑO ACTIVO
+IMPLEMENTADO Y VERIFICADO
 ```
 
-RuntimeFactoryRegistry 1.0 está completo.
+Baseline propia:
 
-CompositionPlan 1.0 está autorizado para implementación incremental.
+```text
+Tests: 4
+Checks: 141
+Failures: 0
+RESULT: PASS
+```
+
+Composition Suite:
+
+```text
+Tests: 9
+Checks: 397
+Failures: 0
+RESULT: PASS
+```
+
+Commit:
+
+```text
+3d62a7b
+feat(composition): add immutable composition plan
+```
 
 CompositionPlan representa instrucciones runtime validadas, inmutables y no ejecutables.
 
@@ -984,9 +1007,11 @@ No contiene:
 
 ## 29. CompositionCompiler
 
-Futuro.
+Siguiente diseño.
 
-Será diseñado después de implementar e integrar RuntimeFactoryRegistry 1.0 y CompositionPlan 1.0.
+RuntimeFactoryRegistry 1.0 y CompositionPlan 1.0 están implementados e integrados.
+
+CompositionCompiler todavía no está implementado.
 
 Entradas conceptuales:
 
@@ -1257,25 +1282,29 @@ Runtime Construction Contract 1.0
 
 RuntimeFactoryRegistry 1.0
 
+CompositionPlan 1.0
+
 Velocity Test Runner
 
 Velocity Test Dashboard 0.4.0
 ```
 
-## 37. Diseño activo
+## 37. Siguiente diseño
 
 ```text
-CompositionPlan 1.0
+CompositionCompiler
 ```
 
-El diseño está completo y autoriza implementación incremental.
+Debe comenzar por problema y análisis.
+
+No existe implementación autorizada todavía.
 
 ## 38. Pendiente
 
 ```text
-Implementación de CompositionPlan 1.0
+Diseño de CompositionCompiler
 
-Diseño e implementación de CompositionCompiler
+Implementación futura de CompositionCompiler
 
 CompositionRuntime
 
@@ -1309,8 +1338,8 @@ RuntimeAllocation
 Dashboard 0.4.0 confirma:
 
 ```text
-Tests: 58
-Checks: 1710
+Tests: 62
+Checks: 1851
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1406,36 +1435,42 @@ Toda modificación se entrega como archivo completo.
 
 ## 44. Siguiente paso
 
-Implementar incrementalmente CompositionPlan 1.0.
+Diseñar CompositionCompiler.
 
-Primer archivo:
+Orden obligatorio:
 
 ```text
-res://core/composition/composition_device_entry.gd
+1. Problema.
+
+2. Análisis.
+
+3. Alternativas y tradeoffs.
+
+4. Diseño completo.
+
+5. Criterios de aceptación.
+
+6. Confirmación antes de implementación.
 ```
 
-Primera prueba sucesora:
+Entradas conceptuales ya aceptadas:
 
 ```text
-res://test/core/composition/CompositionDeviceEntryTest.tscn
+DeviceGraphSnapshot
 
-res://test/core/composition/composition_device_entry_test.gd
+RuntimeFactoryRegistry
+
+Activation Context
+
+DeviceBusDispatchPolicy
 ```
 
-Orden posterior:
+Salida conceptual:
 
 ```text
-CompositionDeviceEntry
-
-CompositionConnectionDirective
-
 CompositionPlan
 
-Registry–Plan Integration
-
-Run All
-
-CompositionCompiler Design
+ValidationReport
 ```
 
-No se implementará CompositionCompiler antes de completar e integrar Registry y Plan.
+No se implementará CompositionCompiler durante diseño abierto.

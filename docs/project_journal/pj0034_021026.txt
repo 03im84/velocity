@@ -1,0 +1,412 @@
+PJ0034 – CompositionPlan 1.0 Implementation Baseline
+
+Fecha:
+
+02/10/2026
+
+Objetivo:
+
+Registrar la implementación,
+verificación e integración de:
+
+CompositionPlan 1.0
+
+Estado previo:
+
+RuntimeFactoryRegistry 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+CompositionPlan 1.0:
+
+DISEÑO ACTIVO
+
+CompositionCompiler:
+
+PENDIENTE DE DISEÑO
+
+Baseline previa:
+
+Tests:
+
+58
+
+Checks:
+
+1710
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Componentes implementados:
+
+res://core/composition/
+composition_device_entry.gd
+
+res://core/composition/
+composition_connection_directive.gd
+
+res://core/composition/
+composition_plan.gd
+
+CompositionDeviceEntry:
+
+✔ Inmutable.
+
+✔ Conserva Device ID.
+
+✔ Conserva DeviceConfiguration.
+
+✔ Conserva RuntimeFactoryKey.
+
+✔ Conserva RuntimeDependencySpecs.
+
+✔ Copia Array de constructor.
+
+✔ Getter devuelve copia.
+
+✔ Lookup exacto por Dependency ID.
+
+✔ Valida identidad completa.
+
+✔ Valida Configuration.
+
+✔ Valida Factory Key.
+
+✔ Valida Profile ID.
+
+✔ Valida Profile Version.
+
+✔ Valida Activation Context.
+
+✔ Rechaza Dependency ID duplicada.
+
+✔ No contiene factory.
+
+✔ No contiene Binding activo.
+
+✔ No contiene Value activo.
+
+✔ No contiene Handle.
+
+✔ No contiene DeviceBus.
+
+CompositionConnectionDirective:
+
+✔ Inmutable.
+
+✔ Connection ID determinista.
+
+✔ Formato canónico:
+
+source_device
+|
+source_port
+|
+target_device
+|
+target_port
+
+✔ Conserva Source Device ID.
+
+✔ Conserva Source Port ID.
+
+✔ Conserva Topic.
+
+✔ Conserva Target Device ID.
+
+✔ Conserva Target Port ID.
+
+✔ Topic no redefine endpoint ID.
+
+✔ Rechaza self-reference.
+
+✔ Rechaza separador reservado
+  en endpoints.
+
+✔ No contiene callback.
+
+✔ No contiene Subscriber activo.
+
+✔ No contiene DeviceBus.
+
+✔ No contiene RuntimeFactory.
+
+✔ No conserva DeviceGraphConnection
+  como modelo canónico.
+
+CompositionPlan:
+
+✔ Inmutable.
+
+✔ Activation Context explícito.
+
+✔ Device Entries tipadas.
+
+✔ Connection Directives tipadas.
+
+✔ DeviceBusDispatchPolicy obligatoria.
+
+✔ Plan vacío válido.
+
+✔ Simulation válido.
+
+✔ Hardware estructuralmente válido.
+
+✔ Device IDs únicas.
+
+✔ Connection IDs únicas.
+
+✔ Endpoints conocidos.
+
+✔ Conserva orden de Entries.
+
+✔ Conserva orden de Directives.
+
+✔ Lookup exacto de Entry.
+
+✔ Lookup exacto de Directive.
+
+✔ Construction order derivado.
+
+✔ Attach order derivado.
+
+✔ Initialization order derivado.
+
+✔ Ready order derivado.
+
+✔ Start order derivado.
+
+✔ Shutdown order inverso.
+
+✔ Rollback order inverso.
+
+✔ Arrays de orden independientes.
+
+✔ Ciclos no requieren
+  topological sort.
+
+✔ No contiene factory.
+
+✔ No contiene Registry.
+
+✔ No contiene Callable.
+
+✔ No contiene Handle.
+
+✔ No contiene DeviceBus activo.
+
+✔ No ejecuta lifecycle.
+
+Integración Registry–Plan:
+
+✔ Cada Entry conserva Key exacta.
+
+✔ Registry resuelve Descriptor exacto.
+
+✔ Registry resuelve factory exacta.
+
+✔ Misma factory puede resolver
+  varias Keys.
+
+✔ Specs de Entry y Descriptor
+  coinciden.
+
+✔ Versión faltante sin fallback.
+
+✔ Contexto faltante sin fallback.
+
+✔ Profile ID faltante sin fallback.
+
+✔ Registry y Plan permanecen
+  snapshots separados.
+
+✔ Plan no contiene Registry.
+
+✔ Factory build count permanece cero.
+
+✔ Factory release count permanece cero.
+
+Pruebas sucesoras:
+
+CompositionDeviceEntryTest
+
+Checks:
+
+38
+
+CompositionConnectionDirectiveTest
+
+Checks:
+
+31
+
+CompositionPlanTest
+
+Checks:
+
+49
+
+CompositionPlanRuntimeFactoryRegistryIntegrationTest
+
+Checks:
+
+23
+
+Baseline propia de CompositionPlan:
+
+Tests:
+
+4
+
+Checks:
+
+141
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Composition Suite:
+
+Tests:
+
+9
+
+Checks:
+
+397
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Baseline global aceptada:
+
+Planned:
+
+62
+
+Completed:
+
+62
+
+Passed:
+
+62
+
+Failed:
+
+0
+
+Timeout:
+
+0
+
+Engine Error:
+
+0
+
+Not Run:
+
+0
+
+Total Runs:
+
+62
+
+Checks:
+
+1851
+
+Check Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Plan ExitCode:
+
+0
+
+RESULT:
+
+PASS
+
+Commit de implementación:
+
+3d62a7b
+
+feat(composition):
+add immutable composition plan
+
+Baselines anteriores:
+
+PRESERVADAS
+
+Dashboard Java externo:
+
+Permanece fuera de Velocity.
+
+No forma parte de:
+
+- repositorio;
+
+- baseline canónica;
+
+- Runner autoritativo;
+
+- cierre de CompositionPlan.
+
+Estado final:
+
+COMPOSITIONPLAN 1.0
+
+IMPLEMENTADO Y VERIFICADO
+
+REGISTRY–PLAN INTEGRATION
+
+PASS
+
+REGRESSION GLOBAL
+
+PASS
+
+Siguiente milestone:
+
+COMPOSITIONCOMPILER DESIGN
+
+Orden obligatorio:
+
+1. Problema.
+
+2. Análisis.
+
+3. Diseño completo.
+
+4. Confirmación.
+
+5. Implementación futura.
+
+CompositionCompiler:
+
+NO IMPLEMENTADO
+
+CompositionRuntime:
+
+FUTURO

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.4 |
+| Versión | 1.5 |
 | Fecha | 02/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -54,14 +54,15 @@ Estado arquitectónico esperado:
 
 - Runtime Construction Contract 1.0 está implementado y verificado.
 - RuntimeFactoryRegistry 1.0 está implementado y verificado.
-- CompositionPlan 1.0 tiene diseño activo.
+- CompositionPlan 1.0 está implementado y verificado.
+- Registry–Plan Integration está verificada.
 - CompositionCompiler permanece pendiente de diseño.
-- La siguiente implementación es CompositionDeviceEntry.
+- El siguiente milestone es CompositionCompiler Design.
 
 Baseline esperada:
 
-- 58 tests.
-- 1710 checks.
+- 62 tests.
+- 1851 checks.
 - 0 failures.
 - 0 missing metrics.
 
@@ -189,6 +190,8 @@ Runtime Construction Contract 1.0
 Velocity Test Dashboard 0.4.0
 
 RuntimeFactoryRegistry 1.0
+
+CompositionPlan 1.0
 ```
 
 Pipeline implementado:
@@ -227,46 +230,46 @@ RuntimeDeviceHandle
 RuntimeFactoryBuildResult
 ```
 
-Diseño activo:
+Siguiente diseño:
 
 ```text
-CompositionPlan 1.0
+CompositionCompiler
 ```
 
 Documentos canónicos del milestone:
 
 ```text
-Core Architecture 2.16
+Core Architecture 2.17
 
-System Composition Pipeline Design 1.7
+System Composition Pipeline Design 1.8
 
-RuntimeFactoryRegistry Design 1.1
+RuntimeFactoryRegistry Design 1.2
 
-CompositionPlan Design 1.1
+CompositionPlan Design 1.2
 
-Project Handoff 1.4
+Project Handoff 1.5
 
-Resume Prompt 1.4
+Resume Prompt 1.5
 ```
 
-Siguiente implementación:
+Siguiente milestone:
 
 ```text
-res://core/composition/composition_device_entry.gd
+CompositionCompiler Design
 ```
 
 ## 4. Baseline global
 
 ```text
-Planned: 58
-Completed: 58
-Passed: 58
+Planned: 62
+Completed: 62
+Passed: 62
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 58
-Checks: 1710
+Total Runs: 62
+Checks: 1851
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
@@ -473,27 +476,20 @@ Last Known Good cambia solo después de commit completo.
 Último milestone completado:
 
 ```text
-RuntimeFactoryRegistry 1.0
+CompositionPlan 1.0
 IMPLEMENTADO Y VERIFICADO
 ```
 
-Diseño activo:
+Integración:
 
 ```text
-CompositionPlan 1.0
+RuntimeFactoryRegistry–CompositionPlan
+PASS
 ```
 
-Orden autorizado:
+Siguiente milestone:
 
 ```text
-CompositionPlan 1.0 implementation
-
-↓
-
-Registry–Plan Integration
-
-↓
-
 CompositionCompiler Design
 ```
 
@@ -603,7 +599,36 @@ CompositionCompiler y CompositionRuntime observan el mismo Registry snapshot dur
 
 ## 16. CompositionPlan 1.0
 
-Componentes diseñados:
+Estado:
+
+```text
+IMPLEMENTADO Y VERIFICADO
+```
+
+Baseline:
+
+```text
+4 tests
+141 checks
+0 failures
+```
+
+Composition Suite:
+
+```text
+9 tests
+397 checks
+0 failures
+```
+
+Commit:
+
+```text
+3d62a7b
+feat(composition): add immutable composition plan
+```
+
+Componentes implementados:
 
 ```text
 CompositionDeviceEntry
@@ -765,17 +790,17 @@ Alternativas rechazadas:
 
 ## 20. Protocolo Git
 
-Base commit antes del cierre de Registry 1.0:
+Base commit antes del cierre de CompositionPlan 1.0:
 
 ```text
-257103a
-chore(editor): remove unused lore plugin
+3d62a7b
+feat(composition): add immutable composition plan
 ```
 
 Commit sugerido para el paquete actual:
 
 ```text
-docs(runtime): record factory registry 1.0 baseline
+docs(composition): record composition plan 1.0 baseline
 ```
 
 Antes del commit:
@@ -821,33 +846,31 @@ Dashboard 0.4.0
 
 Baseline:
 
-58 tests
+62 tests
 
-1710 checks
+1851 checks
 
 0 failures
 
 Último milestone:
 
-RuntimeFactoryRegistry 1.0
+CompositionPlan 1.0
 
 IMPLEMENTADO Y VERIFICADO
 
-Diseño activo:
+Integración:
 
-CompositionPlan 1.0
+RuntimeFactoryRegistry–CompositionPlan
 
-Siguiente implementación:
+PASS
 
-CompositionDeviceEntry
+Siguiente milestone:
 
-Ruta:
-
-res://core/composition/composition_device_entry.gd
+CompositionCompiler Design
 
 CompositionCompiler:
 
-PENDIENTE DE DISEÑO
+PENDIENTE DE DISEÑO E IMPLEMENTACIÓN
 ```
 
 No debe escribir código hasta recibir confirmación y comprobar que el paquete documental está cerrado.

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.1 |
+| Versión | 1.2 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Declaración, validación y resolución exacta de RuntimeFactories |
@@ -1042,23 +1042,34 @@ Verifica:
 - Registry sin latest;
 - Registry sin ejecución.
 
-## 37. Integración futura
+## 37. Integración con CompositionPlan
 
-Después de CompositionPlan se creará:
+Implementada mediante:
 
 ```text
 CompositionPlanRuntimeFactoryRegistryIntegrationTest
 ```
 
-Verificará:
+Verifica:
 
 - cada Device Entry conserva Key;
-- Registry resuelve Key;
+- Registry resuelve Descriptor exacto;
+- Registry resuelve factory exacta;
 - Plan no contiene factory;
+- Plan no contiene Registry;
 - misma factory puede resolver varias Keys;
-- contexto incorrecto falla;
-- no fallback;
+- versión incorrecta no usa fallback;
+- contexto incorrecto no usa fallback;
+- Profile ID incorrecto no usa fallback;
 - no ejecución durante validación.
+
+Baseline:
+
+```text
+Checks: 23
+Failures: 0
+RESULT: PASS
+```
 
 ## 38. Baselines preservadas
 
@@ -1123,13 +1134,13 @@ Registry utiliza pruebas sucesoras.
     COMPLETADO.
 
 14. Implementar CompositionPlan 1.0.
-    SIGUIENTE.
+    COMPLETADO.
 
 15. Integrar Plan y Registry.
-    POSTERIOR.
+    PASS — 23 checks.
 
 16. Diseñar CompositionCompiler.
-    POSTERIOR.
+    SIGUIENTE.
 ```
 
 ## 40. Criterios de aceptación
@@ -1298,8 +1309,8 @@ RESULT: PASS
 Baseline global:
 
 ```text
-Tests: 58
-Checks: 1710
+Tests: 62
+Checks: 1851
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1317,12 +1328,14 @@ feat(runtime): add immutable factory registry
 
 Todos los criterios de aceptación fueron satisfechos.
 
-Siguiente componente:
+CompositionPlan 1.0 está implementado y verificado.
+
+Registry–Plan Integration está verificada.
+
+Siguiente milestone:
 
 ```text
-res://core/composition/composition_device_entry.gd
+CompositionCompiler Design
 ```
 
-CompositionPlan 1.0 conserva diseño activo y está autorizado para implementación.
-
-CompositionCompiler permanece pendiente de diseño.
+CompositionCompiler permanece pendiente de diseño e implementación.
