@@ -1,0 +1,32 @@
+PJ0052 – Input Runtime Slice Problem and Analysis
+
+Fecha: 03/10/2026
+
+Objetivo: definir la primera entrada de jugador del Playable Vertical Slice.
+
+Problema: Core no debe consultar Godot Input, y una entrada humana no debe aplicar fuerzas ni publicar propulsion directamente.
+
+Alternativa seleccionada:
+
+Godot Input → Provider → RuntimeUnit → VehicleControlCommand → DeviceBus.
+
+Decisiones propuestas:
+
+- command normalizado;
+- Topic vehicle_control_command;
+- Provider BORROWED;
+- sampler Node en physics tick;
+- publicación solo RUNNING;
+- keyboard/gamepad bajo actions;
+- deadzone y clamp;
+- neutral state;
+- Simulation-only;
+- no singleton/autoload/service locator.
+
+ADR-014 y Design 1.0 creados para revisión.
+
+Estado:
+
+PROBLEMA CERRADO
+ANÁLISIS PROPUESTO
+IMPLEMENTACIÓN BLOQUEADA HASTA REVISIÓN Y COMMIT DOCUMENTAL
