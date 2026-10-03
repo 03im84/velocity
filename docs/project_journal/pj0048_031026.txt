@@ -1,0 +1,363 @@
+PJ0048 – Velocity Tooling Dashboard Web 0.5.0 Baseline
+
+Fecha:
+
+03/10/2026
+
+Objetivo:
+
+Registrar implementación,
+revisiones Windows,
+paridad y aceptación de:
+
+Velocity Tooling Dashboard 0.5.0
+
+Predecesor:
+
+Velocity Test Dashboard 0.4.0
+
+Tkinter
+
+Last Known Good preservado.
+
+Arquitectura implementada:
+
+Python standard library backend
+
+HTTP JSON
+
+Server-Sent Events
+
+HTML
+
+CSS
+
+JavaScript vanilla
+
+127.0.0.1 only
+
+Componentes:
+
+velocity_dashboard_service.py
+
+velocity_dashboard_delivery.py
+
+velocity_dashboard_web.py
+
+velocity_native_picker.py
+
+index.html
+
+styles.css
+
+app.js
+
+start_velocity_dashboard_web.bat
+
+Features:
+
+- Tests tab;
+
+- Delivery tab;
+
+- History tab;
+
+- Settings tab;
+
+- terminal-style layout;
+
+- Plan sidebar;
+
+- Progress sidebar;
+
+- Environment sidebar;
+
+- live SSE output;
+
+- test discovery;
+
+- suites;
+
+- selected/suite/all plans;
+
+- pause/resume/stop;
+
+- final authoritative summary;
+
+- Delivery Install/Submit;
+
+- native ZIP picker;
+
+- staged preview;
+
+- browser select;
+
+- custom executable path;
+
+- local JSON persistence;
+
+- port auto/explicit;
+
+- coordinated Shutdown;
+
+- themes dark/light/reading.
+
+Security:
+
+- localhost only;
+
+- random session token;
+
+- HttpOnly cookie;
+
+- SameSite Strict;
+
+- CSRF token;
+
+- Origin validation;
+
+- CSP;
+
+- assets allowlist;
+
+- no directory listing;
+
+- no arbitrary command endpoint;
+
+- shell false.
+
+Revision history:
+
+Candidate initial:
+
+functional.
+
+Issue 1:
+
+PowerShell Format-Table
+wrapped MetricsAvailable
+character by character
+under redirected host width.
+
+Correction:
+
+deterministic labeled summary:
+
+Scene own line
+
+Attempt/ExitCode/Status
+
+Engine Error
+
+Checks/Failures/Metrics
+
+Issue 2:
+
+Run All froze UI.
+
+Root causes:
+
+- SSE event per line;
+
+- frontend textContent += O(n²);
+
+- public snapshots included
+  full raw output of prior tests.
+
+Corrections:
+
+- backend batching 50 ms / 16 KiB;
+
+- frontend batching 50 ms;
+
+- incremental Text nodes;
+
+- visual buffer cap;
+
+- raw output removed from snapshots;
+
+- result output tail bounded.
+
+Issue 3:
+
+No clear controls.
+
+Corrections:
+
+- clear Tests terminal;
+
+- clear Delivery terminal;
+
+- clear session history.
+
+Issue 4:
+
+CLI windows flashed
+while Delivery invoked Git/helper.
+
+Correction:
+
+CREATE_NO_WINDOW
+
+for Git children
+and native picker helper.
+
+Issue 5:
+
+Windows CSRF rejection test
+raised WinError 10053.
+
+Root cause:
+
+403 response closed connection
+before consuming request body.
+
+Correction:
+
+drain bounded request body
+before forbidden response.
+
+Security remained unchanged.
+
+Issue 6:
+
+Web VTD showed progress only,
+not final authoritative summary.
+
+Correction:
+
+Final summary includes:
+
+Planned
+
+Completed
+
+Passed
+
+Failed
+
+Timeout
+
+Engine Error
+
+Not Run
+
+Total Runs
+
+Checks
+
+Check Failures
+
+Missing Metrics
+
+Plan ExitCode
+
+RESULT
+
+Displayed:
+
+- terminal final block;
+
+- persistent sidebar panel.
+
+Python baseline:
+
+VTD Web:
+
+35 tests
+
+Submit Tool:
+
+44 tests
+
+Dashboard Logic:
+
+17 tests
+
+Total:
+
+96 tests
+
+RESULT:
+
+OK
+
+Godot baseline:
+
+76 tests
+
+2262 checks
+
+0 failures
+
+0 timeout
+
+0 engine errors
+
+0 missing metrics
+
+Plan ExitCode: 0
+
+RESULT: PASS
+
+Windows UX acceptance:
+
+- visual style accepted;
+
+- Run All responsive;
+
+- formatting accepted;
+
+- terminal clear PASS;
+
+- history clear PASS;
+
+- Delivery no CLI flashes;
+
+- web Delivery Submit PASS;
+
+- themes PASS;
+
+- browser select PASS;
+
+- Shutdown PASS;
+
+- ZIP cleanup PASS.
+
+Feature package:
+
+velocity-tooling-dashboard-web-candidate-r4-031026.zip
+
+Feature commit:
+
+314a7a7
+
+feat(tools): add web tooling dashboard candidate
+
+Git:
+
+## main...origin/main
+
+Product state:
+
+Velocity Tooling Dashboard 0.5.0
+
+IMPLEMENTADO
+
+VERIFICADO
+
+ACEPTADO COMO INTERFAZ RECOMENDADA
+
+Tkinter 0.4.0:
+
+PRESERVADO COMO FALLBACK
+
+Siguiente milestone:
+
+Distance Sensor Runtime Slice 1.0
+
+Problema y análisis
+
+Implementación:
+
+NO AUTORIZADA TODAVIA

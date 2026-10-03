@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.16 |
+| Versión | 1.17 |
 | Fecha de actualización | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -681,7 +681,7 @@ Modificar la implementación después del PASS no ofrecía beneficio demostrado 
 
 ```text
 Core Architecture:                  2.24
-Engineering Standards:              1.8
+Engineering Standards:              1.9
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
@@ -693,10 +693,10 @@ CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
-Velocity Tooling Dashboard Web:      1.0
+Velocity Tooling Dashboard Web:      1.1
 Managed Runtime Adapter Design:      1.1
-Project Handoff:                    1.16
-Resume Prompt:                      1.16
+Project Handoff:                    1.17
+Resume Prompt:                      1.17
 Collaboration Contract:             1.5
 ```
 
@@ -895,46 +895,59 @@ Estado sincronizado:
 
 `Submit` significa staging + commit + push.
 
-## 29. Milestone actual
+## 29. Último milestone completado
 
 ```text
 Velocity Tooling Dashboard 0.5.0
-LOCAL WEB UI
-DELIVERY INTEGRATION
-THEMES
-IMPLEMENTACIÓN AUTORIZADA
+IMPLEMENTADO Y VERIFICADO
 ```
 
 Stack:
 
 ```text
-Python standard library backend
+Python stdlib local server
 HTTP JSON + SSE
 HTML/CSS/JavaScript vanilla
 ```
 
-Requisitos:
-
-- terminal-style UI;
-- Tests/Delivery/History/Settings;
-- light/dark/reading themes;
-- browser select;
-- custom browser path;
-- local JSON persistence;
-- configurable port;
-- coordinated Shutdown;
-- Tkinter 0.4.0 preserved as LKG.
-
-Commit previsto:
+Baseline:
 
 ```text
-docs(tools): define web tooling dashboard
+35 Web tests
+44 Submit Tool tests
+17 Dashboard Logic tests
+96 tooling total
+
+Run All:
+76 tests
+2262 checks
+RESULT: PASS
+```
+
+Feature commit:
+
+```text
+314a7a7 feat(tools): add web tooling dashboard candidate
+```
+
+Launcher recomendado:
+
+```text
+test/tools/start_velocity_dashboard_web.bat
+```
+
+Tkinter 0.4.0 permanece fallback.
+
+Siguiente milestone:
+
+```text
+Distance Sensor Runtime Slice 1.0
+Problema y análisis
 ```
 
 ## 30. Trabajo futuro explícito
 
 ```text
-Velocity Tooling Dashboard 0.5.0 implementation
 Distance Sensor Runtime Slice
 Composition Root concreto
 CompositionRuntimeSupervisor

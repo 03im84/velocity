@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | APROBADO |
-| Versión del documento | 1.5 |
+| Versión del documento | 1.6 |
 | Versión del Dashboard | 0.4.0 |
 | Fecha | 04/09/2026 |
 | Estado de implementación | COMPLETO Y VERIFICADO |
@@ -1207,25 +1207,33 @@ Dashboard continúa siendo un adaptador visual de infraestructura de pruebas.
 
 ```text
 VELOCITY TEST DASHBOARD 0.4.0
-IMPLEMENTADO
-VERIFICADO
-LAST KNOWN GOOD
+TKINTER
+IMPLEMENTADO Y VERIFICADO
+FALLBACK LAST KNOWN GOOD
 ```
 
-Sucesor aprobado:
+Sucesor aceptado:
 
 ```text
 VELOCITY TOOLING DASHBOARD 0.5.0
-Python local web backend
-HTML/CSS/JavaScript vanilla
-Delivery integration
-Light/Dark/Reading themes
+LOCAL WEB UI
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Documento sucesor:
+Web baseline:
 
 ```text
-docs/tools/velocity_tooling_dashboard_web_design.md
+35 Web tests
+96 total tooling tests
+76 Godot tests
+2262 checks
+RESULT: PASS
 ```
 
-Tkinter 0.4.0 no se retira antes de parity tests y aceptación explícita.
+Web commit:
+
+```text
+314a7a7 feat(tools): add web tooling dashboard candidate
+```
+
+Tkinter no se elimina; permanece como fallback durante evolución posterior.

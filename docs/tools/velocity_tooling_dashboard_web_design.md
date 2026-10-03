@@ -2,8 +2,8 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACTIVO |
-| Versión | 1.0 |
+| Estado | ACTIVO — IMPLEMENTADO Y VERIFICADO |
+| Versión | 1.1 |
 | Producto objetivo | Velocity Tooling Dashboard 0.5.0 |
 | Fecha | 03/10/2026 |
 | Backend | Python 3.10+ standard library |
@@ -11,7 +11,7 @@
 | Transporte | HTTP local + Server-Sent Events |
 | Host | 127.0.0.1 solamente |
 | Predecesor | Velocity Test Dashboard 0.4.0 Tkinter |
-| Estado de implementación | AUTORIZADO DESPUÉS DEL COMMIT DOCUMENTAL |
+| Estado de implementación | COMPLETO Y VERIFICADO |
 
 ## 1. Propósito
 
@@ -634,12 +634,72 @@ successor candidate
 ## 36. Estado
 
 ```text
-VELOCITY TOOLING DASHBOARD WEB DESIGN 1.0
-ACTIVO
+VELOCITY TOOLING DASHBOARD 0.5.0
+IMPLEMENTADO
+VERIFICADO
+ACEPTADO COMO INTERFAZ RECOMENDADA
 ```
 
+Componentes:
+
 ```text
-VTD 0.5.0
-IMPLEMENTACIÓN AUTORIZADA
-PENDIENTE DEL COMMIT DOCUMENTAL
+velocity_dashboard_service.py
+velocity_dashboard_delivery.py
+velocity_dashboard_web.py
+velocity_native_picker.py
+index.html
+styles.css
+app.js
+start_velocity_dashboard_web.bat
+```
+
+Pruebas:
+
+```text
+VTD Web:         35
+Submit Tool:     44
+Dashboard Logic: 17
+Total tooling:   96
+RESULT: OK
+```
+
+Godot regression:
+
+```text
+76 tests
+2262 checks
+0 failures
+0 missing metrics
+RESULT: PASS
+```
+
+Windows UX:
+
+```text
+Dark/Light/Reading themes: PASS
+Browser select:            PASS
+Custom path:               PASS
+Configurable port:         PASS
+Run All responsive:        PASS
+Deterministic summary:     PASS
+Clear controls:            PASS
+Delivery integration:      PASS
+No CLI flashes:            PASS
+Shutdown:                  PASS
+ZIP cleanup:               PASS
+```
+
+Feature commit:
+
+```text
+314a7a7
+feat(tools): add web tooling dashboard candidate
+```
+
+Tkinter 0.4.0 permanece versionado como fallback Last Known Good.
+
+Web launcher recomendado:
+
+```text
+test/tools/start_velocity_dashboard_web.bat
 ```
