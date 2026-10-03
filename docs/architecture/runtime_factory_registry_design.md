@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.3 |
+| Versión | 1.4 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Declaración, validación y resolución exacta de RuntimeFactories |
@@ -1309,8 +1309,8 @@ RESULT: PASS
 Baseline global:
 
 ```text
-Tests: 62
-Checks: 1851
+Tests: 65
+Checks: 1970
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1332,14 +1332,18 @@ CompositionPlan 1.0 está implementado y verificado.
 
 Registry–Plan Integration está verificada.
 
-CompositionCompiler Design 1.0 está activo.
+CompositionCompiler 1.0 está implementado y verificado.
 
-Compiler utilizará Registry exacto sin ejecutar factories.
+Compiler utiliza Registry exacto sin ejecutar factories.
 
-Siguiente milestone posterior al commit documental:
+SystemCompositionCompilerIntegrationTest:
 
 ```text
-CompositionCompiler Implementation
+PASS — 40 checks
 ```
 
-CompositionCompiler permanece no implementado.
+Siguiente milestone:
+
+```text
+CompositionRuntime Problem and Analysis
+```

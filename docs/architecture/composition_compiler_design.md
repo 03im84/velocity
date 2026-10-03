@@ -3,11 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.1 |
+| Versión | 1.2 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Compilación transaccional de DeviceGraphSnapshot a CompositionPlan |
-| Estado de implementación | NO IMPLEMENTADO |
+| Estado de implementación | COMPLETO Y VERIFICADO |
 
 ## 1. Propósito
 
@@ -1120,29 +1120,36 @@ CompositionPlanRuntimeFactoryRegistryIntegrationTest
 
 Compiler utiliza pruebas sucesoras.
 
-## 59. Orden de implementación futuro
+## 59. Orden de implementación
 
 ```text
-1. Implementar CompositionCompileResult.
+1. CompositionCompileResult.
+   COMPLETADO.
 
-2. Ejecutar CompositionCompileResultTest.
+2. CompositionCompileResultTest.
+   PASS — 18 checks.
 
-3. Implementar CompositionCompiler.
+3. CompositionCompiler.
+   COMPLETADO.
 
-4. Ejecutar CompositionCompilerTest.
+4. CompositionCompilerTest.
+   PASS — 61 checks.
 
-5. Implementar integración sucesora.
+5. SystemCompositionCompilerIntegrationTest.
+   COMPLETADO.
 
-6. Ejecutar SystemCompositionCompilerIntegrationTest.
+6. Integración sucesora.
+   PASS — 40 checks.
 
-7. Ejecutar Composition Suite.
+7. Composition Suite.
+   PASS — 12 tests, 516 checks.
 
-8. Ejecutar Run All.
+8. Run All.
+   PASS — 65 tests, 1970 checks.
 
 9. Registrar baseline.
+   COMPLETADO.
 ```
-
-No iniciar hasta cerrar este diseño documental.
 
 ## 60. Criterios de aceptación
 
@@ -1313,30 +1320,58 @@ Estas consecuencias son aceptadas.
 ## 65. Estado
 
 ```text
-COMPOSITIONCOMPILER DESIGN 1.0
-ACTIVO
+COMPOSITIONCOMPILER 1.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Problema:
+Baseline propia:
 
 ```text
-CERRADO
+Tests: 3
+Checks: 119
+Failures: 0
+Missing Metrics: 0
+RESULT: PASS
 ```
 
-Análisis:
+Composition Suite:
 
 ```text
-CERRADO
+Tests: 12
+Checks: 516
+Failures: 0
+Missing Metrics: 0
+RESULT: PASS
 ```
 
-Implementación:
+Baseline global:
 
 ```text
-NO AUTORIZADA HASTA COMMIT DOCUMENTAL
+Tests: 65
+Checks: 1970
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+RESULT: PASS
 ```
 
-Primer componente futuro:
+Commit:
 
 ```text
-res://core/composition/composition_compile_result.gd
+4f36fee
+feat(composition): add composition compiler
 ```
+
+Problema y análisis están cerrados.
+
+Todos los criterios de aceptación fueron satisfechos.
+
+Siguiente milestone:
+
+```text
+CompositionRuntime Problem and Analysis
+```
+
+CompositionRuntime no está diseñado o implementado.

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.3 |
+| Versión | 1.4 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Directivas runtime inmutables, orden por fases, comunicación y Runtime Safety |
@@ -846,7 +846,7 @@ Documento activo:
 
 ```text
 docs/architecture/composition_compiler_design.md
-Versión 1.0
+Versión 1.2
 ```
 
 Responsabilidad:
@@ -873,11 +873,23 @@ CompositionCompileResult
 	└── ValidationReport
 ```
 
-Compiler 1.0 será Simulation-only.
+Compiler 1.0 es Simulation-only.
 
 No ejecuta runtime.
 
-Implementación permanece pendiente hasta cerrar el commit documental.
+Estado:
+
+```text
+IMPLEMENTADO Y VERIFICADO
+```
+
+Baseline propia:
+
+```text
+3 tests
+119 checks
+0 failures
+```
 
 ## 38. CompositionRuntime futuro
 
@@ -1277,8 +1289,8 @@ RESULT: PASS
 Baseline global:
 
 ```text
-Tests: 62
-Checks: 1851
+Tests: 65
+Checks: 1970
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1302,21 +1314,12 @@ PASS — 23 checks
 
 Todos los criterios de aceptación fueron satisfechos.
 
+CompositionCompiler 1.0 está implementado y verificado.
+
 Siguiente milestone:
 
 ```text
-CompositionCompiler Implementation
+CompositionRuntime Problem and Analysis
 ```
 
-Prerrequisito:
-
-```text
-CompositionCompiler Design 1.0
-commit documental aceptado
-```
-
-Primer componente futuro:
-
-```text
-CompositionCompileResult
-```
+CompositionRuntime permanece sin diseño e implementación.

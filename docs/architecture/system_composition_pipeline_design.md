@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.9 |
+| Versión | 1.10 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
@@ -26,18 +26,14 @@ Runtime Construction Contract 1.0
 RuntimeFactoryRegistry 1.0
 
 CompositionPlan 1.0
+
+CompositionCompiler 1.0
 ```
 
-Diseño activo:
+Siguiente milestone:
 
 ```text
-CompositionCompiler Design 1.0
-```
-
-Siguiente implementación después del commit documental:
-
-```text
-CompositionCompileResult
+CompositionRuntime Problem and Analysis
 ```
 
 ## 2. Pipeline completo
@@ -148,14 +144,12 @@ CompositionConnectionDirective
 CompositionPlan
 
 CompositionPlanRuntimeFactoryRegistryIntegrationTest
-```
 
-### Diseñado
-
-```text
 CompositionCompileResult
 
 CompositionCompiler
+
+SystemCompositionCompilerIntegrationTest
 ```
 
 ### Futuro
@@ -177,7 +171,9 @@ core/composition/
 ├── device_graph_assembler.gd
 ├── composition_device_entry.gd
 ├── composition_connection_directive.gd
-└── composition_plan.gd
+├── composition_plan.gd
+├── composition_compile_result.gd
+└── composition_compiler.gd
 ```
 
 ```text
@@ -205,15 +201,9 @@ core/runtime/
 
 ## 5. Estructura siguiente
 
-Después del commit documental:
+CompositionRuntime permanece pendiente de problema, análisis y diseño.
 
-```text
-core/composition/
-├── composition_compile_result.gd
-└── composition_compiler.gd
-```
-
-No se implementará durante diseño abierto.
+No existe estructura de implementación autorizada.
 
 ## 6. SystemProfile
 
@@ -837,13 +827,19 @@ RuntimeDependencyBindings
 RuntimeConstructionRequest
 ```
 
-## 38. CompositionCompiler Design
+## 38. CompositionCompiler
 
 Documento activo:
 
 ```text
 docs/architecture/composition_compiler_design.md
-Versión 1.0
+Versión 1.2
+```
+
+Estado:
+
+```text
+IMPLEMENTADO Y VERIFICADO
 ```
 
 Entradas:
@@ -866,7 +862,7 @@ CompositionCompileResult
 	└── ValidationReport
 ```
 
-Compiler 1.0 será Simulation-only.
+Compiler 1.0 es Simulation-only.
 
 Hardware queda bloqueado con HARDWARE_SAFETY_ERROR.
 
@@ -962,18 +958,25 @@ CompositionPlan:
 141 checks
 ```
 
+CompositionCompiler:
+
+```text
+3 tests
+119 checks
+```
+
 Composition Suite:
 
 ```text
-9 tests
-397 checks
+12 tests
+516 checks
 ```
 
 Global:
 
 ```text
-62 tests
-1851 checks
+65 tests
+1970 checks
 0 failures
 0 missing metrics
 ```
@@ -1060,10 +1063,28 @@ Automatic suites:
     COMPLETADO.
 
 20. Commit de diseño.
-    SIGUIENTE.
+    COMPLETADO.
 
 21. CompositionCompileResult.
-    POSTERIOR AL COMMIT.
+    COMPLETADO.
+
+22. CompositionCompiler.
+    COMPLETADO.
+
+23. CompositionCompilerTest.
+    PASS — 61 checks.
+
+24. SystemCompositionCompilerIntegrationTest.
+    PASS — 40 checks.
+
+25. Composition Suite.
+    PASS — 12 tests, 516 checks.
+
+26. Run All.
+    PASS — 65 tests, 1970 checks.
+
+27. CompositionRuntime Problem and Analysis.
+    SIGUIENTE.
 ```
 
 ## 45. Baselines preservadas
@@ -1160,20 +1181,14 @@ IMPLEMENTADO Y VERIFICADO
 ```
 
 ```text
-COMPOSITIONCOMPILER DESIGN 1.0
-ACTIVO
+COMPOSITIONCOMPILER 1.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
 Siguiente milestone:
 
 ```text
-CompositionCompiler Design Commit
+CompositionRuntime Problem and Analysis
 ```
 
-Primera implementación posterior:
-
-```text
-CompositionCompileResult
-```
-
-CompositionCompiler no está implementado.
+CompositionRuntime no está diseñado o implementado.

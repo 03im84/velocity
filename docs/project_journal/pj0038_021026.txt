@@ -1,0 +1,403 @@
+PJ0038 – CompositionCompiler 1.0 Implementation Baseline
+
+Fecha:
+
+02/10/2026
+
+Objetivo:
+
+Registrar implementación,
+integración y baseline de:
+
+CompositionCompiler 1.0
+
+Estado previo:
+
+RuntimeFactoryRegistry 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+CompositionPlan 1.0:
+
+IMPLEMENTADO Y VERIFICADO
+
+CompositionCompiler Design 1.1:
+
+ACTIVO
+
+Baseline previa:
+
+Tests:
+
+62
+
+Checks:
+
+1851
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Componentes implementados:
+
+res://core/composition/
+composition_compile_result.gd
+
+res://core/composition/
+composition_compiler.gd
+
+CompositionCompileResult:
+
+✔ Plan + ValidationReport.
+
+✔ Inmutable.
+
+✔ Success defensivo.
+
+✔ Plan no null.
+
+✔ Report no null.
+
+✔ Plan válida.
+
+✔ Report válido para Context.
+
+✔ Simulation Hazards permitidos
+  en Simulation.
+
+✔ Hardware Safety Errors
+  modelables en Simulation.
+
+✔ Simulation Hazards bloqueantes
+  en Hardware.
+
+✔ Hardware Safety Errors
+  bloqueantes en Hardware.
+
+✔ No compila.
+
+✔ No ejecuta.
+
+✔ No activa.
+
+CompositionCompiler:
+
+✔ Stateless.
+
+✔ Cuatro inputs explícitos.
+
+✔ Simulation-only.
+
+✔ Hardware gate.
+
+✔ HARDWARE_SAFETY_ERROR.
+
+✔ Snapshot obligatorio.
+
+✔ Registry obligatorio.
+
+✔ Context obligatorio.
+
+✔ Dispatch Policy obligatoria.
+
+✔ Snapshot válido obligatorio.
+
+✔ Registry válido obligatorio.
+
+✔ Policy válida obligatoria.
+
+✔ Device stage.
+
+✔ Connection stage.
+
+✔ Gate después de Devices.
+
+✔ Gate después de Connections.
+
+✔ No Plan parcial.
+
+✔ Factory Key exacta.
+
+✔ Sin fallback.
+
+✔ Descriptor exacto.
+
+✔ Dependency Specs trasladadas.
+
+✔ Sin Dependency Values.
+
+✔ Device order preservado.
+
+✔ Connection order preservado.
+
+✔ Connection ID preservado.
+
+✔ Empty Plan válido.
+
+✔ Ciclos sin topological sort.
+
+✔ No factory execution.
+
+✔ No RuntimeDeviceHandle.
+
+✔ No RuntimeHost.
+
+✔ No DeviceBus activo.
+
+✔ No service locator.
+
+✔ No filesystem.
+
+✔ No threads.
+
+✔ Inputs no modificados.
+
+Códigos verificados:
+
+composition_compile_activation_context_invalid
+
+composition_compile_snapshot_missing
+
+composition_compile_registry_missing
+
+composition_compile_dispatch_policy_missing
+
+composition_compile_hardware_not_supported
+
+composition_compile_snapshot_invalid
+
+composition_compile_registry_invalid
+
+composition_compile_dispatch_policy_invalid
+
+composition_compile_configuration_context_mismatch
+
+composition_compile_factory_missing
+
+composition_compile_plan_invalid
+
+Integración completa:
+
+DeviceProfile
+
+↓
+
+DeviceCatalog
+
+↓
+
+SystemProfile
+
+↓
+
+DeviceGraphAssembler
+
+↓
+
+DeviceGraphSnapshot
+
+↓
+
+RuntimeFactoryRegistry
+
+↓
+
+CompositionCompiler
+
+↓
+
+CompositionPlan
+
+Valid pipeline:
+
+PASS
+
+Empty pipeline:
+
+PASS
+
+Cycle pipeline:
+
+PASS
+
+Missing factory:
+
+FAIL CLOSED
+
+Report scope:
+
+Assembly Report conserva
+SIMULATION_HAZARD.
+
+Compiler Report conserva
+scope propio.
+
+No se duplica hazard upstream.
+
+Pruebas sucesoras:
+
+CompositionCompileResultTest
+
+Checks:
+
+18
+
+CompositionCompilerTest
+
+Checks:
+
+61
+
+SystemCompositionCompilerIntegrationTest
+
+Checks:
+
+40
+
+Baseline propia de Compiler:
+
+Tests:
+
+3
+
+Checks:
+
+119
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Composition Suite:
+
+Tests:
+
+12
+
+Checks:
+
+516
+
+Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Baseline global aceptada:
+
+Planned:
+
+65
+
+Completed:
+
+65
+
+Passed:
+
+65
+
+Failed:
+
+0
+
+Timeout:
+
+0
+
+Engine Error:
+
+0
+
+Not Run:
+
+0
+
+Total Runs:
+
+65
+
+Checks:
+
+1970
+
+Check Failures:
+
+0
+
+Missing Metrics:
+
+0
+
+Plan ExitCode:
+
+0
+
+RESULT:
+
+PASS
+
+Commit de implementación:
+
+4f36fee
+
+feat(composition):
+add composition compiler
+
+Baselines anteriores:
+
+PRESERVADAS
+
+VP-002 2.0:
+
+APLICADO
+
+Hardware sin evidencia safety:
+
+OPERACION RECHAZADA
+
+Plan:
+
+null
+
+Simulador:
+
+SEGURO Y RECUPERABLE
+
+Estado final:
+
+COMPOSITIONCOMPILER 1.0
+
+IMPLEMENTADO Y VERIFICADO
+
+FULL LOGICAL COMPOSITION PIPELINE
+
+PASS
+
+Siguiente milestone:
+
+COMPOSITIONRUNTIME
+
+Estado:
+
+PROBLEMA PENDIENTE
+
+ANALISIS PENDIENTE
+
+ADR O AMPLIACION PENDIENTE
+
+DISEÑO PENDIENTE
+
+IMPLEMENTACION NO AUTORIZADA

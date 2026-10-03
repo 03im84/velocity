@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.7 |
+| Versión | 1.8 |
 | Fecha | 02/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -56,14 +56,15 @@ Estado arquitectónico esperado:
 - RuntimeFactoryRegistry 1.0 está implementado y verificado.
 - CompositionPlan 1.0 está implementado y verificado.
 - Registry–Plan Integration está verificada.
-- CompositionCompiler Design 1.1 está activo.
-- CompositionCompiler no está implementado.
-- La siguiente implementación posterior al commit es CompositionCompileResult.
+- CompositionCompiler 1.0 está implementado y verificado.
+- SystemCompositionCompilerIntegration está verificada.
+- El pipeline lógico produce CompositionPlan.
+- El siguiente milestone es CompositionRuntime Problem and Analysis.
 
 Baseline esperada:
 
-- 62 tests.
-- 1851 checks.
+- 65 tests.
+- 1970 checks.
 - 0 failures.
 - 0 missing metrics.
 
@@ -193,6 +194,8 @@ Velocity Test Dashboard 0.4.0
 RuntimeFactoryRegistry 1.0
 
 CompositionPlan 1.0
+
+CompositionCompiler 1.0
 ```
 
 Pipeline implementado:
@@ -231,16 +234,16 @@ RuntimeDeviceHandle
 RuntimeFactoryBuildResult
 ```
 
-Diseño activo:
+Siguiente milestone:
 
 ```text
-CompositionCompiler Design 1.1
+CompositionRuntime Problem and Analysis
 ```
 
 Documentos canónicos del milestone:
 
 ```text
-Core Architecture 2.19
+Core Architecture 2.20
 
 Engineering Standards 1.4
 
@@ -248,37 +251,37 @@ Project Decision VP-002 2.0
 
 ADR-010 1.1
 
-System Composition Pipeline Design 1.9
+System Composition Pipeline Design 1.10
 
-RuntimeFactoryRegistry Design 1.3
+RuntimeFactoryRegistry Design 1.4
 
-CompositionPlan Design 1.3
+CompositionPlan Design 1.4
 
-CompositionCompiler Design 1.1
+CompositionCompiler Design 1.2
 
-Project Handoff 1.7
+Project Handoff 1.8
 
-Resume Prompt 1.7
+Resume Prompt 1.8
 ```
 
-Siguiente implementación posterior al commit:
+Siguiente milestone:
 
 ```text
-CompositionCompileResult
+CompositionRuntime Problem and Analysis
 ```
 
 ## 4. Baseline global
 
 ```text
-Planned: 62
-Completed: 62
-Passed: 62
+Planned: 65
+Completed: 65
+Passed: 65
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 62
-Checks: 1851
+Total Runs: 65
+Checks: 1970
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
@@ -496,17 +499,16 @@ RuntimeFactoryRegistry–CompositionPlan
 PASS
 ```
 
-Diseño activo:
+Último milestone:
 
 ```text
-CompositionCompiler Design 1.1
+CompositionCompiler 1.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Compiler 1.0 será Simulation-only.
+Compiler 1.0 es Simulation-only.
 
-CompositionCompiler no está implementado.
-
-CompositionRuntime permanece futuro.
+CompositionRuntime permanece futuro y sin diseño.
 
 ## 15. RuntimeFactoryRegistry 1.0
 
@@ -803,17 +805,17 @@ Alternativas rechazadas:
 
 ## 20. Protocolo Git
 
-Base commit antes de la revisión VP-002 y reparación ADR-010:
+Base commit antes del cierre de CompositionCompiler 1.0:
 
 ```text
-c65ed67
-docs(composition): define composition compiler
+4f36fee
+feat(composition): add composition compiler
 ```
 
 Commit sugerido para el paquete actual:
 
 ```text
-docs(architecture): clarify simulator integrity and restore ADR-010
+docs(composition): record composition compiler 1.0 baseline
 ```
 
 Antes del commit:
@@ -859,9 +861,9 @@ Dashboard 0.4.0
 
 Baseline:
 
-62 tests
+65 tests
 
-1851 checks
+1970 checks
 
 0 failures
 
@@ -877,17 +879,19 @@ RuntimeFactoryRegistry–CompositionPlan
 
 PASS
 
-Diseño activo:
+Último milestone:
 
-CompositionCompiler Design 1.1
+CompositionCompiler 1.0
 
-Siguiente implementación posterior al commit:
+IMPLEMENTADO Y VERIFICADO
 
-CompositionCompileResult
+Siguiente milestone:
 
-CompositionCompiler:
+CompositionRuntime Problem and Analysis
 
-DISEÑADO, NO IMPLEMENTADO
+CompositionRuntime:
+
+NO DISEÑADO, NO IMPLEMENTADO
 ```
 
 No debe escribir código hasta recibir confirmación y comprobar que el paquete documental está cerrado.

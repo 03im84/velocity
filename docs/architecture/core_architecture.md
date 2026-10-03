@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.19 |
+| Versión | 2.20 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 02/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -213,8 +213,8 @@ SceneTree no define Core.
 | CompositionDeviceEntry | Describir construcción declarativa de un Device | Implementado y verificado |
 | CompositionConnectionDirective | Describir wiring sin callbacks activos | Implementado y verificado |
 | CompositionPlan | Instrucciones runtime inmutables y no ejecutables | Implementado y verificado |
-| CompositionCompileResult | Contener Plan y ValidationReport | Diseño 1.0 activo; siguiente implementación |
-| CompositionCompiler | Compilar Snapshot y Registry a Plan | Diseño 1.0 activo; implementación pendiente |
+| CompositionCompileResult | Contener Plan y ValidationReport | Implementado y verificado |
+| CompositionCompiler | Compilar Snapshot y Registry a Plan | Implementado y verificado |
 | CompositionRuntime | Ejecutar Plan y poseer recursos activos | Pendiente |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
@@ -738,6 +738,8 @@ Runtime Construction Contracts
 RuntimeFactoryRegistry 1.0
 
 CompositionPlan 1.0
+
+CompositionCompiler 1.0
 ```
 
 ## 26. Pipeline futuro
@@ -791,7 +793,7 @@ CompositionRuntime
 Definido por:
 
 ```text
-RuntimeFactoryRegistry Design 1.3
+RuntimeFactoryRegistry Design 1.4
 ```
 
 Estado:
@@ -898,7 +900,7 @@ feat(runtime): add immutable factory registry
 Definido por:
 
 ```text
-CompositionPlan Design 1.3
+CompositionPlan Design 1.4
 ```
 
 Estado:
@@ -1011,22 +1013,45 @@ No contiene:
 Definido por:
 
 ```text
-CompositionCompiler Design 1.0
+CompositionCompiler Design 1.2
 ```
 
 Estado:
 
 ```text
-DISEÑO ACTIVO
+IMPLEMENTADO Y VERIFICADO
 ```
 
 RuntimeFactoryRegistry 1.0 y CompositionPlan 1.0 están implementados e integrados.
 
-Compiler 1.0 será Simulation-only.
+Compiler 1.0 es Simulation-only.
 
 Hardware queda bloqueado porque DeviceGraphSnapshot no conserva toda evidencia safety upstream.
 
-CompositionCompiler todavía no está implementado.
+Baseline propia:
+
+```text
+Tests: 3
+Checks: 119
+Failures: 0
+RESULT: PASS
+```
+
+Composition Suite:
+
+```text
+Tests: 12
+Checks: 516
+Failures: 0
+RESULT: PASS
+```
+
+Commit:
+
+```text
+4f36fee
+feat(composition): add composition compiler
+```
 
 Entradas conceptuales:
 
@@ -1314,29 +1339,31 @@ RuntimeFactoryRegistry 1.0
 
 CompositionPlan 1.0
 
+CompositionCompiler 1.0
+
 Velocity Test Runner
 
 Velocity Test Dashboard 0.4.0
 ```
 
-## 37. Diseño activo
+## 37. Siguiente milestone
 
 ```text
-CompositionCompiler Design 1.0
+CompositionRuntime Problem and Analysis
 ```
 
-Problema y análisis están cerrados.
+CompositionRuntime no está diseñado o implementado.
 
-Implementación comienza únicamente después del commit documental.
+No existe implementación autorizada.
 
 ## 38. Pendiente
 
 ```text
-Implementación de CompositionCompileResult
+CompositionRuntime Problem and Analysis
 
-Implementación de CompositionCompiler
+CompositionRuntime Design
 
-CompositionRuntime
+CompositionRuntime Implementation
 
 RuntimeHost concreto
 
@@ -1368,8 +1395,8 @@ RuntimeAllocation
 Dashboard 0.4.0 confirma:
 
 ```text
-Tests: 62
-Checks: 1851
+Tests: 65
+Checks: 1970
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1465,36 +1492,33 @@ Toda modificación se entrega como archivo completo.
 
 ## 44. Siguiente paso
 
-Cerrar el commit documental de CompositionCompiler Design 1.0.
-
-Después implementar:
+Iniciar CompositionRuntime con metodología completa:
 
 ```text
-res://core/composition/composition_compile_result.gd
+1. Problema.
+
+2. Análisis.
+
+3. ADR nuevo o ampliación explícita.
+
+4. Diseño completo.
+
+5. Criterios de aceptación.
+
+6. Confirmación antes de implementación.
 ```
 
-Primera prueba sucesora:
+Responsabilidades futuras candidatas:
 
-```text
-res://test/core/composition/CompositionCompileResultTest.tscn
+- ownership de DeviceBus;
+- resolución de Dependency Values;
+- construcción de Requests;
+- factory build;
+- host attach;
+- lifecycle por phase barriers;
+- rollback inverso;
+- shutdown;
+- Last Known Good;
+- Runtime Safety observation.
 
-res://test/core/composition/composition_compile_result_test.gd
-```
-
-Orden posterior:
-
-```text
-CompositionCompileResult
-
-CompositionCompiler
-
-CompositionCompilerTest
-
-SystemCompositionCompilerIntegrationTest
-
-Composition Suite
-
-Run All
-```
-
-No se implementará antes del commit de diseño.
+No se implementará CompositionRuntime durante diseño abierto.
