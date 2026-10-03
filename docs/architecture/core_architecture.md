@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.24 |
+| Versión | 2.25 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 03/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -229,6 +229,8 @@ SceneTree no define Core.
 | RuntimeSourceFilteredSubscription | Filtrar BusMessage por Source y Topic | Implementado y verificado |
 | ManagedRuntimeCommunicationBinder | Resolver endpoints y poseer subscriptions | Implementado y verificado |
 | GodotNodeRuntimeHost | Adjuntar Host Objects Node bajo parent explícito | Implementado y verificado |
+| DistanceSensorRuntimeUnit | Adaptar DistanceSensorDevice a managed lifecycle | Diseño 1.0 activo |
+| DistanceSensorRuntimeFactory | Construir Handle concreto de Distance Sensor Simulation | Diseño 1.0 activo |
 | CompositionRuntimeSupervisor | Preservar Last Known Good y hot swap | Futuro |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
@@ -1594,20 +1596,13 @@ Toda modificación se entrega como archivo completo.
 
 ## 44. Siguiente paso
 
-Abrir únicamente problema y análisis de:
+Cerrar commit documental de:
 
 ```text
-Distance Sensor Runtime Slice 1.0
+ADR-013
+Distance Sensor Runtime Slice Design 1.0
 ```
 
-Debe resolver antes de implementación:
+Después implementar RuntimeUnit, Factory y full pipeline integration.
 
-- DeviceConfiguration como autoridad;
-- effective DeviceManifest;
-- health_reporting gap;
-- Provider ownership;
-- runtime unit lifecycle;
-- concrete factory release;
-- integration con adapters verificados.
-
-No implementar hasta autorización explícita del usuario.
+Implementación autorizada por el usuario.

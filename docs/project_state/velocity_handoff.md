@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.17 |
+| Versión | 1.18 |
 | Fecha de actualización | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -680,13 +680,13 @@ Modificar la implementación después del PASS no ofrecía beneficio demostrado 
 ## 23. Documentos vigentes
 
 ```text
-Core Architecture:                  2.24
+Core Architecture:                  2.25
 Engineering Standards:              1.9
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
 ADR-012:                            1.1
-System Composition Pipeline Design: 1.14
+System Composition Pipeline Design: 1.15
 Runtime Construction Contract:      1.1
 RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
@@ -695,8 +695,9 @@ CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
 Velocity Tooling Dashboard Web:      1.1
 Managed Runtime Adapter Design:      1.1
-Project Handoff:                    1.17
-Resume Prompt:                      1.17
+Distance Sensor Runtime Design:     1.0
+Project Handoff:                    1.18
+Resume Prompt:                      1.18
 Collaboration Contract:             1.5
 ```
 
@@ -895,55 +896,26 @@ Estado sincronizado:
 
 `Submit` significa staging + commit + push.
 
-## 29. Último milestone completado
-
-```text
-Velocity Tooling Dashboard 0.5.0
-IMPLEMENTADO Y VERIFICADO
-```
-
-Stack:
-
-```text
-Python stdlib local server
-HTTP JSON + SSE
-HTML/CSS/JavaScript vanilla
-```
-
-Baseline:
-
-```text
-35 Web tests
-44 Submit Tool tests
-17 Dashboard Logic tests
-96 tooling total
-
-Run All:
-76 tests
-2262 checks
-RESULT: PASS
-```
-
-Feature commit:
-
-```text
-314a7a7 feat(tools): add web tooling dashboard candidate
-```
-
-Launcher recomendado:
-
-```text
-test/tools/start_velocity_dashboard_web.bat
-```
-
-Tkinter 0.4.0 permanece fallback.
-
-Siguiente milestone:
+## 29. Milestone actual
 
 ```text
 Distance Sensor Runtime Slice 1.0
-Problema y análisis
+ADR-013 ACEPTADO
+DESIGN 1.0 ACTIVO
+IMPLEMENTACIÓN AUTORIZADA
 ```
+
+Scope:
+
+```text
+DistanceSensorRuntimeUnit
+DistanceSensorRuntimeFactory
+Minimal Configuration fidelity
+BORROWED distance_provider
+Full pipeline integration
+```
+
+Health reporting permanece fuera de alcance y se rechaza si está habilitado.
 
 ## 30. Trabajo futuro explícito
 

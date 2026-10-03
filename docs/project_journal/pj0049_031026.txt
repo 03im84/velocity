@@ -1,0 +1,140 @@
+PJ0049 – Distance Sensor Runtime Slice Problem and Design
+
+Fecha:
+
+03/10/2026
+
+Objetivo:
+
+Diseñar primer Device concreto
+activado por CompositionRuntime.
+
+Estado previo:
+
+CompositionRuntime 1.0:
+PASS
+
+Managed Runtime Adapter Boundary 1.0:
+PASS
+
+Run All:
+76 tests
+2262 checks
+PASS
+
+Candidato:
+
+DistanceSensorDevice
+
+Problema:
+
+Profile ideal declara:
+
+distance_measurement
+health_reporting
+
+y publica:
+
+distance_measurement
+health_report
+
+Device concreto solo implementa:
+
+distance_measurement
+
+Decisión:
+
+Slice 1.0 soporta
+Configuration efectiva mínima:
+
+capability:
+distance_measurement
+
+publishes:
+distance_measurement
+
+subscribes:
+none
+
+Health enabled se rechaza.
+
+No se cambia Profile
+ni se finge soporte.
+
+Contexto:
+
+Simulation-only.
+
+Dependency:
+
+distance_provider
+
+Ownership:
+
+BORROWED
+
+Primary:
+
+DistanceSensorRuntimeUnit
+
+Host Object:
+
+DistanceSensorDevice
+
+Factory:
+
+DistanceSensorRuntimeFactory
+
+Factory construct-only.
+
+Unit implementa:
+
+runtime_initialize
+runtime_set_ready
+runtime_start
+runtime_shutdown
+
+Unit publica solo RUNNING.
+
+Factory release:
+
+requiere Sensor detached,
+free Node,
+preserva Provider,
+idempotente.
+
+Full pipeline objetivo:
+
+Profile
+Catalog
+SystemProfile
+Graph
+Registry
+Compiler
+Plan
+Runtime
+ACTIVE
+BusMessage
+SHUTDOWN
+release
+
+ADR:
+
+ADR-013
+
+Design:
+
+Distance Sensor Runtime Slice 1.0
+
+Usuario indicó:
+
+implementar
+
+Estado:
+
+PROBLEMA CERRADO
+ANALISIS CERRADO
+ADR-013 ACEPTADO
+DESIGN 1.0 ACTIVO
+IMPLEMENTACION AUTORIZADA
+COMMIT DOCUMENTAL PENDIENTE

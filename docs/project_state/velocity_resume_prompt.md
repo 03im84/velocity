@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.17 |
+| Versión | 1.18 |
 | Fecha | 03/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -385,13 +385,13 @@ RESULT: PASS
 ## 8. Documentos canónicos
 
 ```text
-Core Architecture:                  2.24
+Core Architecture:                  2.25
 Engineering Standards:              1.9
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
 ADR-012:                            1.1
-System Composition Pipeline Design: 1.14
+System Composition Pipeline Design: 1.15
 Runtime Construction Contract:      1.1
 RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
@@ -400,8 +400,9 @@ CompositionRuntime Design:          1.1
 Velocity Submit Tool Design:         1.2
 Velocity Tooling Dashboard Web:      1.1
 Managed Runtime Adapter Design:      1.1
-Project Handoff:                    1.17
-Resume Prompt:                      1.17
+Distance Sensor Runtime Design:     1.0
+Project Handoff:                    1.18
+Resume Prompt:                      1.18
 Collaboration Contract:             1.5
 ```
 
@@ -537,24 +538,17 @@ Hot swap no está diseñado para 1.0.
 
 No añadirlo como parche.
 
-## 14. Siguiente milestone
+## 14. Milestone actual
 
 ```text
 Distance Sensor Runtime Slice 1.0
-Problema y análisis
+ADR-013 ACEPTADO
+Design 1.0 ACTIVO
+Implementación autorizada
 ```
 
-Velocity Tooling Dashboard 0.5.0 está implementado y verificado.
-
-Launcher recomendado:
-
-```text
-test/tools/start_velocity_dashboard_web.bat
-```
-
-Tkinter 0.4.0 permanece fallback.
-
-No implementar Distance Sensor Slice sin autorización explícita.
+Configuration 1.0 habilita únicamente distance_measurement.
+Health reporting no implementado se rechaza.
 
 ## 15. Fuera de alcance actual
 
