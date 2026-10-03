@@ -3,8 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACEPTADO |
-| Versión | 1.0 |
-| Fecha | 16/08/2026 |
+| Versión | 1.1 |
+| Fecha inicial | 16/08/2026 |
+| Última revisión | 02/10/2026 |
 | Componentes | DeviceBus, Composition Runtime, Runtime Safety |
 | Alcance | Dispatch limitado, ownership de datos y protección del runtime |
 
@@ -24,7 +25,7 @@ DeviceBus 1.0 utiliza publicación:
 
 VP-002 establece:
 
-> La simulación puede fallar. El simulador no.
+> El usuario puede fallar. El simulador no.
 
 La auditoría EN006 determinó que la publicación reentrante sin límites puede producir:
 

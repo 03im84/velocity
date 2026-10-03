@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.6 |
+| Versión | 1.7 |
 | Fecha de actualización | 02/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -84,7 +84,7 @@ Objetivos:
 
 Regla:
 
-> La simulación puede fallar. El simulador no.
+> El usuario puede fallar. El simulador no.
 
 ## 4. Colaboración
 
@@ -221,9 +221,23 @@ VP-001
 Architecture Precedes Code
 
 VP-002
-The Simulation May Fail;
-The Simulator Must Not
+The User or Environment May Err;
+The Simulator Must Remain Safe
 ```
+
+VP-002 vigente:
+
+```text
+Versión 2.0
+
+docs/decisions/
+VP-002 — The User or Environment May Err;
+The Simulator Must Remain Safe.md
+```
+
+Lema corto:
+
+> El usuario puede fallar. El simulador no.
 
 Contextos:
 
@@ -1077,10 +1091,22 @@ Composition Suite:
 
 ```text
 Core Architecture:
-2.18
+2.19
 
 Engineering Standards:
-1.3
+1.4
+
+Project Decision VP-002:
+2.0
+
+ADR-002:
+1.2
+
+ADR-007:
+1.1
+
+ADR-010:
+1.1
 
 System Composition Pipeline Design:
 1.9
@@ -1095,7 +1121,7 @@ CompositionPlan Design:
 1.3
 
 CompositionCompiler Design:
-1.0
+1.1
 
 Velocity Test Dashboard Design:
 1.4
@@ -1110,13 +1136,13 @@ DeviceGraph Design:
 1.3
 
 Project Handoff:
-1.6
+1.7
 
 Resume Prompt:
-1.6
+1.7
 
 Collaboration Contract:
-1.0
+1.1
 ```
 
 ## 27. Git
@@ -1136,14 +1162,18 @@ main
 Último commit conocido:
 
 ```text
-f2c65de
+c65ed67
 docs(composition):
-record composition plan 1.0 baseline
+define composition compiler
 ```
 
 Commits relevantes:
 
 ```text
+f2c65de
+docs(composition):
+record composition plan 1.0 baseline
+
 3d62a7b
 feat(composition):
 add immutable composition plan
@@ -1350,28 +1380,34 @@ No debe escribir código en primera respuesta.
 
 ## 34. Próximo paso exacto
 
-### Cierre documental inmediato
+### Revisión arquitectónica inmediata
 
 ```text
-1. Registrar CompositionCompiler Design 1.0.
+1. Registrar VP-002 versión 2.0.
 
-2. Actualizar System Composition Pipeline 1.9.
+2. Conservar redirect histórico de VP-002 1.0.
 
-3. Actualizar Core Architecture 2.18.
+3. Restaurar contenido correcto de ADR-010.
 
-4. Actualizar Project State 1.6.
+4. Actualizar Engineering Standards 1.4.
 
-5. Ejecutar auditoría documental.
+5. Actualizar Collaboration Contract 1.1.
 
-6. Crear commit de diseño.
+6. Actualizar Core Architecture 2.19.
 
-7. Ejecutar push a origin/main.
+7. Actualizar CompositionCompiler Design 1.1.
+
+8. Ejecutar auditoría documental.
+
+9. Crear commit de arquitectura.
+
+10. Ejecutar push a origin/main.
 ```
 
 Commit sugerido:
 
 ```text
-docs(composition): define composition compiler
+docs(architecture): clarify simulator integrity and restore ADR-010
 ```
 
 ### Primera implementación posterior
@@ -1388,7 +1424,7 @@ res://test/core/composition/CompositionCompileResultTest.tscn
 res://test/core/composition/composition_compile_result_test.gd
 ```
 
-No se implementará antes del commit de diseño.
+No se implementará antes del commit de revisión.
 
 ## 35. Regla final
 

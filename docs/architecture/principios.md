@@ -32,7 +32,7 @@ Composition over inheritance whenever possible.
 Simplicity is a feature.
 
 11.
-The simulation may fail; the simulator must not.
+The user or environment may err; the simulator must remain safe.
 
 12.
 Canonical definitions are immutable.
@@ -41,7 +41,7 @@ Canonical definitions are immutable.
 Structural errors never become active.
 
 14.
-Experimental failure is a valid learning outcome.
+A modeled adverse outcome is a valid learning result.
 
 15.
 Platform integrity is non-negotiable.
@@ -53,5 +53,5 @@ the Last Known Good state.
 Project Safety Decision:
 
 docs/decisions/
-VP-002 — The Simulation May Fail;
-The Simulator Must Not.md
+VP-002 — The User or Environment May Err;
+The Simulator Must Remain Safe.md

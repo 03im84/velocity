@@ -1,256 +1,73 @@
-# Velocity — Resume Prompt
+# ADR-010 — Runtime Construction and Factory Binding
 
 | Campo | Valor |
 |---|---|
-| Estado | ACTIVO |
+| Estado | ACEPTADO |
 | Versión | 1.1 |
-| Fecha | 25/08/2026 |
-| Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o estilo de colaboración |
+| Fecha de decisión | 04/09/2026 |
+| Restauración documental | 02/10/2026 |
+| Componentes | RuntimeFactoryKey, RuntimeDependencyBinding, RuntimeConstructionRequest, RuntimeDeviceHandle, RuntimeFactoryBuildResult, RuntimeFactory behavior, RuntimeHost behavior |
+| Alcance | Identidad de factory, construcción atómica, ownership, host attachment y rollback |
+| Estado de implementación | COMPLETO Y VERIFICADO |
 
-## 1. Instrucciones de uso
+## 1. Contexto
 
-Al comenzar un chat nuevo, adjuntar:
+Velocity necesita convertir definiciones lógicas de Device en objetos runtime concretos.
+
+La topología y configuración no deben contener implementación ejecutable.
+
+El sistema debe soportar:
+
+- múltiples Profiles;
+- múltiples versiones;
+- Simulation;
+- Hardware futuro;
+- factories concretas;
+- dependencias runtime;
+- objetos que necesitan host;
+- construcción transaccional;
+- rollback;
+- cleanup explícito.
+
+La construcción runtime no puede depender de:
+
+- búsquedas en SceneTree;
+- autoloads por comodidad;
+- singletons globales;
+- filesystem;
+- latest;
+- fallback silencioso;
+- Callables almacenados en CompositionPlan.
+
+## 2. Problema
+
+Antes de esta decisión no existía un contrato canónico para responder:
 
 ```text
-velocity_handoff.md
+¿Qué factory corresponde a una configuración exacta?
 
-velocity_resume_prompt.md
+¿Qué dependencias necesita?
 
-velocity_collaboration_contract.md
+¿Quién posee esas dependencias?
+
+¿Qué objeto representa el resultado construido?
+
+¿Qué objetos deben adjuntarse al host?
+
+¿Quién libera recursos?
+
+¿Qué ocurre ante fallo parcial?
 ```
 
-También es recomendable adjuntar:
+Sin ese contrato, cada Device concreto podría inventar su propio lifecycle, ownership y cleanup.
 
-- ADR del milestone actual;
-- diseño activo;
-- `git status -sb`;
-- URL del repositorio.
+## 3. Decisión
 
-Después, copiar el prompt de la sección 2.
-
-No permitir implementación antes de verificar el resumen inicial.
-
-## 2. Prompt listo para copiar
-
-```text
-Estoy continuando el desarrollo de Velocity.
-
-Repositorio:
-https://github.com/03im84/velocity
-
-Engine:
-Godot Engine 4.7.1 stable
-
-Rama:
-main
-
-He adjuntado:
-
-- velocity_handoff.md
-- velocity_resume_prompt.md
-- velocity_collaboration_contract.md
-
-Antes de responder:
-
-1. Lee completamente los tres documentos.
-
-2. No propongas código todavía.
-
-3. No inventes APIs, clases, rutas, versiones o decisiones.
-
-4. Respeta ADR aceptados, diseños activos y pruebas registradas.
-
-5. Considera las pruebas aceptadas como baselines inmutables.
-
-6. Una arquitectura nueva requiere pruebas sucesoras.
-
-7. Toda modificación debe entregarse como archivo completo consolidado.
-
-8. No utilices parches, diffs, inserciones parciales, eliminaciones parciales ni instrucciones quirúrgicas.
-
-9. Si una prueba falla, solicita el primer error completo antes de modificar código.
-
-10. La ejecución autoritativa utiliza Godot Console, headless y Velocity Test Runner.
-
-11. No utilices Run Current Scene como evidencia autoritativa.
-
-12. No modifiques código durante problema, análisis, ADR o diseño abierto.
-
-13. Propón alternativas y tradeoffs.
-
-14. No aceptes automáticamente mis ideas ni las tuyas.
-
-15. Mantén una responsabilidad principal por componente.
-
-16. Prefiere composición sobre herencia.
-
-17. No añadas singleton o autoload por comodidad.
-
-18. Aplica siempre:
-
-	La simulación puede fallar.
-	El simulador no.
-
-19. El usuario lee y reescribe manualmente cada archivo.
-
-20. Indica siempre la ruta exacta.
-
-21. Trabaja en español.
-
-22. Mantén un tono claro, didáctico, directo, cercano y honesto.
-
-En tu primera respuesta debes entregar únicamente:
-
-A. confirmación de lectura;
-
-B. visión del proyecto;
-
-C. último milestone implementado;
-
-D. baseline global;
-
-E. último commit y estado Git conocido;
-
-F. milestone arquitectónico actual;
-
-G. siguiente componente autorizado;
-
-H. decisiones aceptadas;
-
-I. riesgos o contradicciones;
-
-J. archivos adicionales requeridos;
-
-K. pregunta de confirmación.
-
-No escribas implementación en la primera respuesta.
-
-Si no puedes acceder al repositorio o a un archivo:
-
-- indícalo;
-- solicita la ruta exacta;
-- no reconstruyas contenido por intuición.
-
-Jerarquía de autoridad:
-
-1. código versionado;
-
-2. pruebas aceptadas;
-
-3. ADR aceptados;
-
-4. diseños activos;
-
-5. Core Architecture;
-
-6. Engineering Standards;
-
-7. velocity_handoff.md;
-
-8. velocity_collaboration_contract.md;
-
-9. journals históricos;
-
-10. conversación previa.
-
-Espera confirmación antes de avanzar.
-```
-
-## 3. Estado técnico que debe reconocer
-
-Último milestone implementado:
-
-```text
-DeviceGraphAssembler 1.0
-```
-
-Pipeline implementado:
-
-```text
-DeviceProfiles
-
-↓
-
-DeviceCatalog
-
-↓
-
-SystemProfile
-
-↓
-
-DeviceGraphAssembler
-
-↓
-
-DeviceGraphSnapshot
-```
-
-Baseline global:
-
-```text
-48 tests
-
-1396 checks
-
-0 failures
-
-0 timeout
-
-0 engine errors
-
-Plan ExitCode 0
-
-RESULT PASS
-```
-
-Último commit publicado antes del paquete ADR-010:
-
-```text
-e21caed
-
-docs(project): add recovery and collaboration package
-```
-
-Último estado remoto confirmado:
-
-```text
-## main...origin/main
-```
-
-## 4. Milestone arquitectónico actual
-
-```text
-Runtime Construction Contract 1.0
-```
-
-Documentos:
-
-```text
-ADR-010 — Runtime Construction and Factory Binding
-
-Runtime Construction Contract Design 1.0
-```
-
-Estado:
-
-```text
-ADR ACEPTADO
-
-DISEÑO ACTIVO
-
-IMPLEMENTACIÓN PENDIENTE
-```
-
-## 5. Siguiente componente autorizado
+Velocity utilizará un Runtime Construction Contract explícito compuesto por:
 
 ```text
 RuntimeFactoryKey
-```
 
-Después:
-
-```text
 RuntimeDependencyBinding
 
 RuntimeConstructionRequest
@@ -258,68 +75,19 @@ RuntimeConstructionRequest
 RuntimeDeviceHandle
 
 RuntimeFactoryBuildResult
-
-Runtime Construction Contract Integration
 ```
 
-No implementar todavía:
+Behaviors requeridos:
 
 ```text
-RuntimeFactoryRegistry
+RuntimeFactory
 
-CompositionPlan
-
-CompositionCompiler
-
-CompositionRuntime
+RuntimeHost
 ```
 
-## 6. Decisiones aceptadas de Runtime Construction
+## 4. RuntimeFactoryKey
 
-### Factory
-
-```text
-construct-only
-```
-
-Factory no:
-
-- inicializa;
-- ejecuta set_ready;
-- ejecuta start;
-- coordina shutdown global;
-- adjunta host objects;
-- crea DeviceBus global;
-- descubre dependencias;
-- consulta service locator.
-
-### Factory behavior
-
-```gdscript
-build(
-	request: RuntimeConstructionRequest
-) -> RuntimeFactoryBuildResult
-```
-
-```gdscript
-release(
-	handle: RuntimeDeviceHandle
-) -> ValidationReport
-```
-
-### Producto
-
-```text
-RuntimeDeviceHandle
-```
-
-No:
-
-- Object genérico;
-- Device aislado;
-- Callable.
-
-### Factory Key
+Identidad exacta:
 
 ```text
 Profile ID
@@ -335,25 +103,68 @@ Activation Context
 
 No contiene:
 
+- host target;
+- filesystem path;
+- script path;
+- factory Object;
+- Callable;
+- priority;
+- compatibility range.
+
+No existe:
+
+- latest;
+- fallback;
+- nearest;
+- compatible enough;
+- sustitución automática de versión;
+- sustitución automática de contexto.
+
+## 5. Razón del Activation Context
+
+Una misma definición lógica puede requerir factories diferentes para:
+
+- Simulation;
+- Hardware.
+
+El contexto forma parte de la identidad de construcción.
+
+No es una preferencia posterior.
+
+## 6. host_target excluido
+
+`host_target` no forma parte de RuntimeFactoryKey 1.0.
+
+Razones:
+
+- todavía no existe taxonomía estable de hosts;
+- RuntimeHost recibe el Handle completo;
+- introducir host target ahora crearía identidad prematura;
+- una factory puede producir varios Host Objects.
+
+La decisión podrá revisarse si aparecen múltiples host implementations incompatibles.
+
+## 7. RuntimeDependencyBinding
+
+Representa una dependencia runtime ya resuelta.
+
+Estado:
+
 ```text
-host_target
-```
+Dependency ID
 
-No existe fallback.
-
-### Dependencies
-
-```text
-RuntimeDependencyBinding
-```
-
-Value:
-
-```gdscript
 Object
+
+Ownership
 ```
 
-Ownership:
+No descubre la dependencia.
+
+No funciona como service locator.
+
+## 8. Ownership
+
+Valores canónicos:
 
 ```text
 BORROWED
@@ -364,50 +175,230 @@ TRANSFERRED
 ### BORROWED
 
 - owner original permanece;
-- Handle no libera;
-- factory release no libera.
+- Request y Handle conservan referencia;
+- factory no libera el Object;
+- factory release no cambia ownership original.
 
 ### TRANSFERRED
 
-- transferencia comienza al invocar build;
-- factory es custodio durante construcción;
-- Handle asume ownership en éxito;
-- factory limpia en fallo;
-- caller no realiza segundo cleanup.
+- transferencia comienza al invocar `build()`;
+- caller no ejecuta cleanup paralelo;
+- en éxito, Handle asume ownership;
+- en fallo, factory limpia la dependencia;
+- no existe segundo cleanup por el caller.
 
-### Request
+## 9. Inicio de transacción
 
-```text
-RuntimeConstructionRequest
+Construir `RuntimeConstructionRequest` no transfiere ownership.
+
+La transacción comienza cuando se invoca:
+
+```gdscript
+factory.build(
+	request
+)
 ```
+
+Esta frontera evita transferencia implícita durante configuración o compilación.
+
+## 10. RuntimeConstructionRequest
 
 Contiene:
 
 - Device ID;
 - DeviceConfiguration;
 - RuntimeFactoryKey;
-- bindings pre-resueltos.
+- RuntimeDependencyBindings pre-resueltos.
 
-No es service locator.
+No contiene:
 
-### Handle
+- SceneTree;
+- Node paths;
+- service locator;
+- autoload lookup;
+- filesystem;
+- active DeviceBus global;
+- RuntimeHost.
+
+## 11. Identidad coherente
+
+Request válido requiere coincidencia entre:
+
+```text
+Device ID
+
+Configuration Device ID
+
+Configuration Profile ID
+
+Factory Key Profile ID
+
+Configuration Profile Version
+
+Factory Key Profile Version
+
+Configuration Activation Context
+
+Factory Key Activation Context
+```
+
+No se permite construir con identidad aproximada.
+
+## 12. RuntimeDeviceHandle
+
+Representa una unidad runtime construida y su ownership asociado.
 
 Contiene:
 
 - Device ID;
-- Configuration;
-- Factory Key;
+- DeviceConfiguration;
+- RuntimeFactoryKey;
 - Primary Runtime Object;
 - Host Objects;
 - Dependency Bindings.
 
-Host Objects:
+Primary Runtime Object utiliza:
+
+```gdscript
+Object
+```
+
+Host Objects utilizan:
 
 ```gdscript
 Array[Object]
 ```
 
-### RuntimeHost
+## 13. Handle no coordina sistema
+
+RuntimeDeviceHandle no:
+
+- posee CompositionRuntime;
+- posee DeviceBus global;
+- ejecuta lifecycle global;
+- resuelve otras factories;
+- adjunta por sí mismo;
+- libera por sí mismo.
+
+Representa una sola unidad construida.
+
+## 14. RuntimeFactoryBuildResult
+
+Contiene:
+
+```text
+RuntimeDeviceHandle
+
+ValidationReport
+```
+
+Success requiere:
+
+- Handle no null;
+- Report no null;
+- Handle válido;
+- Report válido para Activation Context.
+
+No ejecuta cleanup.
+
+No sustituye factory release.
+
+## 15. RuntimeFactory behavior
+
+Contrato:
+
+```gdscript
+build(
+	request: RuntimeConstructionRequest
+) -> RuntimeFactoryBuildResult
+```
+
+```gdscript
+release(
+	handle: RuntimeDeviceHandle
+) -> ValidationReport
+```
+
+GDScript verifica behavior mediante presencia de métodos y pruebas de integración.
+
+## 16. Factory construct-only
+
+RuntimeFactory:
+
+- valida Request;
+- adquiere recursos;
+- construye Primary Runtime Object;
+- construye Host Objects;
+- produce Handle;
+- limpia parciales en fallo;
+- libera su producto cuando Runtime lo solicita.
+
+RuntimeFactory no:
+
+- inicializa Device lifecycle;
+- ejecuta `set_ready`;
+- ejecuta `start`;
+- adjunta Host Objects;
+- crea DeviceBus global;
+- descubre dependencias;
+- consulta service locator;
+- activa Hardware.
+
+## 17. Estado inicial
+
+El producto exitoso de factory equivale conceptualmente a:
+
+```text
+CREATED
+```
+
+CompositionRuntime futuro coordinará:
+
+```text
+attach
+
+initialize
+
+set_ready
+
+start
+```
+
+## 18. Construcción atómica
+
+Éxito:
+
+```text
+Request válido
+		│
+		▼
+Factory build
+		│
+		▼
+Handle válido
++
+Report válido
+```
+
+Fallo:
+
+```text
+Factory limpia recursos parciales
+
+Factory limpia TRANSFERRED
+
+Factory preserva BORROWED
+
+Handle null
+
+ValidationReport
+```
+
+No se expone Handle parcial.
+
+## 19. RuntimeHost behavior
+
+Contrato:
 
 ```gdscript
 attach(
@@ -421,255 +412,328 @@ detach(
 ) -> ValidationReport
 ```
 
-Factory no adjunta Nodes.
+RuntimeHost recibe el Handle completo.
 
-RuntimeHost recibe Handle completo.
+No recibe Host Objects dispersos sin identidad de unidad.
 
-### DeviceBus
+## 20. Host transaccional
 
-DeviceBus pertenece a CompositionRuntime.
+RuntimeHost debe:
+
+- evitar attach duplicado;
+- revertir attach parcial;
+- tolerar detach repetido;
+- procesar Host Objects en orden estable;
+- no sustituir factory release.
+
+Attach y release son responsabilidades diferentes.
+
+## 21. Rollback global
+
+CompositionRuntime futuro coordinará rollback en orden inverso a adquisición.
+
+Si build falla:
+
+```text
+release Handles anteriores
+en orden inverso
+```
+
+Si attach falla:
+
+```text
+detach
+
+↓
+
+release
+```
+
+Si lifecycle falla:
+
+```text
+shutdown
+
+↓
+
+detach
+
+↓
+
+release
+```
+
+## 22. Last Known Good
+
+Una construcción o activación fallida no sustituye runtime activo.
+
+Flujo:
+
+```text
+Construir candidato
+
+Validar candidato
+
+Adjuntar candidato
+
+Completar lifecycle
+
+Commit completo
+
+Sustituir Last Known Good
+```
+
+Antes del commit completo, Last Known Good permanece intacto.
+
+## 23. DeviceBus ownership
+
+DeviceBus pertenece a CompositionRuntime futuro.
 
 Factory no crea Bus global.
 
-Factory produce estado equivalente a CREATED.
+Factory no usa autoload.
 
-### Rollback
+DeviceBus se entrega durante initialize coordinado.
 
-Factory failure:
+## 24. Registry separado
 
-```text
-cleanup local
-Handle null
-Report
-```
+RuntimeFactory binding se resolverá fuera de RuntimeFactory.
 
-Global failure:
-
-```text
-rollback en orden inverso
-```
-
-Last Known Good cambia únicamente después de commit completo.
-
-### CompositionPlan
-
-CompositionPlan guarda:
+RuntimeFactoryRegistry:
 
 ```text
 RuntimeFactoryKey
+
+→
+
+RuntimeFactoryDescriptor
+
+→
+
+RuntimeFactory
 ```
 
-No guarda:
+DeviceCatalog no contiene factories.
 
-- RuntimeFactory;
-- Callable;
-- RuntimeDeviceHandle;
-- Device activo;
-- Node activo;
-- DeviceBus activo.
+CompositionPlan conserva Key, no factory.
 
-## 7. Respuesta inicial esperada
+## 25. Dependencias pre-resueltas
 
-Una respuesta correcta debe indicar:
+RuntimeConstructionRequest recibe Bindings ya resueltos.
+
+Factory no busca:
+
+- services;
+- Nodes;
+- Providers;
+- hardware;
+- filesystem;
+- global state.
+
+Esto hace construcción reproducible y testeable.
+
+## 26. No Callable genérico
+
+Factory no se modela como Callable anónimo almacenado en Plan.
+
+Razones:
+
+- identidad pobre;
+- behavior incompleto;
+- release no explícito;
+- difícil validación;
+- ownership opaco;
+- debugging débil.
+
+Se utiliza Object con behavior explícito.
+
+## 27. Alternativas consideradas
+
+### Factory devuelve Device directamente
+
+Rechazada.
+
+No representa Host Objects, ownership o cleanup.
+
+### Factory inicia lifecycle
+
+Rechazada.
+
+Mezcla construcción con coordinación global.
+
+### Factory adjunta Nodes
+
+Rechazada.
+
+Acopla construcción al host.
+
+### DeviceCatalog contiene factories
+
+Rechazada.
+
+Mezcla definición lógica con construcción runtime.
+
+### Service locator
+
+Rechazada.
+
+Oculta dependencias y ownership.
+
+### host_target dentro de Key 1.0
+
+Rechazada por falta de necesidad concreta.
+
+## 28. Seguridad
+
+Esta decisión aplica VP-002 vigente:
+
+> El usuario o el entorno pueden equivocarse. Una operación puede ser rechazada o abortada. El simulador debe permanecer seguro, consistente y recuperable.
+
+Ante error:
+
+- construcción se aborta;
+- recursos parciales se limpian;
+- Handle no se publica;
+- Last Known Good permanece;
+- Hardware no se activa.
+
+## 29. Consecuencias positivas
+
+- identidad exacta;
+- dependencias explícitas;
+- ownership explícito;
+- construcción atómica;
+- cleanup verificable;
+- host desacoplado;
+- lifecycle coordinable;
+- factories sustituibles;
+- pruebas aisladas;
+- rollback global posible.
+
+## 30. Consecuencias negativas
+
+- más componentes;
+- factory signature se verifica por comportamiento;
+- caller debe preparar Bindings;
+- CompositionRuntime debe coordinar fases;
+- TRANSFERRED requiere disciplina estricta;
+- no existe plugin discovery automático.
+
+Estas consecuencias son aceptadas.
+
+## 31. Criterios de aceptación
+
+1. RuntimeFactoryKey exacta.
+
+2. Sin latest o fallback.
+
+3. Activation Context en Key.
+
+4. host_target excluido de Key 1.0.
+
+5. Bindings pre-resueltos.
+
+6. BORROWED preservado.
+
+7. TRANSFERRED explícito.
+
+8. Transferencia comienza en build.
+
+9. Request inmutable por contrato.
+
+10. Handle representa una unidad.
+
+11. Primary Runtime Object usa Object.
+
+12. Host Objects tipados.
+
+13. Build Result defensivo.
+
+14. Factory construct-only.
+
+15. Factory no inicia lifecycle.
+
+16. Factory no adjunta.
+
+17. Factory limpia parciales.
+
+18. Factory release explícito.
+
+19. RuntimeHost attach/detach explícito.
+
+20. Rollback inverso.
+
+21. No service locator.
+
+22. No DeviceBus global.
+
+23. Last Known Good preservado.
+
+24. Pruebas unitarias PASS.
+
+25. Prueba de integración PASS.
+
+26. Run All PASS.
+
+## 32. Implementación aceptada
+
+Componentes:
 
 ```text
-He leído los documentos.
+RuntimeFactoryKey
 
-Último milestone implementado:
-DeviceGraphAssembler 1.0.
+RuntimeDependencyBinding
 
-Baseline:
-48 tests.
-1396 checks.
-0 failures.
+RuntimeConstructionRequest
 
-Milestone actual:
-Runtime Construction Contract 1.0.
+RuntimeDeviceHandle
 
-ADR-010:
-aceptado.
-
-Diseño:
-activo.
-
-Siguiente componente:
-RuntimeFactoryKey.
-
-No implementaré Registry,
-CompositionPlan, Compiler o Runtime
-antes de completar los contratos previos.
+RuntimeFactoryBuildResult
 ```
 
-Después debe esperar confirmación.
-
-## 8. Señales de pérdida de contexto
-
-Detener si el asistente propone:
-
-- DeviceBus como autoload;
-- singleton global;
-- DeviceCatalog con factories;
-- DeviceGraph transportando mensajes;
-- SystemProfile como Resource mutable directo;
-- resolución latest;
-- Callable genérico como factory;
-- factory dentro de CompositionPlan;
-- factory devuelve Device directamente;
-- factory inicia lifecycle;
-- factory adjunta Nodes;
-- service locator;
-- host_target como Factory Key inicial;
-- Object genérico como resultado;
-- CompositionCompiler ejecutando runtime;
-- topological sort obligatorio ignorando ciclos;
-- pruebas aceptadas modificadas;
-- archivos por fragmentos;
-- código antes de diseño.
-
-## 9. Borrador alternativo recuperado
-
-Existe fuera del repositorio:
+Behaviors verificados:
 
 ```text
-recovered_runtime_factory_and_composition_plan_design_250826.md
+RuntimeFactory
+
+RuntimeHost
 ```
 
-No es arquitectura canónica.
-
-Ideas candidatas:
-
-- lifecycle ordering;
-- DispatchPolicy;
-- subscription directives;
-- host abstractions;
-- Last Known Good.
-
-Alternativas rechazadas:
-
-- Callable;
-- factory en Plan;
-- factory devuelve Device;
-- host_target como identidad;
-- Registry mutable sin diseño;
-- Array[Dictionary];
-- topological order obligatorio.
-
-No implementar el borrador directamente.
-
-## 10. Protocolo de fallo
-
-Si una prueba falla:
-
-1. detener cambios;
-
-2. copiar primer error completo;
-
-3. incluir archivo y línea;
-
-4. clasificar parser, contrato o comportamiento;
-
-5. revisar responsabilidad;
-
-6. entregar archivo completo corregido;
-
-7. ejecutar prueba nuevamente;
-
-8. no aceptar baseline hasta PASS.
-
-## 11. Protocolo Git
-
-Antes de commit:
-
-```powershell
-git status --short
-
-git diff --check
-
-git diff --cached --name-status
-
-git diff --cached --check
-```
-
-Después de commit:
-
-```powershell
-git log -1 --oneline
-
-git status --short
-```
-
-Después de milestone:
-
-```powershell
-git push origin main
-
-git status -sb
-```
-
-Resultado esperado:
+Implementación:
 
 ```text
-## main...origin/main
+4147ec4
+feat(runtime): add runtime construction contracts
 ```
 
-## 12. Protocolo de recuperación
-
-Si el chat original desaparece:
-
-1. abrir Agent Mode;
-
-2. adjuntar los tres documentos;
-
-3. adjuntar ADR-010;
-
-4. adjuntar Runtime Construction Contract Design;
-
-5. pegar este prompt;
-
-6. exigir resumen;
-
-7. comparar baseline;
-
-8. comparar siguiente componente;
-
-9. verificar Git;
-
-10. continuar solo si coincide.
-
-## 13. Regla final
-
-Un chat nuevo no necesita imitar una voz exacta.
-
-Debe conservar:
-
-- decisiones;
-- rigor;
-- metodología;
-- honestidad;
-- cercanía;
-- baselines;
-- responsabilidades;
-- seguridad;
-- aprendizaje.
-
-La continuidad depende de:
+Cierre documental:
 
 ```text
-Git
-
-+
-
-ADR
-
-+
-
-Diseños
-
-+
-
-Tests
-
-+
-
-Project State Package
+659c3c3
+docs(runtime): close runtime construction contract 1.0
 ```
+
+Baseline Runtime Construction:
+
+```text
+Tests: 6
+Checks: 173
+Failures: 0
+RESULT: PASS
+```
+
+## 33. Estado
+
+```text
+ADR-010
+ACEPTADO
+IMPLEMENTADO
+VERIFICADO
+RESTAURADO DOCUMENTALMENTE
+```
+
+La restauración no cambia la decisión implementada.
+
+Corrige un archivo cuyo contenido inicial era una copia accidental de Resume Prompt.
+
+Git conserva la versión histórica errónea.

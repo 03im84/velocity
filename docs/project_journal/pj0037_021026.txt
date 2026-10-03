@@ -1,0 +1,192 @@
+PJ0037 – ADR-010 Document Restoration
+
+Fecha:
+
+02/10/2026
+
+Objetivo:
+
+Restaurar el contenido canónico de:
+
+ADR-010 —
+Runtime Construction and Factory Binding
+
+Problema detectado:
+
+El path versionado:
+
+docs/architecture/adr/
+ADR-010 — Runtime Construction and Factory Binding.md
+
+contenía por error:
+
+Velocity Resume Prompt 1.1
+
+El contenido incorrecto estaba presente
+desde la creación del archivo en:
+
+1dee94c
+
+docs(runtime):
+define runtime construction contract
+
+Impacto:
+
+Código runtime:
+
+NO AFECTADO
+
+Pruebas:
+
+NO AFECTADAS
+
+Diseño de Runtime Construction:
+
+CORRECTO Y VERSIONADO
+
+Continuidad arquitectónica:
+
+AFECTADA
+
+Un lector nuevo podía concluir
+que ADR-010 no tenía contenido.
+
+Fuentes utilizadas para restauración:
+
+- runtime_construction_contract_design.md;
+
+- system_composition_pipeline_design.md;
+
+- core_architecture.md;
+
+- pj0028_250826.txt;
+
+- implementación runtime versionada;
+
+- pruebas Runtime Construction;
+
+- commit 4147ec4;
+
+- commit 659c3c3.
+
+No se añadieron decisiones nuevas.
+
+Decisiones restauradas:
+
+- RuntimeFactoryKey exacta;
+
+- Profile ID;
+
+- Profile Version;
+
+- Activation Context;
+
+- host_target excluido;
+
+- RuntimeDependencyBinding;
+
+- BORROWED;
+
+- TRANSFERRED;
+
+- transferencia comienza en build;
+
+- RuntimeConstructionRequest;
+
+- dependencies pre-resueltas;
+
+- RuntimeDeviceHandle;
+
+- RuntimeFactoryBuildResult;
+
+- factory construct-only;
+
+- factory release;
+
+- RuntimeHost attach/detach;
+
+- build atómico;
+
+- cleanup parcial;
+
+- rollback inverso;
+
+- no service locator;
+
+- no DeviceBus global;
+
+- Last Known Good.
+
+Archivo restaurado:
+
+docs/architecture/adr/
+ADR-010 — Runtime Construction and Factory Binding.md
+
+Versión:
+
+1.1
+
+Estado:
+
+ACEPTADO
+
+IMPLEMENTADO
+
+VERIFICADO
+
+RESTAURADO DOCUMENTALMENTE
+
+Baseline relacionada:
+
+Runtime Construction:
+
+6 tests
+
+173 checks
+
+0 failures
+
+RuntimeFactoryRegistry:
+
+4 tests
+
+141 checks
+
+0 failures
+
+CompositionPlan:
+
+4 tests
+
+141 checks
+
+0 failures
+
+Baseline global vigente:
+
+62 tests
+
+1851 checks
+
+0 failures
+
+0 missing metrics
+
+Git conserva:
+
+- contenido erróneo histórico;
+
+- momento de reparación;
+
+- fuentes de reconstrucción;
+
+- implementación que demuestra
+  la decisión aceptada.
+
+Estado final:
+
+ADR-010 CANONICAL CONTENT RESTORED
+
+NO RUNTIME CHANGE
+
+NO TEST CHANGE

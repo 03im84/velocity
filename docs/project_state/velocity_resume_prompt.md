@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.6 |
+| Versión | 1.7 |
 | Fecha | 02/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -56,7 +56,7 @@ Estado arquitectónico esperado:
 - RuntimeFactoryRegistry 1.0 está implementado y verificado.
 - CompositionPlan 1.0 está implementado y verificado.
 - Registry–Plan Integration está verificada.
-- CompositionCompiler Design 1.0 está activo.
+- CompositionCompiler Design 1.1 está activo.
 - CompositionCompiler no está implementado.
 - La siguiente implementación posterior al commit es CompositionCompileResult.
 
@@ -105,8 +105,8 @@ Antes de responder:
 
 18. Aplica:
 
-	La simulación puede fallar.
-	El simulador no.
+	El usuario o el entorno pueden equivocarse.
+	El simulador debe permanecer seguro.
 
 19. El usuario reescribe manualmente los archivos.
 
@@ -234,13 +234,19 @@ RuntimeFactoryBuildResult
 Diseño activo:
 
 ```text
-CompositionCompiler Design 1.0
+CompositionCompiler Design 1.1
 ```
 
 Documentos canónicos del milestone:
 
 ```text
-Core Architecture 2.18
+Core Architecture 2.19
+
+Engineering Standards 1.4
+
+Project Decision VP-002 2.0
+
+ADR-010 1.1
 
 System Composition Pipeline Design 1.9
 
@@ -248,11 +254,11 @@ RuntimeFactoryRegistry Design 1.3
 
 CompositionPlan Design 1.3
 
-CompositionCompiler Design 1.0
+CompositionCompiler Design 1.1
 
-Project Handoff 1.6
+Project Handoff 1.7
 
-Resume Prompt 1.6
+Resume Prompt 1.7
 ```
 
 Siguiente implementación posterior al commit:
@@ -493,7 +499,7 @@ PASS
 Diseño activo:
 
 ```text
-CompositionCompiler Design 1.0
+CompositionCompiler Design 1.1
 ```
 
 Compiler 1.0 será Simulation-only.
@@ -797,17 +803,17 @@ Alternativas rechazadas:
 
 ## 20. Protocolo Git
 
-Base commit antes de CompositionCompiler Design:
+Base commit antes de la revisión VP-002 y reparación ADR-010:
 
 ```text
-f2c65de
-docs(composition): record composition plan 1.0 baseline
+c65ed67
+docs(composition): define composition compiler
 ```
 
 Commit sugerido para el paquete actual:
 
 ```text
-docs(composition): define composition compiler
+docs(architecture): clarify simulator integrity and restore ADR-010
 ```
 
 Antes del commit:
@@ -873,7 +879,7 @@ PASS
 
 Diseño activo:
 
-CompositionCompiler Design 1.0
+CompositionCompiler Design 1.1
 
 Siguiente implementación posterior al commit:
 

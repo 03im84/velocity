@@ -1,0 +1,196 @@
+PJ0036 – VP-002 Terminology Revision
+
+Fecha:
+
+02/10/2026
+
+Objetivo:
+
+Corregir la formulación ambigua:
+
+The Simulation May Fail;
+The Simulator Must Not
+
+Problema:
+
+La simulación es un resultado
+o una ejecución controlada
+por el simulador.
+
+La frase anterior podía interpretarse
+como si la simulación fuese un agente
+independiente capaz de fallar.
+
+La fuente real de error puede ser:
+
+- usuario;
+
+- configuración;
+
+- archivo;
+
+- dependencia;
+
+- entorno;
+
+- dispositivo;
+
+- dato externo;
+
+- operación incompleta.
+
+El simulador debe:
+
+- detectar;
+
+- rechazar;
+
+- abortar controladamente;
+
+- contener;
+
+- informar;
+
+- recuperar;
+
+- preservar Last Known Good.
+
+Decisión revisada:
+
+VP-002 —
+The User or Environment May Err;
+The Simulator Must Remain Safe
+
+Versión visible:
+
+El usuario o el entorno
+pueden equivocarse.
+
+Una operación puede ser
+rechazada o abortada.
+
+El simulador debe permanecer
+seguro, consistente y recuperable.
+
+Lema corto:
+
+El usuario puede fallar.
+El simulador no.
+
+Definiciones:
+
+Usuario o entorno:
+
+Puede proporcionar entradas
+inválidas, incompletas
+o incompatibles.
+
+Operación:
+
+Puede ser rechazada o abortada
+sin comprometer la plataforma.
+
+Resultado simulado:
+
+Puede representar degradación,
+daño, pérdida de control
+o fracaso modelado.
+
+Simulador:
+
+Debe conservar control,
+integridad y capacidad
+de recuperación.
+
+Un rechazo seguro:
+
+Es un éxito del simulador.
+
+No es un fallo de plataforma.
+
+No cambia:
+
+- severities;
+
+- Simulation Hazard;
+
+- Structural Error;
+
+- Platform Safety Error;
+
+- Hardware Safety Error;
+
+- Last Known Good;
+
+- Draft–Snapshot;
+
+- transaccionalidad;
+
+- bounded execution;
+
+- Hardware gate;
+
+- defensa en profundidad.
+
+Cambia:
+
+- terminología central;
+
+- lema extendido;
+
+- responsabilidad explícita;
+
+- preguntas de evolución;
+
+- criterios de aceptación.
+
+Compatibilidad histórica:
+
+El archivo anterior se conserva
+como redirect SUPERSEDED.
+
+Nuevo archivo canónico:
+
+docs/decisions/
+VP-002 — The User or Environment May Err; The Simulator Must Remain Safe.md
+
+Archivo histórico:
+
+docs/decisions/
+VP-002 — The Simulation May Fail; The Simulator Must Not.md
+
+Estado de CompositionCompiler:
+
+Design 1.0:
+
+ACTIVO
+
+Implementación:
+
+NO INICIADA
+
+El Hardware gate permanece.
+
+La revisión refuerza su significado:
+
+Solicitud Hardware sin evidencia safety:
+
+↓
+
+Operación rechazada
+
+↓
+
+Plan null
+
+↓
+
+Simulador seguro
+
+Estado:
+
+VP-002 VERSION 2.0
+
+APROBADO COMO REVISION TERMINOLOGICA
+
+SIN CAMBIO DE DIRECCION ARQUITECTONICA

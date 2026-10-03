@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.18 |
+| Versión | 2.19 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 02/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -1195,6 +1195,21 @@ No dependen de:
 RuntimeHost concreto adaptará Objects.
 
 ## 34. VP-002
+
+Decisión vigente:
+
+```text
+The User or Environment May Err;
+The Simulator Must Remain Safe
+```
+
+Regla:
+
+> El usuario o el entorno pueden equivocarse. Una operación puede ser rechazada o abortada. El simulador debe permanecer seguro, consistente y recuperable.
+
+Lema corto:
+
+> El usuario puede fallar. El simulador no.
 
 Contextos:
 

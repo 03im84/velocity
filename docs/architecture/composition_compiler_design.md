@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
+| Versión | 1.1 |
 | Fecha | 02/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Compilación transaccional de DeviceGraphSnapshot a CompositionPlan |
@@ -199,6 +199,17 @@ Un ciclo puede ser aceptable para Simulation y bloqueante para Hardware.
 CompositionCompiler no puede reconstruir toda evidencia safety desde Snapshot solamente.
 
 Hardware requerirá un diseño sucesor con evidencia explícita.
+
+Esta respuesta aplica VP-002 2.0:
+
+```text
+Solicitud sin evidencia safety
+→ operación rechazada
+→ Plan null
+→ simulador seguro y recuperable
+```
+
+El rechazo controlado es comportamiento correcto del simulador.
 
 ## 11. Scope del Report
 

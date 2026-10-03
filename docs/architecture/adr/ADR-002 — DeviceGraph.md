@@ -3,8 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACEPTADO |
-| Versión | 1.1 |
-| Fecha | 22/08/2026 |
+| Versión | 1.2 |
+| Fecha inicial | 22/08/2026 |
+| Última revisión | 02/10/2026 |
 | Componentes | DeviceGraphDraft, DeviceGraphNode, Ports, TopicChannel, Connection, DeviceGraphValidator, DeviceGraphSnapshot |
 | Alcance | Topología lógica, validación y base para composición visual |
 
@@ -658,7 +659,7 @@ bloqueado.
 
 Esto cumple VP-002:
 
-> La simulación puede fallar. El simulador no.
+> El usuario puede fallar. El simulador no.
 
 ### 19.4 Validación futura
 

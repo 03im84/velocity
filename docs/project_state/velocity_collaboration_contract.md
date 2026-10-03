@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
-| Fecha | 25/08/2026 |
+| Versión | 1.1 |
+| Fecha | 02/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Idioma principal | Español |
 | Propósito | Preservar la forma de colaboración técnica entre el usuario y cualquier asistente futuro |
@@ -612,7 +612,7 @@ Toda refactorización se entrega como archivo completo.
 
 Se aplica:
 
-> La simulación puede fallar. El simulador no.
+> El usuario puede fallar. El simulador no.
 
 Simulation puede representar:
 
@@ -997,4 +997,4 @@ Cuando exista un fallo:
 
 Cuando exista riesgo de plataforma:
 
-> La simulación puede fallar. El simulador no.
+> El usuario puede fallar. El simulador no.

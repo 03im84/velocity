@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.3 |
-| Última revisión | 23/08/2026 |
+| Versión | 1.4 |
+| Última revisión | 02/10/2026 |
 | Engine | Godot Engine 4.7.1 stable |
 | Alcance | Arquitectura, implementación, pruebas, documentación y Git |
 
@@ -895,7 +895,7 @@ No corrige automáticamente el objeto validado.
 
 ### 13.1 Regla principal
 
-> La simulación puede fallar. El simulador no.
+> El usuario puede fallar. El simulador no.
 
 ### 13.2 Nunca permitido
 
@@ -1448,4 +1448,4 @@ No se realizan cirugías manuales sobre archivos.
 
 Cuando exista duda entre permitir una simulación peligrosa y comprometer la plataforma:
 
-> La simulación puede fallar. El simulador no.
+> El usuario puede fallar. El simulador no.
