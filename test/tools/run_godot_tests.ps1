@@ -448,9 +448,23 @@ Write-Host "TEST SUMMARY" -ForegroundColor Green
 Write-Host "============================================================" -ForegroundColor DarkGray
 
 
-$results |
-    Format-Table Scene, Attempt, ExitCode, Status, EngineError, Checks, CheckFailures, MetricsAvailable -AutoSize |
-    Out-Host
+foreach ($result in $results) {
+    Write-Host ""
+    Write-Host "Scene: $($result.Scene)" -ForegroundColor Cyan
+    Write-Host (
+        "Attempt: {0} | ExitCode: {1} | Status: {2}" -f
+        $result.Attempt,
+        $result.ExitCode,
+        $result.Status
+    )
+    Write-Host "Engine Error: $($result.EngineError)"
+    Write-Host (
+        "Checks: {0} | Check Failures: {1} | Metrics Available: {2}" -f
+        $result.Checks,
+        $result.CheckFailures,
+        $result.MetricsAvailable
+    )
+}
 
 
 $failedResults = @(

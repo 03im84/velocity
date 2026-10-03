@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Velocity Tooling Dashboard</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+<body>
+  <div id="app-shell">
+    <header class="topbar">
+      <div class="brand">VELOCITY</div>
+      <nav class="tabs" aria-label="Navegación principal">
+        <button class="tab active" data-tab="tests">tests</button>
+        <button class="tab" data-tab="delivery">delivery</button>
+        <button class="tab" data-tab="history">history</button>
+        <button class="tab" data-tab="settings">settings</button>
+      </nav>
+      <div class="header-status">
+        <span id="header-summary">idle</span>
+        <select id="theme-select" aria-label="Tema">
+          <option value="dark">oscuro</option>
+          <option value="light">claro</option>
+          <option value="reading">lectura</option>
+        </select>
+        <button id="shutdown-button" class="danger-quiet">apagar</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <section class="primary">
+        <div id="tests-panel" class="panel-view active">
+          <div class="panel-title">
+            <span>TEST TERMINAL</span>
+            <div class="panel-title-actions">
+              <button id="clear-test-output" class="small-button">limpiar terminal</button>
+              <span id="execution-badge" class="badge">IDLE</span>
+            </div>
+          </div>
+          <div class="test-controls compact-controls">
+            <input id="test-search" type="search" placeholder="buscar test…">
+            <select id="suite-select" aria-label="Suite"></select>
+            <select id="test-select" aria-label="Test"></select>
+          </div>
+          <pre id="test-output" class="terminal" tabindex="0"></pre>
+          <div class="results-wrap">
+            <table id="results-table">
+              <thead>
+                <tr>
+                  <th>test</th>
+                  <th>status</th>
+                  <th>checks</th>
+                  <th>failures</th>
+                  <th>time</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div id="delivery-panel" class="panel-view">
+          <div class="panel-title">
+            <span>DELIVERY TERMINAL</span>
+            <div class="panel-title-actions">
+              <button id="clear-delivery-output" class="small-button">limpiar terminal</button>
+              <span id="delivery-badge" class="badge">IDLE</span>
+            </div>
+          </div>
+          <div class="delivery-actions">
+            <button id="select-package">seleccionar zip</button>
+            <button id="install-package">install</button>
+            <button id="prepare-submit">prepare submit</button>
+          </div>
+          <div class="package-card">
+            <div class="label">package</div>
+            <div id="package-path" class="path-value">ninguno</div>
+            <div class="label">receipt</div>
+            <div id="receipt-state">none</div>
+          </div>
+          <pre id="delivery-output" class="terminal" tabindex="0"></pre>
+        </div>
+
+        <div id="history-panel" class="panel-view">
+          <div class="panel-title">
+            <span>SESSION HISTORY</span>
+            <button id="clear-history" class="small-button">borrar historial</button>
+          </div>
+          <div id="history-list" class="history-list">
+            <p class="muted">Los eventos de esta sesión aparecerán aquí.</p>
+          </div>
+        </div>
+
+        <div id="settings-panel" class="panel-view">
+          <div class="panel-title"><span>SETTINGS</span></div>
+          <div class="settings-grid">
+            <section class="settings-card">
+              <h2>appearance</h2>
+              <label for="settings-theme">tema</label>
+              <select id="settings-theme">
+                <option value="dark">oscuro</option>
+                <option value="light">claro</option>
+                <option value="reading">lectura</option>
+              </select>
+            </section>
+
+            <section class="settings-card">
+              <h2>browser</h2>
+              <label for="browser-select">navegador</label>
+              <select id="browser-select">
+                <option value="system_default">predeterminado del sistema</option>
+                <option value="edge">Microsoft Edge</option>
+                <option value="chrome">Google Chrome</option>
+                <option value="firefox">Firefox</option>
+                <option value="custom">personalizado…</option>
+              </select>
+              <label for="window-mode">modo de ventana</label>
+              <select id="window-mode">
+                <option value="tab">pestaña</option>
+                <option value="application">aplicación</option>
+              </select>
+              <div id="custom-browser-row" class="custom-browser-row hidden">
+                <input id="browser-path" readonly placeholder="selecciona un .exe">
+                <button id="browse-browser">examinar</button>
+              </div>
+              <button id="test-browser" class="secondary">probar navegador</button>
+            </section>
+
+            <section class="settings-card">
+              <h2>server</h2>
+              <label for="server-port">puerto — 0 automático</label>
+              <input id="server-port" type="number" min="0" max="65535">
+              <div class="label">host</div>
+              <div class="readonly-value">127.0.0.1</div>
+              <p class="muted">Cambiar el puerto requiere reiniciar VTD.</p>
+            </section>
+
+            <section class="settings-card">
+              <h2>runner</h2>
+              <label for="godot-path">Godot Console</label>
+              <input id="godot-path" placeholder="ruta del ejecutable">
+              <label for="repeat-input">repeat</label>
+              <input id="repeat-input" type="number" min="1" max="100">
+              <label for="timeout-input">timeout seconds</label>
+              <input id="timeout-input" type="number" min="1" max="3600">
+            </section>
+          </div>
+          <div class="settings-actions">
+            <button id="save-settings">guardar configuración</button>
+            <span id="settings-message" class="muted"></span>
+          </div>
+        </div>
+      </section>
+
+      <aside class="sidebar">
+        <section class="side-card">
+          <h2>PLAN</h2>
+          <div id="plan-label">ningún plan</div>
+          <ul id="plan-checklist" class="checklist"></ul>
+          <pre id="final-summary" class="final-summary hidden"></pre>
+        </section>
+
+        <section class="side-card">
+          <h2>PROGRESO</h2>
+          <div class="progress-track">
+            <div id="progress-bar" class="progress-fill"></div>
+          </div>
+          <div id="progress-text" class="metric-line">0 / 0 · 0%</div>
+          <div class="metric-grid">
+            <span>checks</span><strong id="metric-checks">0</strong>
+            <span>failures</span><strong id="metric-failures">0</strong>
+            <span>missing</span><strong id="metric-missing">0</strong>
+          </div>
+        </section>
+
+        <section class="side-card">
+          <h2>ENVIRONMENT</h2>
+          <dl class="environment-list">
+            <dt>project</dt><dd id="env-project">—</dd>
+            <dt>server</dt><dd id="env-server">—</dd>
+            <dt>python</dt><dd id="env-python">—</dd>
+            <dt>delivery</dt><dd id="env-delivery">none</dd>
+          </dl>
+        </section>
+      </aside>
+    </main>
+
+    <footer class="command-area">
+      <div class="command-buttons">
+        <button id="run-selected">run selected</button>
+        <button id="run-suite">run suite</button>
+        <button id="run-all">run all</button>
+        <button id="pause-plan" class="secondary">pause</button>
+        <button id="resume-plan" class="secondary">resume</button>
+        <button id="stop-plan" class="warning">stop</button>
+        <button id="refresh-tests" class="secondary">refresh</button>
+      </div>
+      <div id="status-line" class="status-line">sesión iniciando…</div>
+    </footer>
+  </div>
+</body>
+</html>

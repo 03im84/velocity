@@ -30,6 +30,32 @@ GIT_OPERATION_MARKERS = (
 )
 
 
+def hidden_subprocess_options() -> dict[str, object]:
+    if os.name != "nt":
+        return {}
+
+    startup_info = subprocess.STARTUPINFO()
+    startup_info.dwFlags |= getattr(
+        subprocess,
+        "STARTF_USESHOWWINDOW",
+        0,
+    )
+    startup_info.wShowWindow = getattr(
+        subprocess,
+        "SW_HIDE",
+        0,
+    )
+
+    return {
+        "creationflags": getattr(
+            subprocess,
+            "CREATE_NO_WINDOW",
+            0,
+        ),
+        "startupinfo": startup_info,
+    }
+
+
 @dataclass(frozen=True)
 class CommandResult:
     returncode: int
@@ -106,6 +132,7 @@ class GitRunner:
             errors="replace",
             shell=False,
             check=False,
+            **hidden_subprocess_options(),
         )
         result = CommandResult(
             process.returncode,
@@ -138,6 +165,7 @@ class GitRunner:
             text=False,
             shell=False,
             check=False,
+            **hidden_subprocess_options(),
         )
 
         if check and process.returncode != 0:
@@ -948,6 +976,7 @@ def discover_repository_root(
         errors="replace",
         shell=False,
         check=False,
+        **hidden_subprocess_options(),
     )
 
     if process.returncode != 0:
