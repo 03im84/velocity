@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.4 |
-| Fecha | 02/10/2026 |
+| Versión | 1.5 |
+| Fecha | 03/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Declaración, validación y resolución exacta de RuntimeFactories |
 | Estado de implementación | COMPLETO Y VERIFICADO |
@@ -1296,7 +1296,7 @@ Missing Metrics: 0
 RESULT: PASS
 ```
 
-Runtime Suite:
+Runtime Suite preservada:
 
 ```text
 Tests: 10
@@ -1306,11 +1306,22 @@ Missing Metrics: 0
 RESULT: PASS
 ```
 
-Baseline global:
+CompositionRuntime 1.0 utiliza lookup exacto, revalida Specs y conserva el mismo Registry explícito usado por CompositionCompiler.
+
+Full pipeline sucesor:
 
 ```text
-Tests: 65
-Checks: 1970
+FullCompositionRuntimePipelineIntegrationTest
+50 checks
+0 failures
+RESULT: PASS
+```
+
+Baseline global vigente:
+
+```text
+Tests: 69
+Checks: 2156
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1319,31 +1330,23 @@ Plan ExitCode: 0
 RESULT: PASS
 ```
 
-Commit de implementación:
+Commit de Registry:
 
 ```text
 ca2aa04
 feat(runtime): add immutable factory registry
 ```
 
-Todos los criterios de aceptación fueron satisfechos.
-
-CompositionPlan 1.0 está implementado y verificado.
-
-Registry–Plan Integration está verificada.
-
-CompositionCompiler 1.0 está implementado y verificado.
-
-Compiler utiliza Registry exacto sin ejecutar factories.
-
-SystemCompositionCompilerIntegrationTest:
+Commit de Runtime:
 
 ```text
-PASS — 40 checks
+cc9a7ae
+feat(runtime): add transactional composition runtime
 ```
 
-Siguiente milestone:
+Siguiente milestone recomendado:
 
 ```text
-CompositionRuntime Problem and Analysis
+Production Runtime Adapters
+Problema y análisis
 ```

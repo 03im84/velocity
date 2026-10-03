@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACEPTADO |
-| Versión | 1.0 |
-| Fecha | 02/10/2026 |
+| Estado | ACEPTADO — IMPLEMENTADO — VERIFICADO |
+| Versión | 1.1 |
+| Fecha | 03/10/2026 |
 | Componentes | CompositionRuntime, CompositionRuntimeOperationResult, DeviceBus, RuntimeFactoryRegistry, RuntimeHost, lifecycle adapter, communication binder, dependency value resolver |
 | Alcance | Activación Simulation, ownership activo, phase barriers, rollback y shutdown |
 
@@ -732,14 +732,100 @@ Estas consecuencias son aceptadas.
 ## 40. Estado
 
 ```text
-ADR-011
+ADR-011 1.1
 ACEPTADO
+IMPLEMENTADO
+VERIFICADO
 ```
 
-Implementación:
+La implementación mantiene la decisión original:
+
+- Simulation-only;
+- stateful y one-shot;
+- collaborators explícitos;
+- DeviceBus owned;
+- phase barriers;
+- commit ACTIVE completo;
+- rollback inverso;
+- cleanup best effort;
+- SHUTDOWN y FAILED terminales;
+- Hardware bloqueado;
+- sin hot swap, singleton, service locator, IO o threads.
+
+CompositionRuntime Design 1.1 desarrolla y registra esta decisión.
+
+## 41. Evidencia de implementación
+
+Componentes:
 
 ```text
-AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
+res://core/composition/composition_runtime_operation_result.gd
+res://core/composition/composition_runtime.gd
 ```
 
-CompositionRuntime Design 1.0 desarrolla esta decisión.
+Pruebas sucesoras:
+
+```text
+CompositionRuntimeOperationResultTest
+17 checks
+PASS
+
+CompositionRuntimeTest
+62 checks
+PASS
+
+CompositionRuntimeIntegrationTest
+57 checks
+PASS
+
+FullCompositionRuntimePipelineIntegrationTest
+50 checks
+PASS
+```
+
+Las pruebas de integración demostraron fallo controlado y rollback en:
+
+```text
+build
+attach
+bind
+initialize
+ready
+start
+```
+
+También demostraron agregación de errores de cleanup y ausencia de double cleanup.
+
+## 42. Baseline aceptada
+
+```text
+CompositionRuntime:
+4 tests
+186 checks
+0 failures
+
+Composition Suite:
+16 tests
+702 checks
+0 failures
+0 missing metrics
+
+Run All:
+69 tests
+2156 checks
+0 failures
+0 missing metrics
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+Commit:
+
+```text
+cc9a7ae
+feat(runtime): add transactional composition runtime
+```
+
+El milestone `CompositionRuntime 1.0` queda cerrado.
+
+Production Runtime Adapters, Supervisor, Last Known Good manager, hot swap y Hardware Runtime requieren decisiones sucesoras.

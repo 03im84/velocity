@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.1 |
-| Fecha | 02/10/2026 |
+| Versión | 1.2 |
+| Fecha | 03/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Idioma principal | Español |
 | Propósito | Preservar la forma de colaboración técnica entre el usuario y cualquier asistente futuro |
@@ -38,7 +38,7 @@ El usuario:
 
 - es propietario del proyecto;
 - toma las decisiones finales;
-- reescribe manualmente los archivos;
+- aplica archivos completos consolidados mediante paquetes controlados;
 - ejecuta pruebas;
 - administra Git;
 - decide prioridades;
@@ -56,6 +56,10 @@ El asistente:
 - interpreta resultados;
 - ayuda a mantener continuidad;
 - no sustituye la decisión final del usuario.
+
+El usuario puede delegar decisiones técnicas ordinarias al asistente.
+
+Esa delegación no elimina la obligación de consultar antes de una acción destructiva, una decisión de alto impacto o un cambio arquitectónico no aceptado.
 
 ## 3. Continuidad
 
@@ -348,17 +352,42 @@ No se entregan:
 - “reemplaza estas líneas”;
 - diffs como método de construcción.
 
-El usuario debe poder:
+### Paquetes de entrega
 
-1. abrir la ruta;
+Cuando existe uno o varios archivos, el asistente puede preparar un ZIP consolidado con:
 
-2. borrar el contenido anterior;
+```text
+repository_files/
+README.txt
+SHA256SUMS.txt
+```
 
-3. escribir el archivo completo nuevo;
+El usuario:
 
-4. guardar;
+1. extrae el paquete fuera de Velocity;
+2. copia únicamente `repository_files/` sobre la raíz del repositorio;
+3. conserva los `.gd.uid` generados por Godot;
+4. ejecuta las verificaciones indicadas.
 
-5. verificar.
+No se guardan dentro del repositorio:
+
+```text
+README.txt
+SHA256SUMS.txt
+nombre-del-paquete/
+archivo.zip
+```
+
+README y SHA son instrucciones temporales de entrega.
+
+Cada entrega debe indicar:
+
+1. ruta exacta;
+2. archivo nuevo o reemplazo;
+3. versión anterior y nueva cuando aplique;
+4. contenido completo;
+5. verificación;
+6. resultado esperado.
 
 ## 16. Rutas explícitas
 
@@ -675,7 +704,7 @@ BORROWED
 TRANSFERRED
 ```
 
-cuando ADR-010 sea implementado.
+según ADR-010 implementado.
 
 ## 28. DeviceBus
 
@@ -714,9 +743,9 @@ DeviceCatalog resuelve definiciones.
 
 DeviceGraphAssembler construye topología.
 
-CompositionCompiler producirá un plan.
+CompositionCompiler produce un plan.
 
-CompositionRuntime ejecutará el plan.
+CompositionRuntime 1.0 ejecuta el plan de forma transaccional.
 
 Estas responsabilidades no se mezclan.
 

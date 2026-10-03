@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.21 |
+| Versión | 2.22 |
 | Fecha inicial | 2026-08-14 |
-| Última revisión | 02/10/2026 |
+| Última revisión | 03/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
 
 ## 1. Propósito
@@ -57,6 +57,8 @@ Conceptos actuales:
 - Runtime Construction;
 - RuntimeFactoryRegistry;
 - CompositionPlan;
+- CompositionCompiler;
+- CompositionRuntime;
 - System Composition;
 - estado;
 - health;
@@ -117,8 +119,8 @@ core/graph/
 		DeviceGraph.
 
 core/composition/
-		SystemProfile, DeviceGraphAssembler
-		y CompositionPlan.
+		SystemProfile, DeviceGraphAssembler,
+		CompositionCompiler y CompositionRuntime.
 
 core/catalog/
 		DeviceCatalog.
@@ -215,8 +217,8 @@ SceneTree no define Core.
 | CompositionPlan | Instrucciones runtime inmutables y no ejecutables | Implementado y verificado |
 | CompositionCompileResult | Contener Plan y ValidationReport | Implementado y verificado |
 | CompositionCompiler | Compilar Snapshot y Registry a Plan | Implementado y verificado |
-| CompositionRuntimeOperationResult | Describir activate o shutdown | Diseño 1.0 activo; siguiente implementación |
-| CompositionRuntime | Ejecutar Plan y poseer recursos activos | Diseño 1.0 activo; implementación pendiente |
+| CompositionRuntimeOperationResult | Describir activate o shutdown | Implementado y verificado |
+| CompositionRuntime | Ejecutar Plan y poseer recursos activos | Implementado y verificado |
 | CompositionRuntimeSupervisor | Preservar Last Known Good y hot swap | Futuro |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
@@ -668,37 +670,27 @@ BORROWED se preserva.
 
 ## 23. Rollback
 
-Orden global:
+Orden global de CompositionRuntime:
 
 ```text
-inverso a adquisición
+shutdown initialized Handles reverse
+
+unbind bound Directives reverse
+
+detach attached Handles reverse
+
+release built Handles reverse
+
+DeviceBus.clear
 ```
 
-Si build falla:
+Si initialize falla parcialmente, el Handle actual se incluye primero en shutdown best effort.
 
-```text
-release
-```
+Cada subfase continúa ante error.
 
-Si attach falla:
+Los Issues se agregan al resultado original.
 
-```text
-detach
-
-release
-```
-
-Si lifecycle falla:
-
-```text
-shutdown
-
-detach
-
-release
-```
-
-Last Known Good cambia únicamente en commit completo.
+No existe ACTIVE parcial.
 
 ## 24. DeviceBus y Runtime
 
@@ -716,70 +708,50 @@ DeviceBus se entrega durante initialize coordinado.
 
 ```text
 DeviceProfiles
-
 ↓
-
 DeviceCatalog
-
 ↓
-
 SystemProfile
-
 ↓
-
 DeviceGraphAssembler
-
 ↓
-
 DeviceGraphSnapshot
-```
-
-```text
-Runtime Construction Contracts
-
-RuntimeFactoryRegistry 1.0
-
-CompositionPlan 1.0
-
-CompositionCompiler 1.0
-```
-
-## 26. Pipeline futuro
-
-```text
-RuntimeFactoryRegistryDraft
-		│
-		▼
-RuntimeFactoryRegistryCompiler
-		│
-		▼
-RuntimeFactoryRegistry
-```
-
-```text
-DeviceGraphSnapshot
-+
-RuntimeFactoryRegistry
-+
-Activation Context
-+
-DeviceBusDispatchPolicy
-		│
-		▼
+↓
 CompositionCompiler
-		│
-		▼
+↓
 CompositionPlan
+↓
+CompositionRuntime
+↓
+ACTIVE
+↓
+SHUTDOWN
 ```
+
+Contratos auxiliares implementados:
+
+```text
+Runtime Construction Contract 1.0
+RuntimeFactoryRegistry 1.0
+CompositionPlan 1.0
+CompositionCompiler 1.0
+CompositionRuntime 1.0
+```
+
+## 26. Activation pipeline
 
 ```text
 CompositionPlan
 +
 RuntimeFactoryRegistry
 +
-resolved dependency values
+RuntimeDependencyValueResolver
 +
 RuntimeHost
++
+RuntimeLifecycleAdapter
++
+RuntimeCommunicationBinder
 		│
 		▼
 CompositionRuntime
@@ -788,7 +760,23 @@ CompositionRuntime
 		├── RuntimeConstructionRequests
 		├── RuntimeFactoryBuildResults
 		└── RuntimeDeviceHandles
+		│
+		▼
+ACTIVE
+		│
+		▼
+SHUTDOWN
 ```
+
+Pipeline sucesor futuro:
+
+```text
+CompositionRuntimeSupervisor
+→ Last Known Good
+→ controlled replacement
+```
+
+Hot swap y Hardware Runtime no pertenecen a Runtime 1.0.
 
 ## 27. RuntimeFactoryRegistry
 
@@ -988,7 +976,7 @@ shutdown
 rollback
 ```
 
-CompositionRuntime deberá respetar phase barriers.
+CompositionRuntime respeta phase barriers.
 
 Plan 1.0 no requiere topological sort.
 
@@ -1015,7 +1003,7 @@ No contiene:
 Definido por:
 
 ```text
-CompositionCompiler Design 1.2
+CompositionCompiler Design 1.4
 ```
 
 Estado:
@@ -1090,20 +1078,19 @@ No:
 Definido por:
 
 ```text
-ADR-011
-
-CompositionRuntime Design 1.0
+ADR-011 1.1
+CompositionRuntime Design 1.1
 ```
 
 Estado:
 
 ```text
-DISEÑO ACTIVO
+IMPLEMENTADO Y VERIFICADO
 ```
 
-Será Simulation-only y one-shot.
+Es Simulation-only, stateful, one-shot y transaccional.
 
-Recibirá explícitamente:
+Recibe explícitamente:
 
 - RuntimeFactoryRegistry;
 - Dependency Value Resolver behavior;
@@ -1111,18 +1098,46 @@ Recibirá explícitamente:
 - Lifecycle Adapter behavior;
 - Communication Binder behavior.
 
-Poseerá:
+Posee durante ACTIVE:
 
-- CompositionPlan activo;
+- CompositionPlan;
 - DeviceBus;
-- RuntimeDeviceHandles;
-- host attachment state;
-- communication bindings;
-- lifecycle state;
-- rollback;
-- shutdown.
+- RuntimeDeviceHandles.
 
-Last Known Good y hot swap pertenecen a Supervisor futuro.
+Coordina:
+
+- preflight;
+- dependency resolution;
+- build all;
+- attach all;
+- bind all;
+- initialize all;
+- ready all;
+- start all;
+- rollback inverso;
+- shutdown inverso.
+
+Estados:
+
+```text
+CREATED
+ACTIVATING
+ACTIVE
+SHUTTING_DOWN
+SHUTDOWN
+FAILED
+```
+
+`SHUTDOWN` y `FAILED` son terminales.
+
+No contiene hot swap o Last Known Good manager.
+
+Commit:
+
+```text
+cc9a7ae
+feat(runtime): add transactional composition runtime
+```
 
 ## 31. Reglas de dependencia
 
@@ -1218,7 +1233,17 @@ Last Known Good y hot swap pertenecen a Supervisor futuro.
 
 25. Ciclos no requieren topological sort en Plan 1.0.
 
-26. Archivos completos.
+26. Runtime es Simulation-only y one-shot.
+
+27. ACTIVE se publica únicamente después de completar todas las fases.
+
+28. Rollback y shutdown continúan best effort ante errores.
+
+29. SHUTDOWN y FAILED son terminales.
+
+30. Last Known Good pertenece a un Supervisor futuro.
+
+31. Archivos completos.
 
 ## 33. Godot
 
@@ -1358,69 +1383,80 @@ CompositionPlan 1.0
 
 CompositionCompiler 1.0
 
+CompositionRuntime 1.0
+
 Velocity Test Runner
 
 Velocity Test Dashboard 0.4.0
 ```
 
-## 37. Diseño activo
+## 37. Milestone cerrado
 
 ```text
-CompositionRuntime Design 1.0
+CompositionRuntime 1.0
+IMPLEMENTADO Y VERIFICADO
 ```
 
-ADR-011 está aceptado.
+ADR-011 1.1 está aceptado, implementado y verificado.
 
-Implementación comienza únicamente después del commit documental.
+Full pipeline alcanza `ACTIVE → SHUTDOWN` con identidades y ownership preservados.
 
 ## 38. Pendiente
 
 ```text
-CompositionRuntimeOperationResult
-
-CompositionRuntime Implementation
-
 Production Runtime Adapters
-
+Composition Root concreto
 CompositionRuntimeSupervisor
-
+Last Known Good manager
+Hot swap
 RuntimeHost concreto
-
 Factories de producción
-
 Measurement Identity
-
 Provenance
-
 Temporal Boundaries
-
 SystemProfile persistence
-
 DeviceCatalog persistence
-
 GraphEditor
-
 Hardware Mode
-
 Calibration
-
 AdaptationPolicy
-
 RuntimeAllocation
 ```
+
+Production Runtime Adapters es el siguiente problema recomendado.
+
+No existe todavía ADR o diseño aceptado para esa frontera.
 
 ## 39. Baseline global
 
 Dashboard 0.4.0 confirma:
 
 ```text
-Tests: 65
-Checks: 1970
+Tests: 69
+Checks: 2156
 Failures: 0
 Timeout: 0
 Engine Error: 0
 Missing Metrics: 0
 Plan ExitCode: 0
+RESULT: PASS
+```
+
+Composition Suite:
+
+```text
+Tests: 16
+Checks: 702
+Failures: 0
+RESULT: PASS
+```
+
+CompositionRuntime propia:
+
+```text
+Tests: 4
+Checks: 186
+Failures: 0
 RESULT: PASS
 ```
 
@@ -1513,44 +1549,22 @@ Toda modificación se entrega como archivo completo.
 
 ## 44. Siguiente paso
 
-Cerrar el commit documental de ADR-011 y CompositionRuntime Design 1.0.
-
-Después implementar:
+Abrir:
 
 ```text
-res://core/composition/composition_runtime_operation_result.gd
+Production Runtime Adapters
+Problema y análisis
 ```
 
-Primera prueba sucesora:
+Antes de implementar debe definirse qué responsabilidad pertenece a:
 
-```text
-res://test/core/composition/CompositionRuntimeOperationResultTest.tscn
+- Composition Root;
+- Godot RuntimeHost;
+- Dependency Value Resolver;
+- Lifecycle Adapter;
+- Communication Binder;
+- factories concretas.
 
-res://test/core/composition/composition_runtime_operation_result_test.gd
-```
+No crear adapters por conveniencia ni convertirlos en service locators.
 
-Orden posterior:
-
-```text
-CompositionRuntimeOperationResult
-
-Test collaborator behaviors
-
-CompositionRuntime preflight
-
-Activation stages
-
-Rollback
-
-Shutdown
-
-Runtime integration
-
-Full pipeline integration
-
-Composition Suite
-
-Run All
-```
-
-No se implementará antes del commit de diseño.
+Supervisor, Last Known Good replacement y Hardware Runtime permanecen posteriores.

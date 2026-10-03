@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.4 |
-| Fecha | 02/10/2026 |
+| Versión | 1.5 |
+| Fecha | 03/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Directivas runtime inmutables, orden por fases, comunicación y Runtime Safety |
 | Prerrequisito | RuntimeFactoryRegistry 1.0 implementado y verificado |
@@ -28,9 +28,9 @@ y
 CompositionRuntime
 ```
 
-## 2. Entrada futura
+## 2. Entrada de compilación
 
-CompositionCompiler producirá CompositionPlan desde:
+CompositionCompiler produce CompositionPlan desde:
 
 ```text
 DeviceGraphSnapshot
@@ -685,7 +685,7 @@ El orden es determinista.
 
 CompositionConnectionDirective representa intención de wiring.
 
-CompositionRuntime futuro resolverá:
+CompositionRuntime delega al Communication Binder la resolución de:
 
 - Target Device Handle;
 - Target Port;
@@ -846,7 +846,7 @@ Documento activo:
 
 ```text
 docs/architecture/composition_compiler_design.md
-Versión 1.2
+Versión 1.3
 ```
 
 Responsabilidad:
@@ -891,7 +891,7 @@ Baseline propia:
 0 failures
 ```
 
-## 38. CompositionRuntime futuro
+## 38. CompositionRuntime 1.0
 
 Recibe:
 
@@ -979,7 +979,7 @@ composition_plan_target_device_not_found
 
 Las primitivas iniciales pueden usar `is_valid()`.
 
-CompositionCompiler producirá Reports estructurados.
+CompositionCompiler produce Reports estructurados.
 
 ## 40. Estrategia de pruebas
 
@@ -1276,21 +1276,32 @@ Missing Metrics: 0
 RESULT: PASS
 ```
 
-Composition Suite:
+CompositionRuntime 1.0 consume Plan sin añadirle recursos activos.
+
+Full pipeline integration:
 
 ```text
-Tests: 9
-Checks: 397
+FullCompositionRuntimePipelineIntegrationTest
+50 checks
+0 failures
+RESULT: PASS
+```
+
+Composition Suite vigente:
+
+```text
+Tests: 16
+Checks: 702
 Failures: 0
 Missing Metrics: 0
 RESULT: PASS
 ```
 
-Baseline global:
+Baseline global vigente:
 
 ```text
-Tests: 65
-Checks: 1970
+Tests: 69
+Checks: 2156
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1299,27 +1310,18 @@ Plan ExitCode: 0
 RESULT: PASS
 ```
 
-Commit de implementación:
+Commit de implementación de Plan:
 
 ```text
 3d62a7b
 feat(composition): add immutable composition plan
 ```
 
-RuntimeFactoryRegistry–CompositionPlan Integration:
+Commit del consumidor runtime:
 
 ```text
-PASS — 23 checks
+cc9a7ae
+feat(runtime): add transactional composition runtime
 ```
 
-Todos los criterios de aceptación fueron satisfechos.
-
-CompositionCompiler 1.0 está implementado y verificado.
-
-Siguiente milestone:
-
-```text
-CompositionRuntime Problem and Analysis
-```
-
-CompositionRuntime permanece sin diseño e implementación.
+Todos los criterios de aceptación permanecen satisfechos.

@@ -1,0 +1,746 @@
+PJ0040 – CompositionRuntime 1.0 Implementation and Baseline
+
+Fecha:
+
+03/10/2026
+
+Zona horaria:
+
+GMT-5
+sin DST
+
+Objetivo:
+
+Implementar, verificar y registrar:
+
+CompositionRuntimeOperationResult 1.0
+
++
+
+CompositionRuntime 1.0
+
+como owner transaccional one-shot
+de una composición Simulation.
+
+Estado inicial:
+
+ADR-011:
+
+ACEPTADO
+
+CompositionRuntime Design 1.0:
+
+ACTIVO
+
+CompositionRuntime:
+
+NO IMPLEMENTADO
+
+Baseline global inicial:
+
+65 tests
+
+1970 checks
+
+0 failures
+
+0 missing metrics
+
+Commit documental de diseño:
+
+0563dd5
+
+docs(runtime): define composition runtime activation
+
+Decisiones vigentes:
+
+CompositionRuntime 1.0 es:
+
+- Simulation-only;
+
+- stateful;
+
+- one-shot;
+
+- transaccional;
+
+- owner de DeviceBus;
+
+- owner de RuntimeDeviceHandles;
+
+- sin hot swap;
+
+- sin service locator;
+
+- sin singleton;
+
+- sin IO;
+
+- sin threads.
+
+Colaboradores explícitos:
+
+RuntimeFactoryRegistry
+
+RuntimeDependencyValueResolver behavior
+
+RuntimeHost behavior
+
+RuntimeLifecycleAdapter behavior
+
+RuntimeCommunicationBinder behavior
+
+Primer componente:
+
+res://core/composition/
+composition_runtime_operation_result.gd
+
+Responsabilidad:
+
+Describir una operación activate o shutdown
+mediante:
+
+- success bool;
+
+- operation StringName;
+
+- ValidationReport.
+
+Prueba:
+
+CompositionRuntimeOperationResultTest
+
+Resultado:
+
+1 test
+
+17 checks
+
+0 failures
+
+0 missing metrics
+
+RESULT: PASS
+
+Implementación principal:
+
+res://core/composition/
+composition_runtime.gd
+
+Forma:
+
+extends RefCounted
+
+class_name CompositionRuntime
+
+Constructor:
+
+CompositionRuntime.new(
+	factory_registry,
+	dependency_value_resolver,
+	runtime_host,
+	lifecycle_adapter,
+	communication_binder
+)
+
+Estados:
+
+CREATED
+
+ACTIVATING
+
+ACTIVE
+
+SHUTTING_DOWN
+
+SHUTDOWN
+
+FAILED
+
+SHUTDOWN y FAILED son terminales.
+
+API:
+
+activate(plan)
+
+shutdown()
+
+get_state()
+
+is_active()
+
+get_active_plan()
+
+get_device_bus()
+
+get_handles()
+
+get_handle(device_id)
+
+get_last_dispatch_report()
+
+Activation pipeline implementado:
+
+1. Validar State CREATED.
+
+2. Validar Plan.
+
+3. Aplicar Hardware gate.
+
+4. Validar Registry.
+
+5. Validar collaborator behaviors.
+
+6. Verificar Keys y Specs exactas.
+
+7. Resolver Dependency Values declarados.
+
+8. Crear DeviceBus candidato.
+
+9. Configurar Dispatch Policy.
+
+10. Crear RuntimeDependencyBindings.
+
+11. Crear RuntimeConstructionRequests.
+
+12. Build All.
+
+13. Attach All.
+
+14. Bind All Communication.
+
+15. Initialize All.
+
+16. Ready All.
+
+17. Start All.
+
+18. Commit ACTIVE.
+
+Invariante:
+
+No se exponen Plan, Bus o Handles parciales.
+
+Commit ACTIVE ocurre únicamente
+después de completar todas las fases.
+
+Dependency resolution:
+
+Runtime itera exclusivamente
+RuntimeDependencySpecs del Plan.
+
+Por Spec:
+
+has_value(device_id, dependency_id)
+
++
+
+get_value(device_id, dependency_id)
+
++
+
+Spec Ownership
+
+↓
+
+RuntimeDependencyBinding
+
+BORROWED conserva owner original.
+
+TRANSFERRED entra a la transacción
+durante factory.build(request).
+
+Rollback implementado:
+
+1. shutdown de initialized Handles
+   en orden inverso.
+
+2. unbind de Directives confirmadas
+   en orden inverso.
+
+3. detach de Handles confirmados
+   en orden inverso.
+
+4. release de Handles construidos
+   en orden inverso.
+
+5. DeviceBus.clear().
+
+Initialize parcial:
+
+El Handle actual se registra
+antes de invocar initialize.
+
+Si initialize falla después
+de producir efectos parciales,
+rollback incluye ese Handle
+primero en shutdown best effort.
+
+Cleanup best effort:
+
+Un error no detiene
+las operaciones restantes.
+
+Todos los Issues se agregan
+al Operation Result original.
+
+Shutdown activo:
+
+ACTIVE
+
+→ SHUTTING_DOWN
+
+→ cleanup inverso
+
+→ SHUTDOWN si Report válido
+
+o
+
+→ FAILED si cleanup reporta error.
+
+Test unitario principal:
+
+CompositionRuntimeTest
+
+Cobertura:
+
+- estado inicial;
+
+- collaborators requeridos;
+
+- contratos incompletos;
+
+- Plan null e inválida;
+
+- Hardware gate;
+
+- empty activation;
+
+- empty shutdown;
+
+- dependency preflight;
+
+- ownership;
+
+- phase barriers;
+
+- reverse shutdown;
+
+- contract boundaries.
+
+Resultado:
+
+1 test
+
+62 checks
+
+0 failures
+
+0 missing metrics
+
+RESULT: PASS
+
+Test de integración transaccional:
+
+CompositionRuntimeIntegrationTest
+
+Se crearon test doubles con trace compartido:
+
+runtime_integration_test_trace.gd
+
+runtime_integration_test_factory.gd
+
+runtime_integration_test_host.gd
+
+runtime_integration_test_lifecycle_adapter.gd
+
+runtime_integration_test_communication_binder.gd
+
+Cobertura:
+
+- activación limpia;
+
+- shutdown limpio;
+
+- fallo controlado en build;
+
+- fallo controlado en attach;
+
+- fallo controlado en bind;
+
+- fallo controlado en initialize;
+
+- fallo controlado en ready;
+
+- fallo controlado en start;
+
+- phase barriers;
+
+- current partially initialized Handle;
+
+- rollback inverso;
+
+- agregación de errores de cleanup;
+
+- cleanup sin cortocircuito;
+
+- ausencia de double cleanup;
+
+- cero estado activo parcial.
+
+Resultado:
+
+1 test
+
+57 checks
+
+0 failures
+
+0 missing metrics
+
+RESULT: PASS
+
+Test de integración full pipeline:
+
+FullCompositionRuntimePipelineIntegrationTest
+
+Pipeline verificado:
+
+DeviceProfiles
+
+↓
+
+DeviceCatalog
+
+↓
+
+SystemProfile
+
+↓
+
+DeviceGraphAssembler
+
+↓
+
+DeviceGraphSnapshot
+
+↓
+
+RuntimeFactoryRegistry
+
+↓
+
+CompositionCompiler
+
+↓
+
+CompositionPlan
+
+↓
+
+CompositionRuntime
+
+↓
+
+ACTIVE
+
+↓
+
+SHUTDOWN
+
+Cobertura:
+
+- identidad exacta de Profiles;
+
+- referencias de Configurations;
+
+- Connection ID;
+
+- Topic;
+
+- Factory Keys;
+
+- Dependency Specs;
+
+- Dispatch Policy;
+
+- resolución de Values;
+
+- Binding BORROWED;
+
+- Binding TRANSFERRED;
+
+- phase barriers;
+
+- ownership activo;
+
+- shutdown inverso;
+
+- preservación de BORROWED;
+
+- liberación de TRANSFERRED.
+
+Resultado:
+
+1 test
+
+50 checks
+
+0 failures
+
+0 missing metrics
+
+RESULT: PASS
+
+CompositionRuntime baseline propia:
+
+4 tests
+
+186 checks
+
+0 failures
+
+0 missing metrics
+
+Composition Suite:
+
+16 tests
+
+702 checks
+
+0 failures
+
+0 missing metrics
+
+RESULT: PASS
+
+Run All:
+
+69 tests
+
+2156 checks
+
+0 failures
+
+0 timeout
+
+0 engine errors
+
+0 not run
+
+0 check failures
+
+0 missing metrics
+
+Plan ExitCode: 0
+
+RESULT: PASS
+
+Incremento exacto:
+
+65 → 69 tests
+
+1970 → 2156 checks
+
++4 tests
+
++186 checks
+
+Refactor audit:
+
+Se revisaron:
+
+- responsabilidad;
+
+- API;
+
+- duplicación;
+
+- dependencias;
+
+- seguridad;
+
+- testabilidad.
+
+Resultado:
+
+SIN CAMBIO OBLIGATORIO
+
+Razón:
+
+La implementación acababa de superar:
+
+- prueba aislada;
+
+- integración transaccional;
+
+- integración full pipeline;
+
+- Composition Suite;
+
+- Run All.
+
+Cambiarla sin defecto o beneficio
+demostrado añadía riesgo.
+
+Feature submit:
+
+Commit:
+
+cc9a7ae
+
+Mensaje:
+
+feat(runtime): add transactional composition runtime
+
+Archivos:
+
+32 archivos nuevos
+
+incluyendo:
+
+- 2 scripts de producción;
+
+- 4 escenas de test;
+
+- 4 scripts de test;
+
+- 8 test doubles;
+
+- todos los .gd.uid generados.
+
+Estado después del push:
+
+## main...origin/main
+
+Incidente Git menor:
+
+Apareció un archivo untracked:
+
+--help
+
+Inspección:
+
+- archivo;
+
+- 0 bytes;
+
+- no symlink;
+
+- ajeno a Velocity.
+
+También apareció:
+
+vtd
+
+como enlace local al VTD externo.
+
+Ninguno entró al commit.
+
+vtd permanece local y debe ignorarse
+mediante .git/info/exclude.
+
+Dashboard Java:
+
+El experimento Java VTD
+permanece externo.
+
+No se integra a Velocity.
+
+Python VTD permanece canónico.
+
+Cierre arquitectónico:
+
+ADR-011 1.1:
+
+ACEPTADO
+
+IMPLEMENTADO
+
+VERIFICADO
+
+CompositionRuntime Design 1.1:
+
+ACTIVO
+
+IMPLEMENTACIÓN COMPLETA Y VERIFICADA
+
+Milestone:
+
+COMPOSITIONRUNTIME 1.0
+
+CERRADO
+
+Siguiente milestone recomendado:
+
+Production Runtime Adapters
+
+Problema y análisis
+
+Fronteras a estudiar:
+
+- Composition Root;
+
+- Godot RuntimeHost;
+
+- Dependency Value Resolver;
+
+- Lifecycle Adapter;
+
+- Communication Binder;
+
+- RuntimeFactory concreta.
+
+Riesgos a evitar:
+
+- service locator;
+
+- singleton por comodidad;
+
+- SceneTree discovery global;
+
+- factory mezclada con lifecycle;
+
+- factory adjuntando Nodes;
+
+- hardware accidental;
+
+- Supervisor prematuro;
+
+- hot swap sin Last Known Good explícito.
+
+Fuera de alcance conservado:
+
+- Production Runtime Adapters;
+
+- CompositionRuntimeSupervisor;
+
+- Last Known Good manager;
+
+- hot swap;
+
+- multi-runtime;
+
+- Hardware Runtime;
+
+- production factories;
+
+- persistence;
+
+- telemetry concreta;
+
+- automatic recovery.
+
+Estado final:
+
+COMPOSITIONRUNTIME 1.0
+
+IMPLEMENTADO
+
+VERIFICADO
+
+DOCUMENTADO
+
+FEATURE COMMIT PUBLICADO
+
+BASELINE DOCUMENTAL PENDIENTE DE COMMIT

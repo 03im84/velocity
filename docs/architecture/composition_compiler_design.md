@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.3 |
-| Fecha | 02/10/2026 |
+| Versión | 1.4 |
+| Fecha | 03/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding |
 | Alcance | Compilación transaccional de DeviceGraphSnapshot a CompositionPlan |
 | Estado de implementación | COMPLETO Y VERIFICADO |
@@ -660,13 +660,13 @@ Compiler no modifica:
 
 CompositionCompiler recibe un Registry snapshot.
 
-CompositionRuntime deberá recibir la misma instancia.
+CompositionRuntime recibe la misma instancia durante la activación full pipeline verificada.
 
 Plan no contiene Registry.
 
 Result no contiene Registry.
 
-Composition Root futura conserva la referencia.
+Composition Root conserva la referencia.
 
 No se inventa:
 
@@ -1334,21 +1334,32 @@ Missing Metrics: 0
 RESULT: PASS
 ```
 
-Composition Suite:
+CompositionRuntime 1.0 consume el Plan compilado sin modificar Snapshot, Registry, Entries, Directives o Policy.
+
+Full pipeline sucesor:
 
 ```text
-Tests: 12
-Checks: 516
+FullCompositionRuntimePipelineIntegrationTest
+50 checks
+0 failures
+RESULT: PASS
+```
+
+Composition Suite vigente:
+
+```text
+Tests: 16
+Checks: 702
 Failures: 0
 Missing Metrics: 0
 RESULT: PASS
 ```
 
-Baseline global:
+Baseline global vigente:
 
 ```text
-Tests: 65
-Checks: 1970
+Tests: 69
+Checks: 2156
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -1357,25 +1368,18 @@ Plan ExitCode: 0
 RESULT: PASS
 ```
 
-Commit:
+Commit del Compiler:
 
 ```text
 4f36fee
 feat(composition): add composition compiler
 ```
 
-Problema y análisis están cerrados.
-
-Todos los criterios de aceptación fueron satisfechos.
-
-CompositionRuntime Problem and Analysis está cerrado.
-
-ADR-011 está aceptado.
-
-CompositionRuntime Design 1.0 está activo.
-
-Siguiente implementación después del commit documental:
+Commit del Runtime consumidor:
 
 ```text
-CompositionRuntimeOperationResult
+cc9a7ae
+feat(runtime): add transactional composition runtime
 ```
+
+Todos los criterios de aceptación permanecen satisfechos.

@@ -3,11 +3,11 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.0 |
-| Fecha | 02/10/2026 |
+| Versión | 1.1 |
+| Fecha | 03/10/2026 |
 | ADR relacionado | ADR-011 — Composition Runtime Activation, Ownership and Rollback |
 | Alcance | Activación Simulation, ownership, DeviceBus, phase barriers, rollback y shutdown |
-| Estado de implementación | NO IMPLEMENTADO |
+| Estado de implementación | COMPLETO Y VERIFICADO |
 
 ## 1. Propósito
 
@@ -60,7 +60,7 @@ core/composition/
 └── composition_runtime.gd
 ```
 
-## 5. Tests previstos
+## 5. Tests implementados
 
 ```text
 test/core/composition/
@@ -74,13 +74,24 @@ test/core/composition/
 └── full_composition_runtime_pipeline_integration_test.gd
 ```
 
-Test doubles:
+Test doubles unitarios:
 
 ```text
 test/core/composition/
 ├── runtime_test_dependency_value_resolver.gd
 ├── runtime_test_lifecycle_adapter.gd
 └── runtime_test_communication_binder.gd
+```
+
+Test doubles transaccionales compartidos:
+
+```text
+test/core/composition/
+├── runtime_integration_test_trace.gd
+├── runtime_integration_test_factory.gd
+├── runtime_integration_test_host.gd
+├── runtime_integration_test_lifecycle_adapter.gd
+└── runtime_integration_test_communication_binder.gd
 ```
 
 Reutiliza:
@@ -493,9 +504,11 @@ Activation utiliza variables locales para:
 - built Handles;
 - attached Handles;
 - bound Directives;
-- initialized Handles;
-- ready Handles;
-- started Handles.
+- initialized Handles.
+
+Ready y Start son phase barriers sobre el conjunto initialized.
+
+No requieren colecciones de ownership adicionales porque rollback ejecuta `shutdown()` sobre todos los Handles que alcanzaron initialize, incluyendo el Handle cuyo initialize pudo fallar parcialmente.
 
 Campos activos se asignan únicamente en commit.
 
@@ -623,7 +636,9 @@ Orden:
 plan.get_initialization_order()
 ```
 
-Invoca:
+Antes de invocar initialize, Runtime registra el Handle en el conjunto sujeto a shutdown best effort.
+
+Después invoca:
 
 ```gdscript
 lifecycle_adapter.initialize(
@@ -632,7 +647,7 @@ lifecycle_adapter.initialize(
 )
 ```
 
-Handle se registra initialized solo después de Report válido.
+Esta secuencia es intencional: si initialize falla después de producir efectos parciales, rollback incluye primero al Handle actual y luego a los anteriores en orden inverso.
 
 ## 38. Ready stage
 
@@ -993,33 +1008,42 @@ composition_runtime_handle_invalid
 composition_runtime_handle_identity_mismatch
 ```
 
-## 60. Error codes — collaborators
+## 60. Error codes — collaborator invocation
+
+CompositionRuntime conserva los Issues devueltos por factories y colaboradores.
+
+No sustituye sus códigos por códigos genéricos de fase.
+
+Si un collaborator devuelve un valor que no es `ValidationReport`, Runtime agrega:
 
 ```text
 composition_runtime_report_missing
-
-composition_runtime_host_attach_failed
-
-composition_runtime_communication_bind_failed
-
-composition_runtime_initialize_failed
-
-composition_runtime_ready_failed
-
-composition_runtime_start_failed
 ```
+
+con severidad:
+
+```text
+PLATFORM_SAFETY_ERROR
+```
+
+Los tests de integración utilizan códigos controlados propios para demostrar preservación de causa en build, attach, bind, initialize, ready, start y cleanup.
 
 ## 61. Error codes — cleanup
 
+Cleanup conserva y agrega los Issues producidos por:
+
+- Lifecycle Adapter;
+- Communication Binder;
+- RuntimeHost;
+- RuntimeFactory.
+
+Si el Descriptor necesario para release deja de estar disponible, Runtime agrega:
+
 ```text
-composition_runtime_shutdown_failed
-
-composition_runtime_communication_unbind_failed
-
-composition_runtime_host_detach_failed
-
 composition_runtime_factory_release_failed
 ```
+
+Un Issue de cleanup no detiene las operaciones restantes.
 
 ## 62. Severities
 
@@ -1121,7 +1145,7 @@ O(1) por Key
 
 ## 69. Operation Result tests
 
-Verifica:
+`CompositionRuntimeOperationResultTest` verifica:
 
 - operation canónica;
 - success true/false;
@@ -1131,34 +1155,55 @@ Verifica:
 - no setters;
 - no execution.
 
-## 70. Runtime input tests
+Baseline:
 
-Verifica:
+```text
+1 test
+17 checks
+0 failures
+RESULT: PASS
+```
 
-- collaborators null;
-- collaborator contract incompleto;
-- Plan null;
-- Plan inválida;
-- Hardware Plan;
-- Registry inválida;
-- state inválido;
-- preflight sin adquisición.
+## 70. Runtime unit tests
 
-## 71. Dependency tests
+`CompositionRuntimeTest` verifica:
 
-Verifica:
+- estado inicial;
+- collaborators requeridos;
+- contratos incompletos;
+- Plan null e inválida;
+- Hardware gate;
+- empty activation y shutdown;
+- dependency preflight;
+- ownership;
+- phase barriers;
+- shutdown inverso;
+- API y límites de contrato.
+
+Baseline:
+
+```text
+1 test
+62 checks
+0 failures
+RESULT: PASS
+```
+
+## 71. Dependency verification
+
+La prueba unitaria y la integración full pipeline verifican:
 
 - zero Specs;
 - BORROWED;
 - TRANSFERRED;
 - missing Value;
-- invalid availability type;
-- null Value;
-- disposed Value;
 - exact Binding ownership;
-- no extra lookup.
+- orden de consulta;
+- ausencia de lookup extra;
+- preservación de BORROWED en shutdown;
+- liberación de TRANSFERRED en shutdown.
 
-## 72. Activation success tests
+## 72. Activation success verification
 
 Verifica:
 
@@ -1175,9 +1220,9 @@ Verifica:
 - Bus Policy;
 - no duplicate activation.
 
-## 73. Failure tests
+## 73. Transaction failure integration
 
-Verifica fallo controlado en:
+`CompositionRuntimeIntegrationTest` verifica fallo controlado en:
 
 - build;
 - attach;
@@ -1186,9 +1231,27 @@ Verifica fallo controlado en:
 - ready;
 - start.
 
-Cada caso verifica orden de rollback y cero double cleanup.
+Cada caso verifica:
 
-## 74. Shutdown tests
+- phase barrier;
+- causa original;
+- rollback inverso;
+- current partially initialized Handle;
+- cleanup best effort;
+- agregación de errores;
+- cero double cleanup;
+- cero estado activo parcial.
+
+Baseline:
+
+```text
+1 test
+57 checks
+0 failures
+RESULT: PASS
+```
+
+## 74. Shutdown verification
 
 Verifica:
 
@@ -1197,25 +1260,23 @@ Verifica:
 - reverse detach;
 - reverse release;
 - Bus clear;
-- SHUTDOWN;
+- SHUTDOWN limpio;
+- FAILED cuando cleanup reporta error;
+- cleanup Issues agregados;
 - repeated shutdown rejected;
-- cleanup Issues aggregated.
+- ausencia de double cleanup.
 
-## 75. Integration tests
+## 75. Full pipeline integration
 
-CompositionRuntimeIntegrationTest:
-
-- Plan + Registry + test collaborators;
-- success activation;
-- failure activation;
-- shutdown.
-
-FullCompositionRuntimePipelineIntegrationTest:
+`FullCompositionRuntimePipelineIntegrationTest` verifica:
 
 ```text
-DeviceCatalog
+DeviceProfiles
+→ DeviceCatalog
 → SystemProfile
 → DeviceGraphAssembler
+→ DeviceGraphSnapshot
+→ RuntimeFactoryRegistry
 → CompositionCompiler
 → CompositionPlan
 → CompositionRuntime
@@ -1223,59 +1284,101 @@ DeviceCatalog
 → SHUTDOWN
 ```
 
+Comprueba preservación de identidades, referencias de Configuration, Dependency Specs, Policy, Connection ID, ownership BORROWED/TRANSFERRED, phase barriers y cleanup inverso.
+
+Baseline:
+
+```text
+1 test
+50 checks
+0 failures
+RESULT: PASS
+```
+
 ## 76. Baselines preservadas
 
-No se modifican:
+No se modificaron pruebas aceptadas de:
 
-- Runtime Construction tests;
-- Registry tests;
-- CompositionPlan tests;
-- CompositionCompiler tests;
-- full logical pipeline integration.
+- Runtime Construction;
+- RuntimeFactoryRegistry;
+- CompositionPlan;
+- CompositionCompiler;
+- pipeline lógico previo.
 
-Runtime utiliza pruebas sucesoras.
+CompositionRuntime utiliza pruebas sucesoras.
 
-## 77. Orden de implementación futuro
+Regresión final:
+
+```text
+Composition Suite
+16 tests
+702 checks
+0 failures
+0 missing metrics
+RESULT: PASS
+```
+
+```text
+Run All
+69 tests
+2156 checks
+0 failures
+0 missing metrics
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+## 77. Orden de implementación ejecutado
 
 ```text
 1. CompositionRuntimeOperationResult.
+   COMPLETADO.
 
 2. Operation Result Test.
+   PASS — 17 checks.
 
 3. Test Dependency Resolver.
+   COMPLETADO.
 
 4. Test Lifecycle Adapter.
+   COMPLETADO.
 
 5. Test Communication Binder.
+   COMPLETADO.
 
-6. CompositionRuntime skeleton y preflight.
+6. CompositionRuntime preflight y state machine.
+   COMPLETADO.
 
-7. Runtime input tests.
+7. Build, attach y communication stages.
+   COMPLETADO.
 
-8. Build stage.
+8. Lifecycle phase barriers.
+   COMPLETADO.
 
-9. Attach stage.
+9. Rollback y shutdown.
+   COMPLETADO.
 
-10. Communication stage.
+10. CompositionRuntimeTest.
+    PASS — 62 checks.
 
-11. Lifecycle stages.
+11. Runtime integration.
+    PASS — 57 checks.
 
-12. Rollback.
+12. Full pipeline integration.
+    PASS — 50 checks.
 
-13. Shutdown.
+13. Composition Suite.
+    PASS — 16 tests, 702 checks.
 
-14. Runtime integration.
+14. Run All.
+    PASS — 69 tests, 2156 checks.
 
-15. Full pipeline integration.
+15. Refactor audit.
+    COMPLETADO — sin cambio obligatorio.
 
-16. Composition Suite.
-
-17. Run All.
-
-18. Registrar baseline.
+16. Baseline de implementación.
+    REGISTRADA.
 ```
-
-No iniciar antes de aceptar ADR-011 y cerrar commit documental.
 
 ## 78. Criterios de aceptación
 
@@ -1385,24 +1488,70 @@ No iniciar antes de aceptar ADR-011 y cerrar commit documental.
 ## 80. Estado
 
 ```text
-COMPOSITIONRUNTIME DESIGN 1.0
+COMPOSITIONRUNTIME DESIGN 1.1
 ACTIVO
 ```
 
 ADR:
 
 ```text
-ADR-011 ACEPTADO
+ADR-011 1.1
+ACEPTADO
+IMPLEMENTADO
+VERIFICADO
 ```
 
 Implementación:
 
 ```text
-AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
+CompositionRuntimeOperationResult 1.0
+CompositionRuntime 1.0
+COMPLETOS Y VERIFICADOS
 ```
 
-Primer componente futuro:
+Baseline propia:
 
 ```text
-res://core/composition/composition_runtime_operation_result.gd
+4 tests
+186 checks
+0 failures
+0 missing metrics
+RESULT: PASS
 ```
+
+Composition Suite:
+
+```text
+16 tests
+702 checks
+0 failures
+0 missing metrics
+RESULT: PASS
+```
+
+Baseline global:
+
+```text
+69 tests
+2156 checks
+0 failures
+0 missing metrics
+Plan ExitCode: 0
+RESULT: PASS
+```
+
+Commit de implementación:
+
+```text
+cc9a7ae
+feat(runtime): add transactional composition runtime
+```
+
+Siguiente milestone recomendado:
+
+```text
+Production Runtime Adapters
+Problema y análisis
+```
+
+No se implementarán adapters de producción antes de cerrar su problema, análisis y diseño.

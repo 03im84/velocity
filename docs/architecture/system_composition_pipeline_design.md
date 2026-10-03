@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.11 |
-| Fecha | 02/10/2026 |
+| Versión | 1.12 |
+| Fecha | 03/10/2026 |
 | ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
 
@@ -12,35 +12,40 @@
 
 Este documento describe el pipeline completo de composición de Velocity.
 
-Estado implementado:
+Estado implementado y verificado:
 
 ```text
 SystemProfile 1.0
-
 DeviceCatalog 1.0
-
 DeviceGraphAssembler 1.0
-
 Runtime Construction Contract 1.0
-
 RuntimeFactoryRegistry 1.0
-
 CompositionPlan 1.0
-
 CompositionCompiler 1.0
+CompositionRuntime 1.0
 ```
 
-Diseño activo:
+Pipeline full runtime verificado:
 
 ```text
-CompositionRuntime Design 1.0
-ADR-011 ACEPTADO
+DeviceProfiles
+→ DeviceCatalog
+→ SystemProfile
+→ DeviceGraphAssembler
+→ DeviceGraphSnapshot
+→ RuntimeFactoryRegistry
+→ CompositionCompiler
+→ CompositionPlan
+→ CompositionRuntime
+→ ACTIVE
+→ SHUTDOWN
 ```
 
-Siguiente implementación después del commit:
+Siguiente milestone recomendado:
 
 ```text
-CompositionRuntimeOperationResult
+Production Runtime Adapters
+Problema y análisis
 ```
 
 ## 2. Pipeline completo
@@ -95,82 +100,61 @@ RuntimeDeviceHandle
 
 ## 3. Estado
 
-### Implementado
+### Implementado y verificado
 
 ```text
 DeviceProfiles
-
 ↓
-
 DeviceCatalog
-
 ↓
-
 SystemProfile
-
 ↓
-
 DeviceGraphAssembler
-
 ↓
-
 DeviceGraphSnapshot
+↓
+CompositionCompiler
+↓
+CompositionPlan
+↓
+CompositionRuntime
+↓
+ACTIVE
+↓
+SHUTDOWN
 ```
+
+Contratos y componentes:
 
 ```text
 RuntimeFactoryKey
-
 RuntimeDependencyBinding
-
 RuntimeConstructionRequest
-
 RuntimeDeviceHandle
-
 RuntimeFactoryBuildResult
-
-RuntimeFactory behavior
-
-RuntimeHost behavior
-
 RuntimeDependencySpec
-
 RuntimeFactoryDescriptor
-
 RuntimeFactoryRegistryDraft
-
 RuntimeFactoryRegistry
-
 RuntimeFactoryRegistryCompileResult
-
 RuntimeFactoryRegistryCompiler
-
 CompositionDeviceEntry
-
 CompositionConnectionDirective
-
 CompositionPlan
-
-CompositionPlanRuntimeFactoryRegistryIntegrationTest
-
 CompositionCompileResult
-
 CompositionCompiler
-
-SystemCompositionCompilerIntegrationTest
-```
-
-### Diseñado
-
-```text
 CompositionRuntimeOperationResult
-
 CompositionRuntime
 ```
 
 ### Futuro
 
 ```text
+Production Runtime Adapters
 CompositionRuntimeSupervisor
+Last Known Good manager
+Hot swap
+Hardware Runtime
 ```
 
 ## 4. Estructura implementada
@@ -188,7 +172,9 @@ core/composition/
 ├── composition_connection_directive.gd
 ├── composition_plan.gd
 ├── composition_compile_result.gd
-└── composition_compiler.gd
+├── composition_compiler.gd
+├── composition_runtime_operation_result.gd
+└── composition_runtime.gd
 ```
 
 ```text
@@ -216,15 +202,24 @@ core/runtime/
 
 ## 5. Estructura siguiente
 
-Después del commit documental:
+CompositionRuntime 1.0 está cerrado.
+
+Siguiente frontera de trabajo:
 
 ```text
-core/composition/
-├── composition_runtime_operation_result.gd
-└── composition_runtime.gd
+Production Runtime Adapters
 ```
 
-Production adapters y Supervisor permanecen futuros.
+Debe comenzar por problema y análisis antes de decidir:
+
+- Godot RuntimeHost concreto;
+- Dependency Value Resolver de producción;
+- Lifecycle Adapter de producción;
+- Communication Binder de producción;
+- factories concretas;
+- Composition Root.
+
+Supervisor, hot swap y Hardware Runtime permanecen posteriores.
 
 ## 6. SystemProfile
 
@@ -798,7 +793,7 @@ Connection Directives preservan:
 - Target Port;
 - orden.
 
-Runtime futuro resolverá callbacks y source filtering.
+Runtime delega callbacks, endpoints y source filtering al Communication Binder explícito.
 
 Plan no contiene callbacks.
 
@@ -889,40 +884,64 @@ Hardware queda bloqueado con HARDWARE_SAFETY_ERROR.
 
 No ejecuta runtime.
 
-## 39. CompositionRuntime Design
+## 39. CompositionRuntime
 
 Documento activo:
 
 ```text
 docs/architecture/composition_runtime_design.md
-Versión 1.0
+Versión 1.1
 ```
 
 ADR:
 
 ```text
-ADR-011 ACEPTADO
+ADR-011 1.1
+ACEPTADO
+IMPLEMENTADO
+VERIFICADO
 ```
 
-Runtime 1.0 será:
+Runtime 1.0 es:
 
 - Simulation-only;
-- one-shot;
+- stateful y one-shot;
 - owner de DeviceBus y Handles;
 - transaccional;
 - phase-barriered;
 - rollback inverso;
-- shutdown explícito.
+- cleanup best effort;
+- shutdown explícito;
+- sin hot swap interno.
 
 Last Known Good y hot swap pertenecen a Supervisor futuro.
+
+Commit:
+
+```text
+cc9a7ae
+feat(runtime): add transactional composition runtime
+```
 
 ## 40. Rollback
 
 Factory build local es atómico.
 
-Rollback global usa orden inverso.
+Rollback global usa orden inverso:
 
-Last Known Good cambia únicamente después de commit.
+```text
+shutdown initialized Handles
+→ unbind Directives
+→ detach Handles
+→ release Handles
+→ clear DeviceBus
+```
+
+Cada subfase continúa ante error y agrega Issues.
+
+CompositionRuntime 1.0 no sustituye otro runtime activo.
+
+Last Known Good pertenece a un Supervisor futuro.
 
 ## 41. No service locator
 
@@ -974,7 +993,7 @@ RuntimeFactoryRegistry:
 141 checks
 ```
 
-Runtime Suite:
+Runtime Suite preservada:
 
 ```text
 10 tests
@@ -995,20 +1014,29 @@ CompositionCompiler:
 119 checks
 ```
 
-Composition Suite:
+CompositionRuntime:
 
 ```text
-12 tests
-516 checks
+4 tests
+186 checks
 ```
 
-Global:
+Composition Suite vigente:
 
 ```text
-65 tests
-1970 checks
+16 tests
+702 checks
+```
+
+Global vigente:
+
+```text
+69 tests
+2156 checks
 0 failures
 0 missing metrics
+Plan ExitCode: 0
+RESULT: PASS
 ```
 
 ## 43. Tooling
@@ -1032,101 +1060,51 @@ Automatic suites:
 0 Other
 ```
 
-## 44. Orden siguiente
+## 44. Orden completado
 
 ```text
-1. RuntimeDependencySpec.
-   COMPLETADO.
+1. RuntimeFactoryRegistry 1.0.
+   IMPLEMENTADO Y VERIFICADO.
 
-2. RuntimeDependencySpecTest.
-   PASS.
+2. CompositionPlan 1.0.
+   IMPLEMENTADO Y VERIFICADO.
 
-3. RuntimeFactoryDescriptor.
-   COMPLETADO.
+3. CompositionCompiler 1.0.
+   IMPLEMENTADO Y VERIFICADO.
 
-4. RuntimeFactoryDescriptorTest.
-   PASS.
+4. ADR-011 y CompositionRuntime Design.
+   ACEPTADOS.
 
-5. RuntimeFactoryRegistryDraft.
-   COMPLETADO.
+5. CompositionRuntimeOperationResult.
+   PASS — 17 checks.
 
-6. RuntimeFactoryRegistryDraftTest.
-   PASS.
+6. CompositionRuntime.
+   PASS — 62 checks.
 
-7. RuntimeFactoryRegistry.
-   COMPLETADO.
+7. Runtime transaction integration.
+   PASS — 57 checks.
 
-8. RuntimeFactoryRegistryCompileResult.
-   COMPLETADO.
+8. Full runtime pipeline integration.
+   PASS — 50 checks.
 
-9. RuntimeFactoryRegistryCompiler.
-   COMPLETADO.
+9. Composition Suite.
+   PASS — 16 tests, 702 checks.
 
-10. RuntimeFactoryRegistryCompilerTest.
-    PASS.
+10. Run All.
+    PASS — 69 tests, 2156 checks.
 
-11. CompositionDeviceEntry.
-    COMPLETADO.
+11. Feature commit.
+    cc9a7ae.
 
-12. CompositionDeviceEntryTest.
-    PASS — 38 checks.
+12. Registrar baseline documental.
+    COMPLETADO EN ESTA REVISIÓN.
+```
 
-13. CompositionConnectionDirective.
-    COMPLETADO.
+Siguiente trabajo:
 
-14. CompositionConnectionDirectiveTest.
-    PASS — 31 checks.
-
-15. CompositionPlan.
-    COMPLETADO.
-
-16. CompositionPlanTest.
-    PASS — 49 checks.
-
-17. Registry–Plan Integration.
-    PASS — 23 checks.
-
-18. Run All.
-    PASS — 62 tests, 1851 checks.
-
-19. CompositionCompiler Design.
-    COMPLETADO.
-
-20. Commit de diseño.
-    COMPLETADO.
-
-21. CompositionCompileResult.
-    COMPLETADO.
-
-22. CompositionCompiler.
-    COMPLETADO.
-
-23. CompositionCompilerTest.
-    PASS — 61 checks.
-
-24. SystemCompositionCompilerIntegrationTest.
-    PASS — 40 checks.
-
-25. Composition Suite.
-    PASS — 12 tests, 516 checks.
-
-26. Run All.
-    PASS — 65 tests, 1970 checks.
-
-27. CompositionRuntime Problem and Analysis.
-    COMPLETADO.
-
-28. ADR-011.
-    ACEPTADO.
-
-29. CompositionRuntime Design 1.0.
-    COMPLETADO.
-
-30. Commit de diseño.
-    SIGUIENTE.
-
-31. CompositionRuntimeOperationResult.
-    POSTERIOR AL COMMIT.
+```text
+Production Runtime Adapters
+Problema y análisis
 ```
 
 ## 45. Baselines preservadas
@@ -1149,20 +1127,20 @@ RuntimeConstructionContractIntegrationTest
 
 ## 46. Fuera de alcance
 
-- CompositionCompiler;
-- CompositionRuntime;
-- factory execution real;
-- RuntimeHost concreto;
-- dependency resolution activa;
-- DeviceBus activo;
-- lifecycle execution;
+- Production Runtime Adapters;
+- CompositionRuntimeSupervisor;
+- Last Known Good manager;
+- hot swap;
+- multiple active runtimes;
+- Hardware Runtime;
 - scheduling SCC;
 - persistence;
-- host target;
-- Hardware runtime;
+- host target en Factory Key;
 - Calibration;
 - AdaptationPolicy;
-- RuntimeAllocation.
+- RuntimeAllocation;
+- telemetry concreta;
+- automatic recovery.
 
 ## 47. Invariantes
 
@@ -1204,50 +1182,51 @@ RuntimeConstructionContractIntegrationTest
 
 ```text
 SYSTEMPROFILE 1.0
-IMPLEMENTADO Y VERIFICADO
-
 DEVICECATALOG 1.0
-IMPLEMENTADO Y VERIFICADO
-
 DEVICEGRAPHASSEMBLER 1.0
-IMPLEMENTADO Y VERIFICADO
-
 RUNTIME CONSTRUCTION CONTRACT 1.0
-IMPLEMENTADO Y VERIFICADO
-
 RUNTIMEFACTORYREGISTRY 1.0
-IMPLEMENTADO Y VERIFICADO
-
 COMPOSITIONPLAN 1.0
-IMPLEMENTADO Y VERIFICADO
-```
-
-```text
 COMPOSITIONCOMPILER 1.0
-IMPLEMENTADO Y VERIFICADO
-```
+COMPOSITIONRUNTIME 1.0
 
-```text
-COMPOSITIONRUNTIME DESIGN 1.0
-ACTIVO
+IMPLEMENTADOS Y VERIFICADOS
 ```
 
 ADR-011:
 
 ```text
 ACEPTADO
+IMPLEMENTADO
+VERIFICADO
 ```
 
-Siguiente milestone:
+Baseline final:
 
 ```text
-CompositionRuntime Design Commit
+Composition Suite:
+16 tests
+702 checks
+0 failures
+
+Run All:
+69 tests
+2156 checks
+0 failures
+0 missing metrics
+RESULT: PASS
 ```
 
-Primera implementación posterior:
+Último commit de implementación:
 
 ```text
-CompositionRuntimeOperationResult
+cc9a7ae
+feat(runtime): add transactional composition runtime
 ```
 
-CompositionRuntime no está implementado.
+Siguiente milestone recomendado:
+
+```text
+Production Runtime Adapters
+Problema y análisis
+```

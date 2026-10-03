@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.9 |
-| Fecha | 02/10/2026 |
+| Versión | 1.10 |
+| Fecha | 03/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
 ## 1. Archivos a adjuntar
@@ -13,22 +13,25 @@ En un chat nuevo, adjuntar:
 
 ```text
 velocity_handoff.md
-
 velocity_resume_prompt.md
-
 velocity_collaboration_contract.md
 ```
 
 También adjuntar cuando sea posible:
 
-- `runtime_factory_registry_design.md`;
-- `composition_plan_design.md`;
-- `system_composition_pipeline_design.md`;
-- ADR-009;
-- ADR-010;
-- `git status -sb`;
-- `git log -1 --oneline`;
-- URL del repositorio.
+```text
+composition_runtime_design.md
+ADR-011 — Composition Runtime Activation, Ownership and Rollback.md
+system_composition_pipeline_design.md
+git status -sb
+git log -1 --oneline
+```
+
+Repositorio:
+
+```text
+https://github.com/03im84/velocity
+```
 
 ## 2. Prompt listo para copiar
 
@@ -55,29 +58,48 @@ Estado arquitectónico esperado:
 - Runtime Construction Contract 1.0 está implementado y verificado.
 - RuntimeFactoryRegistry 1.0 está implementado y verificado.
 - CompositionPlan 1.0 está implementado y verificado.
-- Registry–Plan Integration está verificada.
 - CompositionCompiler 1.0 está implementado y verificado.
-- SystemCompositionCompilerIntegration está verificada.
-- ADR-011 está aceptado.
-- CompositionRuntime Design 1.0 está activo.
-- CompositionRuntime no está implementado.
+- ADR-011 1.1 está aceptado, implementado y verificado.
+- CompositionRuntimeOperationResult 1.0 está implementado y verificado.
+- CompositionRuntime 1.0 está implementado y verificado.
+- Full Composition Runtime Pipeline está verificado hasta ACTIVE y SHUTDOWN.
 
 Baseline esperada:
 
-- 65 tests.
-- 1970 checks.
+- 69 tests.
+- 2156 checks.
 - 0 failures.
 - 0 missing metrics.
+- Plan ExitCode 0.
+- RESULT PASS.
+
+Composition Suite esperada:
+
+- 16 tests.
+- 702 checks.
+- 0 failures.
+
+Último commit de implementación esperado:
+
+cc9a7ae feat(runtime): add transactional composition runtime
+
+Siguiente milestone recomendado:
+
+Production Runtime Adapters
+Problema y análisis
+
+No existe todavía ADR o diseño aceptado para Production Runtime Adapters.
+No escribas implementación hasta cerrar problema, análisis y diseño.
 
 Antes de responder:
 
-1. Lee completamente los tres documentos.
+1. Lee completamente los tres documentos de Project State.
 
-2. No propongas código todavía.
+2. Revisa ADR-011 y CompositionRuntime Design 1.1.
 
 3. No inventes APIs, clases, rutas, versiones o decisiones.
 
-4. Respeta ADR, diseños activos y pruebas.
+4. Respeta código versionado, pruebas aceptadas, ADR y diseños.
 
 5. Las pruebas aceptadas son baselines inmutables.
 
@@ -85,67 +107,60 @@ Antes de responder:
 
 7. Toda modificación se entrega como archivo completo consolidado.
 
-8. No uses parches, diffs, inserciones parciales, eliminaciones parciales o cirugía manual.
+8. No uses parches, diffs, fragmentos, inserciones parciales o cirugía manual.
 
-9. Si una prueba falla, solicita el primer error completo.
+9. Los paquetes se extraen fuera de Velocity y solo repository_files/ entra al repositorio.
 
-10. La ejecución autoritativa utiliza Godot Console, headless y Velocity Test Runner.
+10. README.txt, SHA256SUMS.txt, la carpeta del paquete y el ZIP no entran al repositorio.
 
-11. No uses Run Current Scene como evidencia autoritativa.
+11. Si una prueba falla, solicita el primer error completo con ruta y línea.
 
-12. No escribas código durante problema, análisis, ADR o diseño abierto.
+12. La ejecución autoritativa utiliza Godot Console, headless y Velocity Test Runner.
 
-13. Propón alternativas y tradeoffs.
+13. No uses Run Current Scene como evidencia autoritativa.
 
-14. No aceptes automáticamente mis ideas ni las tuyas.
+14. No escribas código durante problema, análisis, ADR o diseño abierto.
 
-15. Mantén una responsabilidad por componente.
+15. Propón alternativas y tradeoffs.
 
-16. Prefiere composición sobre herencia.
+16. No aceptes automáticamente mis ideas ni las tuyas.
 
-17. No añadas singleton o autoload por comodidad.
+17. Mantén una responsabilidad por componente.
 
-18. Aplica:
+18. Prefiere composición sobre herencia.
 
-	El usuario o el entorno pueden equivocarse.
-	El simulador debe permanecer seguro.
+19. No añadas singleton o autoload por comodidad.
 
-19. El usuario reescribe manualmente los archivos.
+20. Aplica:
 
-20. Indica siempre la ruta exacta.
+    El usuario o el entorno pueden equivocarse.
+    El simulador debe permanecer seguro.
 
 21. Trabaja en español.
 
 22. Mantén tono claro, didáctico, directo, cercano y honesto.
 
-23. No rediseñes RuntimeFactoryRegistry 1.0 o CompositionPlan 1.0 por intuición.
+23. CompositionRuntime 1.0 es Simulation-only, one-shot y transaccional.
 
-24. No implementes CompositionRuntime antes de aceptar ADR-011, cerrar su diseño y confirmar el commit documental.
+24. SHUTDOWN y FAILED son terminales.
 
-25. RuntimeDependencySpec declara Dependency ID y Ownership, pero no contiene Value activo.
+25. Last Known Good y hot swap pertenecen a un Supervisor futuro.
 
-26. CompositionPlan conserva RuntimeFactoryKey, no factory.
+26. Hardware Runtime permanece bloqueado.
+
+27. Production collaborators no pueden convertirse en service locators.
 
 Tu primera respuesta debe incluir únicamente:
 
 A. confirmación de lectura;
-
 B. visión del proyecto;
-
 C. último milestone completado;
-
-D. baseline global;
-
+D. baseline global y Composition Suite;
 E. último commit y estado Git conocido;
-
-F. milestone actual y siguiente implementación;
-
+F. milestone recomendado;
 G. decisiones aceptadas;
-
 H. riesgos o contradicciones;
-
 I. archivos adicionales requeridos;
-
 J. pregunta de confirmación.
 
 No escribas implementación en la primera respuesta.
@@ -159,23 +174,14 @@ Si no puedes acceder a un archivo:
 Jerarquía de autoridad:
 
 1. código versionado;
-
 2. pruebas aceptadas;
-
 3. ADR aceptados;
-
 4. diseños activos;
-
 5. Core Architecture;
-
 6. Engineering Standards;
-
 7. velocity_handoff.md;
-
 8. velocity_collaboration_contract.md;
-
 9. journals;
-
 10. conversación.
 
 Espera confirmación antes de avanzar.
@@ -183,118 +189,402 @@ Espera confirmación antes de avanzar.
 
 ## 3. Estado técnico esperado
 
-Últimos milestones completados:
+Milestones completados:
 
 ```text
+DeviceBus y Runtime Safety
+Topic y Message Contracts
+Provider System
+Device Core
+DeviceProfile y DeviceConfiguration
+DeviceGraph 1.0
+SystemProfile 1.0
+DeviceCatalog 1.0
 DeviceGraphAssembler 1.0
-
 Runtime Construction Contract 1.0
-
-Velocity Test Dashboard 0.4.0
-
 RuntimeFactoryRegistry 1.0
-
 CompositionPlan 1.0
-
 CompositionCompiler 1.0
+CompositionRuntime 1.0
 ```
 
 Pipeline implementado:
 
 ```text
 DeviceProfiles
-
 ↓
-
 DeviceCatalog
-
 ↓
-
 SystemProfile
-
 ↓
-
 DeviceGraphAssembler
-
 ↓
-
 DeviceGraphSnapshot
+↓
+RuntimeFactoryRegistry
+↓
+CompositionCompiler
+↓
+CompositionPlan
+↓
+CompositionRuntime
+↓
+ACTIVE
+↓
+SHUTDOWN
 ```
 
-Runtime contracts implementados:
+## 4. CompositionRuntime 1.0
+
+Componentes:
 
 ```text
-RuntimeFactoryKey
-
-RuntimeDependencyBinding
-
-RuntimeConstructionRequest
-
-RuntimeDeviceHandle
-
-RuntimeFactoryBuildResult
+res://core/composition/composition_runtime_operation_result.gd
+res://core/composition/composition_runtime.gd
 ```
 
-Diseño activo:
+Constructor:
 
 ```text
-CompositionRuntime Design 1.0
-ADR-011 ACEPTADO
+RuntimeFactoryRegistry
+RuntimeDependencyValueResolver behavior
+RuntimeHost behavior
+RuntimeLifecycleAdapter behavior
+RuntimeCommunicationBinder behavior
 ```
 
-Documentos canónicos del milestone:
+Estados:
 
 ```text
-Core Architecture 2.21
-
-Engineering Standards 1.4
-
-Project Decision VP-002 2.0
-
-ADR-010 1.1
-
-ADR-011 1.0
-
-System Composition Pipeline Design 1.11
-
-RuntimeFactoryRegistry Design 1.4
-
-CompositionPlan Design 1.4
-
-CompositionCompiler Design 1.3
-
-CompositionRuntime Design 1.0
-
-Project Handoff 1.9
-
-Resume Prompt 1.9
+CREATED
+ACTIVATING
+ACTIVE
+SHUTTING_DOWN
+SHUTDOWN
+FAILED
 ```
 
-Siguiente implementación después del commit documental:
+Características:
+
+- Simulation-only;
+- stateful;
+- one-shot;
+- transaccional;
+- DeviceBus owned;
+- phase barriers;
+- commit ACTIVE completo;
+- rollback inverso;
+- shutdown inverso;
+- cleanup best effort;
+- sin hot swap;
+- sin service locator;
+- sin singleton;
+- sin IO;
+- sin threads.
+
+## 5. Activation y rollback
+
+Activation:
 
 ```text
-CompositionRuntimeOperationResult
+Preflight
+├── validate Plan, Registry and collaborators
+└── resolve declared Dependency Values
+→ Create Bus
+→ Configure Policy
+→ Create Bindings and Build All
+→ Attach All
+→ Bind All
+→ Initialize All
+→ Ready All
+→ Start All
+→ ACTIVE
 ```
 
-## 4. Baseline global
+Rollback y shutdown:
 
 ```text
-Planned: 65
-Completed: 65
-Passed: 65
+shutdown reverse
+→ unbind reverse
+→ detach reverse
+→ release reverse
+→ DeviceBus.clear
+```
+
+Si initialize falla parcialmente, el Handle actual entra en shutdown best effort.
+
+Cleanup no se detiene por el primer error.
+
+## 6. Runtime tests
+
+```text
+CompositionRuntimeOperationResultTest
+17 checks
+PASS
+
+CompositionRuntimeTest
+62 checks
+PASS
+
+CompositionRuntimeIntegrationTest
+57 checks
+PASS
+
+FullCompositionRuntimePipelineIntegrationTest
+50 checks
+PASS
+```
+
+Total:
+
+```text
+4 tests
+186 checks
+0 failures
+```
+
+## 7. Baseline global
+
+```text
+Planned: 69
+Completed: 69
+Passed: 69
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 65
-Checks: 1970
+Total Runs: 69
+Checks: 2156
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
 RESULT: PASS
 ```
 
-## 5. Tooling
+Composition Suite:
+
+```text
+Planned: 16
+Completed: 16
+Passed: 16
+Failed: 0
+Checks: 702
+Check Failures: 0
+Missing Metrics: 0
+RESULT: PASS
+```
+
+## 8. Documentos canónicos
+
+```text
+Core Architecture:                  2.22
+Engineering Standards:              1.4
+Project Decision VP-002:            2.0
+ADR-010:                            1.1
+ADR-011:                            1.1
+System Composition Pipeline Design: 1.12
+Runtime Construction Contract:      1.1
+RuntimeFactoryRegistry Design:      1.5
+CompositionPlan Design:             1.5
+CompositionCompiler Design:         1.4
+CompositionRuntime Design:          1.1
+Project Handoff:                    1.10
+Resume Prompt:                      1.10
+Collaboration Contract:             1.2
+```
+
+## 9. Git
+
+Último commit de implementación:
+
+```text
+cc9a7ae
+feat(runtime): add transactional composition runtime
+```
+
+Commit de diseño anterior:
+
+```text
+0563dd5
+docs(runtime): define composition runtime activation
+```
+
+Estado esperado después del push de implementación:
+
+```text
+## main...origin/main
+```
+
+Commit documental de baseline sugerido:
+
+```text
+docs(runtime): record composition runtime 1.0 baseline
+```
+
+## 10. RuntimeFactoryRegistry y Plan
+
+Registry:
+
+- lookup exacto;
+- inmutable;
+- no ejecuta;
+- no fallback;
+- no latest;
+- no overwrite.
+
+CompositionPlan:
+
+- inmutable;
+- no ejecutable;
+- conserva Keys y Specs;
+- no contiene factory, Callable, Value activo, Handle o Bus;
+- conserva DeviceBusDispatchPolicy;
+- deriva órdenes forward y reverse.
+
+CompositionCompiler y CompositionRuntime utilizan la misma Registry explícita durante una activación.
+
+## 11. Ownership
+
+```text
+BORROWED
+```
+
+Owner original permanece.
+
+```text
+TRANSFERRED
+```
+
+Transferencia comienza en `factory.build(request)`.
+
+Factory limpia el request actual si build falla.
+
+Runtime libera Handles exitosos anteriores en orden inverso.
+
+## 12. Last Known Good
+
+CompositionRuntime 1.0 no reemplaza otra instancia activa.
+
+Un Supervisor futuro será owner de Last Known Good.
+
+Hot swap no está diseñado para 1.0.
+
+No añadirlo como parche.
+
+## 13. Siguiente milestone
+
+Recomendado:
+
+```text
+Production Runtime Adapters
+Problema y análisis
+```
+
+Debe definir límites entre:
+
+```text
+Composition Root
+Godot RuntimeHost
+Dependency Value Resolver
+Lifecycle Adapter
+Communication Binder
+RuntimeFactory concreta
+```
+
+Riesgos:
+
+- convertir Resolver en service locator;
+- mezclar factory con lifecycle;
+- adjuntar Nodes desde factory;
+- descubrir SceneTree globalmente;
+- introducir autoload por comodidad;
+- mezclar simulation y hardware;
+- diseñar Supervisor prematuramente.
+
+## 14. Fuera de alcance actual
+
+```text
+Production Runtime Adapters
+CompositionRuntimeSupervisor
+Last Known Good manager
+hot swap
+multi-runtime
+Hardware Runtime
+production factories
+persistence
+telemetry concreta
+automatic recovery
+```
+
+## 15. Señales de pérdida de contexto
+
+Detener si un asistente propone:
+
+- DeviceBus como autoload;
+- singleton global;
+- DeviceCatalog con factories;
+- DeviceGraph transportando mensajes;
+- latest o fallback;
+- Callable como factory;
+- factory dentro de Plan;
+- factory inicia lifecycle;
+- factory adjunta Nodes;
+- service locator;
+- Registry mutable;
+- Registry dentro de Plan;
+- RuntimeDependencySpec con Value activo;
+- Plan sin Dispatch Policy;
+- Compiler ejecutando runtime;
+- Runtime reutilizable después de FAILED o SHUTDOWN;
+- hot swap dentro de Runtime 1.0;
+- Hardware activation sin diseño sucesor;
+- tests aceptados modificados;
+- archivos por fragmentos;
+- código antes de diseño.
+
+## 16. Protocolo de fallo
+
+```text
+1. Detener.
+2. Copiar primer error completo.
+3. Incluir archivo y línea.
+4. Clasificar parser, contrato o comportamiento.
+5. Revisar responsabilidad.
+6. Entregar archivo completo corregido.
+7. Ejecutar prueba aislada.
+8. Ejecutar regresión.
+9. Aceptar baseline solo en PASS.
+```
+
+## 17. Protocolo Git
+
+Antes de commit:
+
+```powershell
+git status --short
+git diff --check
+git diff --cached --name-status
+git diff --cached --check
+```
+
+No usar:
+
+```powershell
+git add .
+```
+
+Después:
+
+```powershell
+git log -1 --oneline
+git status --short
+git push origin main
+git status -sb
+```
+
+`Submit` significa staging + commit + push.
+
+## 18. Tooling
 
 Velocity Test Dashboard:
 
@@ -308,615 +598,11 @@ Runner Metrics Protocol:
 1
 ```
 
-Dashboard Logic:
+El experimento Java VTD permanece externo.
 
-```text
-17 unittests
-OK
-```
+Python VTD permanece canónico.
 
-Suites:
-
-```text
-All
-
-DeviceBus
-
-DeviceCore
-
-Providers
-
-Profiles
-
-Message Contracts
-
-DeviceGraph
-
-Composition
-
-DeviceCatalog
-
-Runtime
-
-Debug
-```
-
-Tests en Other:
-
-```text
-0
-```
-
-## 6. ADR vigentes
-
-```text
-ADR-001
-
-ADR-002
-
-ADR-003
-
-ADR-004
-
-ADR-005
-
-ADR-006
-
-ADR-007
-
-ADR-008
-
-ADR-009
-
-ADR-010
-```
-
-ADR-010 está implementado por Runtime Construction Contract 1.0.
-
-## 7. RuntimeFactoryKey
-
-```text
-Profile ID
-
-+
-
-Profile Version
-
-+
-
-Activation Context
-```
-
-No contiene host target.
-
-No existe fallback.
-
-## 8. RuntimeDependencyBinding
-
-```text
-Dependency ID
-
-Object
-
-Ownership
-```
-
-Ownership:
-
-```text
-BORROWED
-
-TRANSFERRED
-```
-
-BORROWED no se libera por factory.
-
-TRANSFERRED pasa a la transacción durante build.
-
-## 9. RuntimeConstructionRequest
-
-Contiene:
-
-- Device ID;
-- DeviceConfiguration;
-- RuntimeFactoryKey;
-- bindings pre-resueltos.
-
-No es service locator.
-
-## 10. RuntimeDeviceHandle
-
-Contiene:
-
-- Device ID;
-- Configuration;
-- Factory Key;
-- Primary Runtime Object;
-- Host Objects;
-- bindings.
-
-No coordina el sistema completo.
-
-## 11. RuntimeFactory behavior
-
-```gdscript
-build(
-	request: RuntimeConstructionRequest
-) -> RuntimeFactoryBuildResult
-```
-
-```gdscript
-release(
-	handle: RuntimeDeviceHandle
-) -> ValidationReport
-```
-
-Factory construye solamente.
-
-No inicializa, inicia o adjunta.
-
-## 12. RuntimeHost behavior
-
-```gdscript
-attach(
-	handle: RuntimeDeviceHandle
-) -> ValidationReport
-```
-
-```gdscript
-detach(
-	handle: RuntimeDeviceHandle
-) -> ValidationReport
-```
-
-RuntimeHost recibe Handle completo.
-
-## 13. Rollback
-
-Factory failure:
-
-```text
-cleanup local
-Handle null
-Report
-```
-
-Global failure:
-
-```text
-rollback inverso
-```
-
-Last Known Good cambia solo después de commit completo.
-
-## 14. Milestone actual
-
-Último milestone completado:
-
-```text
-CompositionPlan 1.0
-IMPLEMENTADO Y VERIFICADO
-```
-
-Integración:
-
-```text
-RuntimeFactoryRegistry–CompositionPlan
-PASS
-```
-
-Último milestone:
-
-```text
-CompositionCompiler 1.0
-IMPLEMENTADO Y VERIFICADO
-```
-
-Diseño activo:
-
-```text
-CompositionRuntime Design 1.0
-```
-
-CompositionRuntime será Simulation-only y one-shot.
-
-CompositionRuntime no está implementado.
-
-## 15. RuntimeFactoryRegistry 1.0
-
-Estado:
-
-```text
-IMPLEMENTADO Y VERIFICADO
-```
-
-Baseline:
-
-```text
-4 tests
-141 checks
-0 failures
-```
-
-Runtime Suite:
-
-```text
-10 tests
-314 checks
-0 failures
-```
-
-Commit:
-
-```text
-ca2aa04
-feat(runtime): add immutable factory registry
-```
-
-Responsabilidad:
-
-> Resolver RuntimeFactory mediante RuntimeFactoryKey exacta.
-
-Pipeline:
-
-```text
-RuntimeFactoryRegistryDraft
-		│
-		▼
-RuntimeFactoryRegistryCompiler
-		│
-		▼
-RuntimeFactoryRegistryCompileResult
-		├── RuntimeFactoryRegistry
-		└── ValidationReport
-```
-
-Componentes diseñados:
-
-```text
-RuntimeDependencySpec
-
-RuntimeFactoryDescriptor
-
-RuntimeFactoryRegistryDraft
-
-RuntimeFactoryRegistry
-
-RuntimeFactoryRegistryCompileResult
-
-RuntimeFactoryRegistryCompiler
-```
-
-RuntimeDependencySpec contiene:
-
-```text
-Dependency ID
-
-Ownership
-```
-
-No contiene Value activo.
-
-RuntimeFactoryDescriptor asocia:
-
-```text
-RuntimeFactoryKey
-
-RuntimeFactory Object
-
-RuntimeDependencySpecs
-```
-
-Registry final:
-
-- es inmutable;
-- permite Registry vacío válido;
-- conserva orden;
-- valida `build` y `release` sin ejecutarlos;
-- resuelve por Key exacta;
-- permite la misma factory bajo Keys diferentes;
-- rechaza Key duplicada;
-- no utiliza latest;
-- no utiliza fallback;
-- no utiliza overwrite;
-- no depende de DeviceCatalog;
-- no forma parte de CompositionPlan.
-
-CompositionCompiler y CompositionRuntime observan el mismo Registry snapshot durante una activación.
-
-## 16. CompositionPlan 1.0
-
-Estado:
-
-```text
-IMPLEMENTADO Y VERIFICADO
-```
-
-Baseline:
-
-```text
-4 tests
-141 checks
-0 failures
-```
-
-Composition Suite:
-
-```text
-9 tests
-397 checks
-0 failures
-```
-
-Commit:
-
-```text
-3d62a7b
-feat(composition): add immutable composition plan
-```
-
-Componentes implementados:
-
-```text
-CompositionDeviceEntry
-
-CompositionConnectionDirective
-
-CompositionPlan
-```
-
-Plan contiene:
-
-```text
-Activation Context
-
-CompositionDeviceEntries
-
-CompositionConnectionDirectives
-
-DeviceBusDispatchPolicy
-```
-
-Device Entries conservan:
-
-- Device ID;
-- DeviceConfiguration;
-- RuntimeFactoryKey;
-- RuntimeDependencySpecs.
-
-Connection Directives conservan:
-
-- Connection ID;
-- Source Device ID;
-- Source Port ID;
-- Topic;
-- Target Device ID;
-- Target Port ID.
-
-Forward order deriva de Entries para:
-
-```text
-construction
-
-attach
-
-initialize
-
-set_ready
-
-start
-```
-
-Reverse order invierte Entries para:
-
-```text
-shutdown
-
-rollback
-```
-
-Phase barriers son obligatorias.
-
-Plan 1.0 no requiere topological sort.
-
-Plan vacío con contexto y Dispatch Policy válidos es válido.
-
-Plan no contiene:
-
-- RuntimeFactory;
-- Callable;
-- RuntimeDependencyBinding con Value activo;
-- RuntimeDeviceHandle;
-- Device activo;
-- Node activo;
-- DeviceBus activo;
-- Plan ID;
-- Plan Version.
-
-## 17. Señales de pérdida de contexto
-
-Detener si un asistente propone:
-
-- DeviceBus como autoload;
-- singleton global;
-- DeviceCatalog con factories;
-- DeviceGraph transportando mensajes;
-- latest;
-- fallback;
-- Callable como factory;
-- factory dentro de Plan;
-- factory devuelve Device directamente;
-- factory inicia lifecycle;
-- factory adjunta Nodes;
-- service locator;
-- host target como Factory Key actual;
-- CompositionCompiler ejecutando runtime;
-- Registry mutable después de compilación;
-- Registry dentro de CompositionPlan;
-- RuntimeDependencySpec con Value activo;
-- optional dependencies en Registry 1.0;
-- Plan sin DeviceBusDispatchPolicy explícita;
-- Compiler y Runtime usando Registries diferentes durante una activación;
-- topological sort obligatorio ignorando ciclos;
-- arrays independientes de orden para cada fase;
-- tests modificados;
-- archivos por fragmentos;
-- código antes de diseño.
-
-## 18. Borrador alternativo
-
-Existe fuera del repositorio:
-
-```text
-recovered_runtime_factory_and_composition_plan_design_250826.md
-```
-
-No es arquitectura canónica.
-
-Ideas incorporadas a los diseños activos:
-
-- lifecycle order derivado;
-- phase barriers;
-- DeviceBusDispatchPolicy obligatoria;
-- communication directives tipadas;
-- rollback inverso;
-- Last Known Good.
-
-Ideas que permanecen futuras:
-
-- RuntimeHost concreto;
-- scheduling mediante SCC;
-- temporal boundaries.
-
-Alternativas rechazadas:
-
-- Callable;
-- factory en Plan;
-- host target como Key;
-- Registry mutable sin diseño;
-- Dictionary entries;
-- topological order obligatorio.
-
-## 19. Protocolo de fallo
-
-1. detener;
-
-2. copiar primer error;
-
-3. incluir archivo y línea;
-
-4. clasificar;
-
-5. revisar responsabilidad;
-
-6. entregar archivo completo;
-
-7. probar;
-
-8. aceptar baseline solo en PASS.
-
-## 20. Protocolo Git
-
-Base commit antes de CompositionRuntime Design:
-
-```text
-cfb42f1
-docs(composition): record composition compiler 1.0 baseline
-```
-
-Commit sugerido para el paquete actual:
-
-```text
-docs(runtime): define composition runtime activation
-```
-
-Antes del commit:
-
-```powershell
-git status --short
-
-git diff --check
-
-git diff --cached --name-status
-
-git diff --cached --check
-```
-
-Después:
-
-```powershell
-git log -1 --oneline
-
-git status --short
-```
-
-Push:
-
-```powershell
-git push origin main
-
-git status -sb
-```
-
-## 21. Respuesta inicial correcta
-
-Debe indicar:
-
-```text
-Últimos milestones:
-
-DeviceGraphAssembler 1.0
-
-Runtime Construction Contract 1.0
-
-Dashboard 0.4.0
-
-Baseline:
-
-65 tests
-
-1970 checks
-
-0 failures
-
-Último milestone:
-
-CompositionPlan 1.0
-
-IMPLEMENTADO Y VERIFICADO
-
-Integración:
-
-RuntimeFactoryRegistry–CompositionPlan
-
-PASS
-
-Último milestone:
-
-CompositionCompiler 1.0
-
-IMPLEMENTADO Y VERIFICADO
-
-Diseño activo:
-
-CompositionRuntime Design 1.0
-
-ADR-011:
-
-ACEPTADO
-
-CompositionRuntime:
-
-DISEÑADO, NO IMPLEMENTADO
-
-Siguiente implementación:
-
-CompositionRuntimeOperationResult
-```
-
-No debe escribir código hasta recibir confirmación y comprobar que el paquete documental está cerrado.
-
-## 22. Regla final
+## 19. Regla final
 
 Un nuevo chat no necesita imitar una voz exacta.
 
@@ -936,20 +622,12 @@ La continuidad depende de:
 
 ```text
 Git
-
 +
-
 ADR
-
 +
-
 Diseños
-
 +
-
 Tests
-
 +
-
 Project State Package
 ```
