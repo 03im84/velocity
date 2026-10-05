@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO — IMPLEMENTADO Y VERIFICADO |
-| Versión | 1.2 |
-| Producto objetivo | Velocity Tooling Dashboard 0.5.0 |
-| Fecha | 03/10/2026 |
+| Versión | 1.3 |
+| Producto objetivo | Velocity Tooling Dashboard 0.5.1 |
+| Fecha | 04/10/2026 |
 | Backend | Python 3.10+ standard library |
 | Frontend | HTML, CSS y JavaScript vanilla |
 | Transporte | HTTP local + Server-Sent Events |
@@ -579,8 +579,8 @@ LKG
 ```
 
 ```text
-Velocity Tooling Dashboard 0.5.0
-successor candidate
+Velocity Tooling Dashboard 0.5.1
+accepted web successor
 ```
 
 ## 34. Criterios de aceptación
@@ -634,7 +634,7 @@ successor candidate
 ## 36. Estado
 
 ```text
-VELOCITY TOOLING DASHBOARD 0.5.0
+VELOCITY TOOLING DASHBOARD 0.5.1
 IMPLEMENTADO
 VERIFICADO
 ACEPTADO COMO INTERFAZ RECOMENDADA
@@ -656,18 +656,18 @@ start_velocity_dashboard_web.bat
 Pruebas:
 
 ```text
-VTD Web:         35
+VTD Web:         43
 Submit Tool:     44
 Dashboard Logic: 17
-Total tooling:   96
+Total tooling:   104
 RESULT: OK
 ```
 
 Godot regression:
 
 ```text
-76 tests
-2262 checks
+85 tests
+2418 checks
 0 failures
 0 missing metrics
 RESULT: PASS
@@ -706,7 +706,7 @@ test/tools/start_velocity_dashboard_web.bat
 
 ## 37. Product Roadmap and Gantt
 
-VTD 0.5.0 includes a read-only Roadmap tab backed by:
+VTD 0.5.1 includes a read-only Roadmap tab backed by:
 
 ```text
 docs/project_state/velocity_roadmap.json
@@ -719,4 +719,79 @@ Candidate baseline:
 ```text
 VTD Web: 39 tests PASS
 Tooling total: 100 tests PASS
+```
+
+## 38. Reload Safety 0.5.1
+
+Problemas observados en Windows:
+
+1. un reload del navegador reejecutaba prompts históricos de Submit;
+2. un Install que reemplazaba el roadmap no actualizaba la vista hasta reiniciar el servidor.
+
+Causa del prompt:
+
+```text
+EventBroker history
++
+fresh EventSource without Last-Event-ID
++
+server default cursor 0
+=
+full historical replay
+```
+
+Un `delivery_prompt` histórico volvía a ejecutar `window.prompt()` aunque la operación ya hubiera finalizado.
+
+Solución:
+
+```text
+bootstrap captures current event cursor
+→ frontend connects /api/events?after=<cursor>
+→ fresh page skips old history
+→ SSE reconnect still uses Last-Event-ID
+```
+
+Defensa adicional:
+
+Antes de mostrar un prompt, el frontend consulta `/api/state` y exige que `pending_prompt` siga coincidiendo exactamente.
+
+Si una página se recarga mientras existe un prompt genuinamente pendiente, bootstrap lo restaura una sola vez.
+
+Roadmap:
+
+```text
+successful Install
+→ refresh tests
+→ reload roadmap from disk
+→ publish roadmap_updated
+→ renderRoadmap
+```
+
+No se requiere reiniciar VTD después de instalar una entrega que actualice `velocity_roadmap.json`.
+
+## 39. Baseline 0.5.1
+
+```text
+VTD Web:         43 tests PASS
+Submit Tool:     44 tests PASS
+Dashboard Logic: 17 tests PASS
+Total tooling:   104 tests PASS
+Python compile:  PASS
+JavaScript parse: PASS
+```
+
+Regresiones específicas:
+
+- fresh cursor skips historical `delivery_prompt`;
+- live events después del cursor permanecen disponibles;
+- Last-Event-ID y query cursor se resuelven sin retroceso;
+- Install recarga y publica roadmap;
+- bootstrap expone event cursor;
+- frontend restaura solo un prompt actualmente pendiente.
+
+Estado:
+
+```text
+VELOCITY TOOLING DASHBOARD 0.5.1
+RELOAD SAFETY IMPLEMENTADA Y VERIFICADA
 ```

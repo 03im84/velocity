@@ -175,6 +175,10 @@ class EventBroker:
 
         return event
 
+    def get_latest_event_id(self) -> int:
+        with self._lock:
+            return self._next_id - 1
+
     def subscribe(
         self,
         last_event_id: int = 0,

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.21 |
+| Versión | 1.22 |
 | Fecha de actualización | 04/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -271,7 +271,7 @@ Distance Sensor Runtime Slice 1.0
 Input Runtime Slice 1.0
 Velocity Test Runner
 Velocity Test Dashboard 0.4.0
-Velocity Tooling Dashboard Web 0.5.0
+Velocity Tooling Dashboard Web 0.5.1
 Velocity Submit Tool 1.0.0
 Product Roadmap y Gantt 1.0
 ```
@@ -724,11 +724,11 @@ Managed Runtime Adapter Design:      1.1
 Distance Sensor Runtime Design:     1.1
 Input Runtime Slice Design:         1.1
 Velocity Submit Tool Design:         1.2
-Velocity Tooling Dashboard Web:      1.2
+Velocity Tooling Dashboard Web:      1.3
 Product Roadmap:                    1.1
 Playable Vertical Slice Design:     1.1
-Project Handoff:                    1.21
-Resume Prompt:                      1.21
+Project Handoff:                    1.22
+Resume Prompt:                      1.22
 Collaboration Contract:             1.5
 ```
 
@@ -766,7 +766,7 @@ Estado confirmado antes de esta baseline documental:
 
 ```text
 Velocity Test Dashboard:          0.4.0
-Velocity Tooling Dashboard Web:   0.5.0
+Velocity Tooling Dashboard Web:   0.5.1
 Runner Metrics Protocol:          1
 Velocity Submit Tool:             1.0.0
 ```
@@ -795,8 +795,18 @@ Other: 0
 Baseline de tooling aceptada antes del candidato Rollback:
 
 ```text
-VTD Web: 39 tests PASS
-Tooling total: 100 tests PASS
+VTD Web: 43 tests PASS
+Tooling total: 104 tests PASS
+```
+
+Web VTD Reload Safety 0.5.1:
+
+```text
+fresh page starts from bootstrap event cursor
+SSE reconnect preserves Last-Event-ID replay
+stale delivery prompts are rejected against /api/state
+successful Install reloads tests and roadmap
+43 Web tests PASS
 ```
 
 `Velocity Submit Tool Rollback 1.1` es un candidato separado, todavía no aceptado ni versionado.

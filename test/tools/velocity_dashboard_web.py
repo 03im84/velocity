@@ -41,7 +41,7 @@ from velocity_dashboard_service import (
 
 
 APP_NAME = "Velocity Tooling Dashboard"
-APP_VERSION = "0.5.0"
+APP_VERSION = "0.5.1"
 MAX_REQUEST_BYTES = 1024 * 1024
 COOKIE_NAME = "vtd_session"
 STATIC_ALLOWLIST = {
@@ -50,6 +50,29 @@ STATIC_ALLOWLIST = {
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
 }
+
+
+def resolve_event_resume_cursor(
+    last_event_header: str | None,
+    after_query: str | None,
+    latest_event_id: int,
+) -> int:
+    candidates: list[int] = []
+
+    for raw_value in (last_event_header, after_query):
+        if raw_value is None:
+            continue
+        try:
+            value = int(raw_value)
+        except ValueError:
+            continue
+        if value >= 0:
+            candidates.append(value)
+
+    if candidates:
+        return max(candidates)
+
+    return max(0, latest_event_id)
 
 
 @dataclass(frozen=True, slots=True)
@@ -82,7 +105,7 @@ class VelocityWebApplication:
         self.delivery = DeliveryService(
             self.configuration.project_root,
             self.broker,
-            self.refresh_tests,
+            self.refresh_after_delivery_install,
         )
         self.server: ThreadingHTTPServer | None = None
         self.identity: ServerIdentity | None = None
@@ -110,6 +133,12 @@ class VelocityWebApplication:
             },
         )
         return discovered
+
+    def refresh_after_delivery_install(self) -> None:
+        roadmap = load_roadmap(self.configuration)
+        self.refresh_tests()
+        self.roadmap = roadmap
+        self.broker.publish("roadmap_updated", roadmap)
 
     def state(self) -> dict[str, Any]:
         with self.tests_lock:
@@ -148,8 +177,10 @@ class VelocityWebApplication:
         identity = self.identity
         if identity is None:
             raise RuntimeError("Server identity is unavailable.")
+        event_cursor = self.broker.get_latest_event_id()
         data = self.state()
         data["csrf_token"] = identity.csrf_token
+        data["event_cursor"] = event_cursor
         return data
 
     def start_plan(self, payload: Mapping[str, Any]) -> None:
@@ -383,7 +414,7 @@ class VelocityRequestHandler(BaseHTTPRequestHandler):
         elif parsed.path == "/api/roadmap":
             self._json_response(HTTPStatus.OK, self.app.roadmap)
         elif parsed.path == "/api/events":
-            self._serve_events()
+            self._serve_events(parsed)
         else:
             self._json_response(
                 HTTPStatus.NOT_FOUND,
@@ -489,12 +520,17 @@ class VelocityRequestHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(content)
 
-    def _serve_events(self) -> None:
-        last_event_text = self.headers.get("Last-Event-ID", "0")
-        try:
-            last_event_id = int(last_event_text)
-        except ValueError:
-            last_event_id = 0
+    def _serve_events(
+        self,
+        parsed: urllib.parse.SplitResult,
+    ) -> None:
+        query = urllib.parse.parse_qs(parsed.query)
+        after_query = query.get("after", [None])[0]
+        last_event_id = resolve_event_resume_cursor(
+            self.headers.get("Last-Event-ID"),
+            after_query,
+            self.app.broker.get_latest_event_id(),
+        )
         subscriber = self.app.broker.subscribe(last_event_id)
         self.send_response(HTTPStatus.OK)
         self.send_header("Content-Type", "text/event-stream")

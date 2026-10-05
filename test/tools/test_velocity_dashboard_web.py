@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import http.cookiejar
 import json
+import queue
 import sys
 import tempfile
 import threading
@@ -41,6 +42,7 @@ from velocity_dashboard_web import (  # noqa: E402
     STATIC_ALLOWLIST,
     VelocityWebApplication,
     create_server,
+    resolve_event_resume_cursor,
 )
 
 
@@ -148,7 +150,7 @@ class DiscoveryAndLogicTests(unittest.TestCase):
 
     def test_web_candidate_discovers_current_tests(self) -> None:
         tests = discover_tests(self.configuration)
-        self.assertGreaterEqual(len(tests), 76)
+        self.assertGreaterEqual(len(tests), 85)
         self.assertTrue(
             any(test.name == "ManagedRuntimeAdapterIntegrationTest" for test in tests)
         )
@@ -187,6 +189,35 @@ class DiscoveryAndLogicTests(unittest.TestCase):
         self.assertEqual(replayed.event_id, second.event_id)
         self.assertEqual(replayed.data["text"], "two")
         broker.unsubscribe(subscriber)
+
+    def test_fresh_event_cursor_skips_history_and_receives_live(self) -> None:
+        broker = EventBroker()
+        broker.publish("delivery_prompt", {"prompt": "old"})
+        cursor = broker.get_latest_event_id()
+        subscriber = broker.subscribe(cursor)
+
+        with self.assertRaises(queue.Empty):
+            subscriber.get_nowait()
+
+        live = broker.publish("delivery_state", {"busy": False})
+        received = subscriber.get(timeout=0.2)
+        self.assertEqual(received.event_id, live.event_id)
+        self.assertEqual(received.event_type, "delivery_state")
+        broker.unsubscribe(subscriber)
+
+    def test_event_cursor_prefers_resume_values(self) -> None:
+        self.assertEqual(
+            resolve_event_resume_cursor(None, None, 12),
+            12,
+        )
+        self.assertEqual(
+            resolve_event_resume_cursor("9", "7", 12),
+            9,
+        )
+        self.assertEqual(
+            resolve_event_resume_cursor("invalid", "7", 12),
+            7,
+        )
 
     def test_public_plan_result_excludes_raw_output(self) -> None:
         test = TestScene(
@@ -271,6 +302,32 @@ class RoadmapTests(unittest.TestCase):
         copied["milestones"][0]["dependencies"] = ["missing"]
         with self.assertRaises(ValueError):
             validate_roadmap(copied)
+
+    def test_delivery_refresh_reloads_roadmap_and_publishes(self) -> None:
+        application = VelocityWebApplication(TOOLS_DIRECTORY)
+        updated = load_roadmap(self.configuration)
+        updated["version"] = "test-refresh"
+        cursor = application.broker.get_latest_event_id()
+        subscriber = application.broker.subscribe(cursor)
+
+        with mock.patch(
+            "velocity_dashboard_web.load_roadmap",
+            return_value=updated,
+        ):
+            application.refresh_after_delivery_install()
+
+        events = [
+            subscriber.get(timeout=0.2),
+            subscriber.get(timeout=0.2),
+        ]
+        roadmap_event = next(
+            event
+            for event in events
+            if event.event_type == "roadmap_updated"
+        )
+        self.assertEqual(application.roadmap["version"], "test-refresh")
+        self.assertEqual(roadmap_event.data["version"], "test-refresh")
+        application.broker.unsubscribe(subscriber)
 
 
 class DeliveryBridgeTests(unittest.TestCase):
@@ -392,6 +449,14 @@ class StaticFrontendContractTests(unittest.TestCase):
         self.assertIn('id="milestone-detail"', self.html)
         self.assertIn("renderRoadmap", self.js)
         self.assertIn("YOU ARE HERE", self.js)
+
+    def test_reload_safety_contract_exists(self) -> None:
+        self.assertIn("event_cursor", self.js)
+        self.assertIn("/api/events?after=", self.js)
+        self.assertIn("handleDeliveryPrompt", self.js)
+        self.assertIn('api("/api/state")', self.js)
+        self.assertIn("state.delivery.pending_prompt", self.js)
+        self.assertIn('"roadmap_updated"', self.js)
 
     def test_browser_uses_select(self) -> None:
         self.assertIn('<select id="browser-select">', self.html)
@@ -523,9 +588,11 @@ class HttpSecurityTests(unittest.TestCase):
                 timeout=1.0,
             )
         )
-        self.assertEqual(data["app"]["version"], "0.5.0")
+        self.assertEqual(data["app"]["version"], "0.5.1")
         self.assertEqual(data["server"]["host"], "127.0.0.1")
-        self.assertGreaterEqual(len(data["tests"]), 79)
+        self.assertGreaterEqual(len(data["tests"]), 85)
+        self.assertIsInstance(data["event_cursor"], int)
+        self.assertGreaterEqual(data["event_cursor"], 0)
         self.assertEqual(
             data["roadmap"]["target"],
             "playable_vertical_slice",

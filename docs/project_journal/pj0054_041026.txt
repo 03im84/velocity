@@ -1,0 +1,110 @@
+PJ0054 – Web VTD Reload Safety 0.5.1
+
+Fecha: 04/10/2026
+
+Problemas observados:
+
+1. Después de haber ejecutado Prepare Submit, recargar Web VTD volvía a mostrar el prompt textual SUBMIT aunque la operación anterior ya hubiera terminado.
+
+2. Instalar una entrega que reemplazaba velocity_roadmap.json no actualizaba Roadmap hasta reiniciar el servidor VTD.
+
+Primer síntoma confirmado:
+
+Un browser reload creaba un EventSource nuevo sin Last-Event-ID.
+
+El backend interpretaba ausencia de Last-Event-ID como cursor 0 y EventBroker reproducía todo su historial, incluyendo delivery_prompt antiguos.
+
+Flujo defectuoso:
+
+fresh browser page
+→ EventSource /api/events
+→ missing Last-Event-ID
+→ cursor 0
+→ replay all history
+→ stale delivery_prompt
+→ window.prompt SUBMIT
+
+Install por sí solo no emitía delivery_prompt.
+Prepare Submit lo emitía y el evento permanecía en history durante la vida del servidor.
+
+Segundo síntoma confirmado:
+
+VelocityWebApplication cargaba roadmap una vez durante __init__.
+DeliveryService llamaba únicamente refresh_tests después de Install.
+Browser reload recibía el roadmap antiguo almacenado en memoria.
+
+Alternativas revisadas:
+
+A. Desactivar todo replay SSE.
+Rechazada: perdería recuperación de eventos durante una desconexión real.
+
+B. Ignorar delivery_prompt solo en frontend.
+Insuficiente: delivery_state histórico también se reproducía y podía presentar estado obsoleto.
+
+C. Cursor de bootstrap + Last-Event-ID + validación actual del prompt.
+Seleccionada.
+
+Diseño implementado:
+
+- EventBroker expone latest event ID.
+- bootstrap captura cursor antes de construir state.
+- frontend conecta /api/events?after=<cursor>.
+- backend combina query cursor y Last-Event-ID sin retroceder.
+- una página nueva omite historial anterior a bootstrap.
+- una reconexión SSE conserva replay desde Last-Event-ID.
+- antes de mostrar prompt, frontend consulta /api/state.
+- solo se muestra si pending_prompt coincide exactamente.
+- deliveryPromptActive evita prompts duplicados.
+- un prompt realmente pendiente se restaura una vez desde bootstrap.
+
+Roadmap refresh:
+
+successful Install
+→ load roadmap from disk
+→ refresh tests
+→ publish roadmap_updated
+→ frontend renderRoadmap
+
+Versión:
+
+Velocity Tooling Dashboard Web 0.5.1
+Design 1.3
+
+Pruebas:
+
+VTD Web:
+43 tests PASS
+
+Velocity Submit:
+44 tests PASS
+
+Dashboard Logic:
+17 tests PASS
+
+Total tooling:
+104 tests PASS
+
+Python compile:
+PASS
+
+JavaScript parse:
+PASS
+
+Producción Godot:
+Sin cambios.
+Baseline Godot preservada:
+85 tests / 2418 checks PASS.
+
+Alcance:
+
+Este incremento no contiene Velocity Submit Tool Rollback 1.1.
+El candidato Rollback permanece separado en el backup externo:
+
+C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
+
+Estado:
+
+WEB VTD RELOAD SAFETY 0.5.1
+IMPLEMENTADO
+VERIFICADO LOCALMENTE
+WINDOWS ACCEPTANCE PENDIENTE

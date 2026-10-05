@@ -12,7 +12,10 @@ const state = {
   roadmap: {},
   activeTab: "tests",
   eventSource: null,
+  eventCursor: 0,
 };
+
+let deliveryPromptActive = false;
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -391,9 +394,36 @@ function formatExecutionSummary(execution) {
   ].join("\n");
 }
 
-function connectEvents() {
+async function handleDeliveryPrompt(data) {
+  const promptText = data.prompt || "";
+  if (!promptText || deliveryPromptActive) return;
+
+  deliveryPromptActive = true;
+  try {
+    const snapshot = await api("/api/state");
+    const currentDelivery = snapshot.delivery || {};
+    state.delivery = currentDelivery;
+    renderDelivery();
+    if (currentDelivery.pending_prompt !== promptText) return;
+
+    let answer = "";
+    if (promptText.includes("SUBMIT")) {
+      answer = window.prompt(promptText) || "";
+    } else if (promptText.toLowerCase().includes("delete")) {
+      answer = window.confirm(promptText) ? "y" : "n";
+    } else if (promptText.includes("PUSH")) {
+      answer = window.prompt(promptText) || "";
+    }
+    await post("/api/delivery/answer", { answer });
+  } finally {
+    deliveryPromptActive = false;
+  }
+}
+
+function connectEvents(afterEventId = 0) {
   if (state.eventSource) state.eventSource.close();
-  const source = new EventSource("/api/events");
+  const cursor = Math.max(0, Number(afterEventId) || 0);
+  const source = new EventSource(`/api/events?after=${encodeURIComponent(cursor)}`);
   state.eventSource = source;
 
   source.addEventListener("output", (event) => {
@@ -442,6 +472,10 @@ function connectEvents() {
     state.suites = data.suites;
     renderTests();
   });
+  source.addEventListener("roadmap_updated", (event) => {
+    state.roadmap = JSON.parse(event.data);
+    renderRoadmap();
+  });
   source.addEventListener("delivery_output", (event) => {
     const data = JSON.parse(event.data);
     appendOutput("#delivery-output", data.text || "");
@@ -450,18 +484,8 @@ function connectEvents() {
     state.delivery = JSON.parse(event.data);
     renderDelivery();
   });
-  source.addEventListener("delivery_prompt", async (event) => {
-    const data = JSON.parse(event.data);
-    const promptText = data.prompt || "";
-    let answer = "";
-    if (promptText.includes("SUBMIT")) {
-      answer = window.prompt(promptText) || "";
-    } else if (promptText.toLowerCase().includes("delete")) {
-      answer = window.confirm(promptText) ? "y" : "n";
-    } else if (promptText.includes("PUSH")) {
-      answer = window.prompt(promptText) || "";
-    }
-    await post("/api/delivery/answer", { answer });
+  source.addEventListener("delivery_prompt", (event) => {
+    void handleDeliveryPrompt(JSON.parse(event.data));
   });
   source.addEventListener("settings_changed", (event) => {
     const data = JSON.parse(event.data);
@@ -633,13 +657,19 @@ async function bootstrap() {
     state.environment = data.environment;
     state.server = data.server;
     state.roadmap = data.roadmap;
+    state.eventCursor = Number(data.event_cursor || 0);
     renderTests();
     renderExecution();
     renderDelivery();
     renderRoadmap();
     renderSettings();
     renderEnvironment();
-    connectEvents();
+    connectEvents(state.eventCursor);
+    if (state.delivery.pending_prompt) {
+      void handleDeliveryPrompt({
+        prompt: state.delivery.pending_prompt,
+      });
+    }
     setStatus("sesión lista", "pass");
   } catch (error) {
     setStatus(error.message, "fail");

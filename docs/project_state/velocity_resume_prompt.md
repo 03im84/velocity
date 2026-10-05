@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.21 |
+| Versión | 1.22 |
 | Fecha | 04/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -367,11 +367,11 @@ Managed Runtime Adapter Design:      1.1
 Distance Sensor Runtime Design:     1.1
 Input Runtime Slice Design:         1.1
 Velocity Submit Tool Design:         1.2
-Velocity Tooling Dashboard Web:      1.2
+Velocity Tooling Dashboard Web:      1.3
 Product Roadmap:                    1.1
 Playable Vertical Slice Design:     1.1
-Project Handoff:                    1.21
-Resume Prompt:                      1.21
+Project Handoff:                    1.22
+Resume Prompt:                      1.22
 Collaboration Contract:             1.5
 ```
 
@@ -425,7 +425,37 @@ Review and approval
 Documentation commit
 ```
 
-## 12. Candidato Rollback separado
+## 12. Web VTD Reload Safety 0.5.1
+
+Contrato vigente:
+
+```text
+fresh page
+→ bootstrap event cursor
+→ no historical prompt replay
+
+SSE reconnect
+→ Last-Event-ID
+→ missed live events replayed
+
+pending prompt
+→ confirm against /api/state
+→ display once
+
+successful Install
+→ refresh tests and roadmap
+```
+
+Baseline:
+
+```text
+VTD Web: 43 tests PASS
+Submit Tool: 44 tests PASS
+Dashboard Logic: 17 tests PASS
+Total tooling: 104 tests PASS
+```
+
+## 13. Candidato Rollback separado
 
 ```text
 Velocity Submit Tool Rollback 1.1
@@ -449,7 +479,7 @@ Reglas:
 - no asumir los conteos declarados hasta ejecutar tooling tests;
 - conservar el backup hasta commit y push aceptados.
 
-## 13. Fuera de alcance actual
+## 14. Fuera de alcance actual
 
 ```text
 Propulsion implementation antes de ADR
@@ -466,7 +496,7 @@ Hardware Runtime
 telemetry persistente
 ```
 
-## 14. Protocolo de fallo
+## 15. Protocolo de fallo
 
 ```text
 1. Detener.
@@ -481,7 +511,7 @@ telemetry persistente
 10. Ejecutar Run All.
 ```
 
-## 15. Protocolo Git y Delivery
+## 16. Protocolo Git y Delivery
 
 Flujo normal:
 
@@ -515,7 +545,7 @@ amend de commit publicado
 
 Los ZIP permanecen fuera del repositorio.
 
-## 16. Metodología
+## 17. Metodología
 
 ```text
 1. Problema
@@ -534,7 +564,7 @@ Los ZIP permanecen fuera del repositorio.
 14. Submit
 ```
 
-## 17. Regla final
+## 18. Regla final
 
 Un nuevo chat no necesita imitar una voz exacta.
 
