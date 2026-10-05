@@ -1240,7 +1240,7 @@ Git status: clean
 Receipt cleared: PASS
 ```
 
-La Delivery final añade únicamente presentación Environment/alineación sobre el core ya aceptado y debe ejecutar 126 tooling tests antes de Submit.
+La Delivery final añadió únicamente presentación Environment/alineación sobre el core ya aceptado y ejecutó 126 tooling tests en Windows antes de Submit.
 
 No se reutilizó ni instaló la Factory histórica preservada en el backup.
 
@@ -1250,4 +1250,16 @@ Entrada principal:
 tools\git\velocity_submit.bat
 ```
 
-El milestone puede someterse después de instalar la Delivery final y repetir la regresión de 126 tests.
+Feature commit:
+
+```text
+b219462 feat(tools): add delivery rollback command
+```
+
+```text
+Final Windows tooling: 126 tests OK (skipped=1 symlink)
+Remote: synchronized
+RESULT: PASS
+```
+
+El milestone queda cerrado.

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.23 |
+| Versión | 1.24 |
 | Fecha | 04/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -77,7 +77,8 @@ Estado arquitectónico esperado:
 - Último commit del Slice: 80c5118 test(input): add runtime pipeline integration.
 - Input baseline documental: 26002da docs(input): record input runtime baseline.
 - Web VTD Reload Safety: d36c7ee fix(tools): make web dashboard reload-safe.
-- main estaba sincronizada con origin/main en d36c7ee.
+- Delivery Rollback 1.1: b219462 feat(tools): add delivery rollback command.
+- main está sincronizada con origin/main en b219462.
 
 Target de producto:
 Playable Vertical Slice 1.0.
@@ -87,10 +88,11 @@ Propulsion Runtime Slice 1.0.
 Problema, alternativas, ADR y diseño todavía pendientes.
 
 Trabajo operativo separado:
-Velocity Submit Tool Rollback 1.1 fue reconstruido sobre d36c7ee.
+Velocity Submit Tool Rollback 1.1 está implementado y verificado.
 Windows self-rollback restauró d36c7ee con Git limpio y receipt ausente.
-Baseline final local: 126 tooling tests PASS.
-Install final, regresión Windows y Submit permanecen pendientes.
+Baseline final: 126 tooling tests PASS.
+Feature commit: b219462 feat(tools): add delivery rollback command.
+main quedó sincronizada con origin/main.
 El backup original sigue preservado fuera del repositorio en:
 C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
 No mezclar con Propulsion.
@@ -375,8 +377,8 @@ Velocity Submit Tool Design:         1.4
 Velocity Tooling Dashboard Web:      1.4
 Product Roadmap:                    1.1
 Playable Vertical Slice Design:     1.1
-Project Handoff:                    1.23
-Resume Prompt:                      1.23
+Project Handoff:                    1.24
+Resume Prompt:                      1.24
 Collaboration Contract:             1.5
 ```
 
@@ -394,10 +396,19 @@ f4345cb feat(input): add input runtime unit
 80c5118 test(input): add runtime pipeline integration
 ```
 
-Estado confirmado después de `80c5118`:
+Commits posteriores aceptados:
+
+```text
+26002da docs(input): record input runtime baseline
+d36c7ee fix(tools): make web dashboard reload-safe
+b219462 feat(tools): add delivery rollback command
+```
+
+Estado confirmado:
 
 ```text
 ## main...origin/main
+HEAD b219462
 ```
 
 El estado Git actual debe comprobarse en cada reanudación.
@@ -460,12 +471,13 @@ Dashboard Logic: 17 tests PASS
 Total tooling: 104 tests PASS
 ```
 
-## 13. Candidato Rollback separado
+## 13. Velocity Submit Tool Rollback 1.1
 
 ```text
 Velocity Submit Tool Rollback 1.1
-Estado: RECONSTRUIDO; WINDOWS E2E SELF-ROLLBACK PASS
-Base vigente: d36c7ee
+Estado: IMPLEMENTADO Y VERIFICADO
+Feature commit: b219462
+Self-rollback baseline verificada: d36c7ee
 ```
 
 Backup externo original:
@@ -515,16 +527,17 @@ validation candidate installed
 → receipt none
 ```
 
-Pendiente:
+Finalización:
 
 ```text
-install final delivery
-→ 126 Windows tooling tests
-→ visual Environment/alignment check
-→ Submit
+final delivery installed
+→ 126 Windows tooling tests PASS
+→ visual Environment/alignment PASS
+→ Submit PASS
+→ b219462 synchronized
 ```
 
-No mezclar este candidato con Propulsion.
+Rollback 1.1 está cerrado. No mezclar futuros cambios de tooling con Propulsion.
 
 ## 14. Fuera de alcance actual
 

@@ -868,3 +868,18 @@ Presentación final:
 - versión VTD visible en Environment;
 - Delivery ID completo disponible como tooltip;
 - cuatro acciones Delivery alineadas en una sola fila.
+
+Windows final:
+
+```text
+126 tooling tests OK (skipped=1 symlink)
+visual version/alignment PASS
+Submit PASS
+Remote synchronized
+```
+
+Feature commit:
+
+```text
+b219462 feat(tools): add delivery rollback command
+```

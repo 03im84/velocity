@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.23 |
+| Versión | 1.24 |
 | Fecha de actualización | 04/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -727,8 +727,8 @@ Velocity Submit Tool Design:         1.4
 Velocity Tooling Dashboard Web:      1.4
 Product Roadmap:                    1.1
 Playable Vertical Slice Design:     1.1
-Project Handoff:                    1.23
-Resume Prompt:                      1.23
+Project Handoff:                    1.24
+Resume Prompt:                      1.24
 Collaboration Contract:             1.5
 ```
 
@@ -761,13 +761,14 @@ Commits posteriores aceptados:
 ```text
 26002da docs(input): record input runtime baseline
 d36c7ee fix(tools): make web dashboard reload-safe
+b219462 feat(tools): add delivery rollback command
 ```
 
-Estado confirmado antes del candidato Rollback:
+Estado confirmado después de Rollback 1.1:
 
 ```text
 ## main...origin/main
-HEAD d36c7ee
+HEAD b219462
 ```
 
 ## 25. Tooling
@@ -827,7 +828,7 @@ Total tooling:  126 tests PASS
 Windows E2E self-rollback: PASS
 ```
 
-Self-rollback real restauró `d36c7ee`, dejó Git limpio y eliminó el receipt. La Delivery final incorpora solo correcciones visuales adicionales y requiere 126 tooling tests antes de Submit.
+Self-rollback real restauró `d36c7ee`, dejó Git limpio y eliminó el receipt. La Delivery final pasó 126 tooling tests en Windows y fue submitted en `b219462`.
 
 ## 26. Convenciones GDScript
 
@@ -957,9 +958,10 @@ Trabajo operativo separado:
 
 ```text
 Velocity Submit Tool Rollback 1.1
-RECONSTRUIDO Y VERIFICADO
+IMPLEMENTADO Y VERIFICADO
 WINDOWS END-TO-END SELF-ROLLBACK PASS
-FINAL DELIVERY PENDIENTE DE SUBMIT
+126 TOOLING TESTS PASS
+COMMIT b219462
 ```
 
 Backup externo preservado:
@@ -968,7 +970,7 @@ Backup externo preservado:
 C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
 ```
 
-No mezclar ese candidato con Input baseline ni con Propulsion.
+Rollback 1.1 queda cerrado. El siguiente trabajo de producto, Propulsion, comienza desde problema y análisis separados.
 
 ## 30. Trabajo futuro explícito
 

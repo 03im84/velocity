@@ -179,10 +179,25 @@ Correcciones finales:
 - tooltip con Delivery ID completo;
 - regresión Web adicional.
 
+Delivery final:
+
+- velocity-submit-rollback-1-1-0 instalada: PASS;
+- 126 tooling tests Windows: OK, skipped=1 symlink;
+- VTD version 0.5.2 visible: PASS;
+- cuatro acciones Delivery alineadas: PASS;
+- Submit: PASS;
+- remote synchronized: PASS;
+- package cleanup: PASS.
+
+Feature commit:
+
+b219462 feat(tools): add delivery rollback command
+
 Estado:
 
 VELOCITY SUBMIT TOOL ROLLBACK 1.1
-RECONSTRUIDO
-VERIFICADO LOCALMENTE
-WINDOWS END-TO-END SELF-ROLLBACK PASS
-DELIVERY FINAL PENDIENTE DE INSTALL, REGRESSION Y SUBMIT
+IMPLEMENTADO
+VERIFICADO LOCALMENTE Y EN WINDOWS
+END-TO-END SELF-ROLLBACK PASS
+BASELINE 126 TESTS PASS
+COMMITTED Y PUSHED
