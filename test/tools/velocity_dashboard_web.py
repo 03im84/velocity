@@ -41,7 +41,7 @@ from velocity_dashboard_service import (
 
 
 APP_NAME = "Velocity Tooling Dashboard"
-APP_VERSION = "0.5.1"
+APP_VERSION = "0.5.2"
 MAX_REQUEST_BYTES = 1024 * 1024
 COOKIE_NAME = "vtd_session"
 STATIC_ALLOWLIST = {
@@ -484,6 +484,11 @@ class VelocityRequestHandler(BaseHTTPRequestHandler):
             if self.app.execution.is_running():
                 raise RuntimeError("A test plan is active.")
             self.app.delivery.start_submit()
+            return {"delivery": self.app.delivery.snapshot()}
+        if path == "/api/delivery/rollback":
+            if self.app.execution.is_running():
+                raise RuntimeError("A test plan is active.")
+            self.app.delivery.start_rollback()
             return {"delivery": self.app.delivery.snapshot()}
         if path == "/api/delivery/answer":
             self.app.delivery.answer_prompt(str(payload.get("answer", "")))

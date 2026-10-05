@@ -6,7 +6,9 @@ param(
 
     [switch]$Submit,
 
-    [switch]$ValidatePackage
+    [switch]$ValidatePackage,
+
+    [switch]$Rollback
 )
 
 $ErrorActionPreference = "Stop"
@@ -15,10 +17,11 @@ $selectedModes = @(
     $Install.IsPresent
     $Submit.IsPresent
     $ValidatePackage.IsPresent
+    $Rollback.IsPresent
 ) | Where-Object { $_ }
 
 if ($selectedModes.Count -gt 1) {
-    Write-Error "Install, Submit and ValidatePackage are mutually exclusive."
+    Write-Error "Install, Submit, ValidatePackage and Rollback are mutually exclusive."
     exit 2
 }
 
@@ -48,6 +51,9 @@ elseif ($Submit) {
 }
 elseif ($ValidatePackage) {
     $arguments += "--validate-package"
+}
+elseif ($Rollback) {
+    $arguments += "--rollback"
 }
 
 $pythonCommand = Get-Command "python.exe" -ErrorAction SilentlyContinue

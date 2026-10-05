@@ -119,6 +119,22 @@ class DeliveryService:
             self._thread.start()
         self._publish_state()
 
+    def start_rollback(self) -> None:
+        with self._lock:
+            if self._busy:
+                raise RuntimeError("Delivery operation is active.")
+            self._busy = True
+            self._operation = "ROLLING_BACK"
+            self._last_result = ""
+            self._thread = threading.Thread(
+                target=self._worker,
+                args=("rollback", None),
+                daemon=True,
+                name="vtd-delivery-rollback",
+            )
+            self._thread.start()
+        self._publish_state()
+
     def answer_prompt(self, answer: str) -> None:
         with self._prompt_condition:
             if not self._pending_prompt:

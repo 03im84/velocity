@@ -1,0 +1,188 @@
+PJ0055 – Velocity Submit Tool Rollback 1.1 Audit Candidate
+
+Fecha: 04/10/2026
+
+Origen:
+
+Backup externo preservado durante el incidente InputRuntimeFactory:
+
+C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
+
+Archivo de auditoría camuflado como TXT:
+
+velocity-recovery-20261004-162750.txt
+
+SHA-256:
+
+2e4f09fa24ab2f06ff74f87aad7dfc78cf3607e0ae4b17adea22c5f2be8e8c0e
+
+Baseline original del candidato:
+
+f4345cb feat(input): add input runtime unit
+
+Baseline vigente de reconstrucción:
+
+d36c7ee fix(tools): make web dashboard reload-safe
+
+Problema:
+
+El escenario
+"delivery instalada, pruebas fallan, sin commit"
+no tenía un rollback versionado. La recuperación dependía de instrucciones externas reconstruidas durante cada incidente.
+
+Separación del backup:
+
+Evidencia histórica excluida de producto:
+
+- InputRuntimeFactory antiguo;
+- escena snake_case antigua;
+- UIDs de esa entrega;
+- receipt input-runtime-factory-1-0;
+- git-log.txt;
+- git-status.txt.
+
+Código recuperable:
+
+- DeliveryRollback;
+- integración CLI y PowerShell;
+- integración Web VTD;
+- tests de rollback;
+- diseños de Submit Tool y Web VTD.
+
+Conflictos detectados:
+
+1. El candidato Web provenía de antes de Reload Safety 0.5.1.
+2. Restaurarlo literalmente eliminaba event cursor, prompt freshness y roadmap refresh.
+3. PJ0053 colisionaba con Input Runtime Slice baseline.
+4. El frontend no reconocía ROLLBACK como prompt textual y lo cancelaba siempre.
+5. _validate_add_entry permitía una adición faltante, contradiciendo la validación exacta de targets.
+6. Faltaban regresiones de installing, branch mismatch y UID sidecar tracked.
+
+Decisión:
+
+Reconstruir sobre d36c7ee; nunca restaurar literalmente el backup.
+
+Arquitectura:
+
+Velocity Submit Tool 1.1.0 añade:
+
+- velocity_submit_rollback.py;
+- DeliveryRollback;
+- RollbackPlan;
+- RollbackResult;
+- --rollback;
+- PowerShell -Rollback;
+- Web endpoint /api/delivery/rollback;
+- botón rollback habilitado solo para receipt installed;
+- confirmación textual ROLLBACK.
+
+Preconditions:
+
+- proyecto válido;
+- ninguna operación Git activa;
+- receipt exacto state installed;
+- branch igual al receipt;
+- HEAD igual al base_commit;
+- índice vacío;
+- working tree limitado a receipt + UIDs derivados;
+- targets exactos presentes y con SHA-256 esperado;
+- backups replace presentes y con previous_sha256;
+- UID derivado solo si untracked, válido y asociado a add .gd.
+
+Ejecución:
+
+- confirmación ROLLBACK;
+- recorrido inverso del receipt;
+- replace restaurado mediante atomic_copy;
+- add exacto eliminado;
+- UID derivado seguro eliminado;
+- directorios vacíos podados;
+- git status limpio obligatorio;
+- state directory eliminado solo al final.
+
+Estados rechazados:
+
+- installing;
+- local_commit_only;
+- branch mismatch;
+- moved HEAD;
+- staged changes;
+- unexpected changes;
+- target drift;
+- target missing;
+- backup missing;
+- UID inválido;
+- UID tracked.
+
+Reload Safety preservada:
+
+- bootstrap event cursor;
+- Last-Event-ID para reconnect;
+- prompt validado contra /api/state;
+- no replay histórico en fresh page;
+- roadmap refresh después de Install.
+
+Baselines locales:
+
+Velocity Submit Tool:
+62 tests PASS
+
+Web VTD:
+47 tests PASS
+
+Dashboard Logic:
+17 tests PASS
+
+Total tooling:
+126 tests PASS
+
+RollbackTests Repeat 5:
+18 tests por run PASS
+
+Web VTD Repeat 5:
+47 tests por run PASS
+
+Python compile:
+PASS
+
+JavaScript parse:
+PASS
+
+Godot:
+Producción sin cambios.
+Baseline preservada 85 tests / 2418 checks PASS.
+
+Acceptance Windows ejecutada:
+
+1. validation candidate instalada: PASS;
+2. Web VTD 0.5.2 reiniciado: PASS;
+3. 125 tooling tests: OK, skipped=1 symlink;
+4. rollback button habilitado: PASS;
+5. confirmación textual ROLLBACK: PASS;
+6. replacements restored: 13;
+7. additions removed: 2;
+8. UID sidecars removed: 0;
+9. baseline d36c7ee restaurada: PASS;
+10. git status main...origin/main limpio: PASS;
+11. receipt active_delivery ausente: PASS.
+
+Hallazgos visuales finales:
+
+- versión no visible en Environment;
+- cuarta acción Delivery desalineada por grid de tres columnas;
+- Delivery ID podía verse truncado sin tooltip.
+
+Correcciones finales:
+
+- env-version;
+- grid Delivery de cuatro columnas;
+- tooltip con Delivery ID completo;
+- regresión Web adicional.
+
+Estado:
+
+VELOCITY SUBMIT TOOL ROLLBACK 1.1
+RECONSTRUIDO
+VERIFICADO LOCALMENTE
+WINDOWS END-TO-END SELF-ROLLBACK PASS
+DELIVERY FINAL PENDIENTE DE INSTALL, REGRESSION Y SUBMIT

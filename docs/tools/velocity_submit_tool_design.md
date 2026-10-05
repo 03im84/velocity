@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO — COMPLETO Y VERIFICADO |
-| Versión del documento | 1.2 |
-| Versión objetivo de la herramienta | 1.0.0 |
-| Fecha | 03/10/2026 |
+| Versión del documento | 1.4 |
+| Versión objetivo de la herramienta | 1.1.0 |
+| Fecha | 04/10/2026 |
 | Plataforma inicial | Windows |
 | Entrada principal | BAT guided launcher |
 | Selector | Diálogo nativo mediante Tkinter |
@@ -253,9 +253,12 @@ Modos explícitos mutuamente excluyentes:
 -ValidatePackage
 -Install
 -Submit
+-Rollback
 ```
 
 Guided mode no recibe switches.
+
+`Rollback` nunca participa del guided mode: revertir una delivery instalada es siempre una decisión explícita.
 
 State selection:
 
@@ -1055,13 +1058,20 @@ Insuficientes para package hashes, instalación transaccional y receipt.
 37. Temp Git integration PASS.
 38. Windows launcher y picker PASS.
 39. Bootstrap manual documentado.
+40. Rollback explícito, nunca guided.
+41. Rollback exige receipt installed exacto.
+42. Rollback valida hashes y allowlist antes de tocar archivos.
+43. Rollback preserva evidencia ante cualquier discrepancia.
+44. Rollback elimina state solo con working tree limpio.
+45. Rollback confirmado con `ROLLBACK` textual.
+46. Rollback nunca deshace commits.
 
 ## 48. Fuera de alcance
 
 - ejecutar Godot;
 - interpretar Dashboard;
 - command strings desde manifest;
-- deletion;
+- deletion como action de manifest;
 - rename;
 - force push;
 - amend;
@@ -1076,13 +1086,95 @@ Insuficientes para package hashes, instalación transaccional y receipt.
 - UI gráfica completa de gestión;
 - install-and-submit sin test boundary.
 
-## 49. Estado
+## 49. Delivery rollback command — 1.1.0
+
+La versión 1.1.0 añade el comando público `rollback` para el escenario:
 
 ```text
-VELOCITY SUBMIT TOOL 1.0.0
-IMPLEMENTADO
-VERIFICADO
-BASELINE ACEPTADA
+delivery instalada
+→ pruebas fallan
+→ todavía no existe commit
+```
+
+Responsabilidad:
+
+> Restaurar exactamente la baseline declarada por el receipt activo y limpiar el estado de la delivery, sin tocar nada fuera de ella.
+
+Entrada:
+
+```powershell
+.\tools\git\velocity_submit.ps1 -Rollback
+```
+
+```text
+python velocity_submit.py --rollback
+```
+
+```text
+Web VTD → Delivery → rollback
+```
+
+Preconditions obligatorias:
+
+- receipt activo con `state = installed`;
+- `installing` se rechaza: recovery manual requerido;
+- `local_commit_only` se rechaza: rollback no deshace commits;
+- rama actual igual a `receipt.branch`;
+- `HEAD` igual a `receipt.base_commit`;
+- índice Git vacío: staging previo se rechaza;
+- cambios reales del working tree contenidos en la allowlist:
+  paths del receipt más sidecars `.gd.uid` derivados;
+- cada target instalado conserva el SHA-256 del receipt;
+- cada backup de replace conserva `previous_sha256`;
+- sidecars `.gd.uid` derivados solo se eliminan si:
+  no están tracked,
+  contienen un UID Godot válido,
+  y derivan exactamente de un `.gd` declarado como add.
+
+Cualquier incumplimiento aborta antes de modificar archivos y preserva receipt y backups como evidencia.
+
+Confirmación destructiva:
+
+```text
+Type ROLLBACK to restore baseline <head> and discard delivery <id>:
+```
+
+Ejecución en orden inverso del receipt:
+
+- replace: restaurar desde backup con copia atómica y verificar `previous_sha256`;
+- add: eliminar target exacto y su sidecar UID derivado;
+- directorios creados por adds se podan solo si quedan vacíos.
+
+Post-condición:
+
+- `git status` limpio; si no, `FINAL_STATE_ERROR` y evidencia preservada;
+- `.git/velocity-submit/` se elimina solo después de verificar working tree limpio.
+
+Resultado:
+
+```text
+VELOCITY DELIVERY ROLLBACK: PASS
+Delivery: <id>
+Baseline restored: <head>
+Replacements restored: N
+Additions removed: N
+UID sidecars removed: N
+State: receipt and backups cleared
+```
+
+No existe rollback de:
+
+- install interrumpido (`installing`): recovery manual;
+- commit local (`local_commit_only`): Retry Push;
+- commit publicado: nuevo commit o `git revert` aprobado.
+
+## 50. Estado
+
+```text
+VELOCITY SUBMIT TOOL 1.1.0
+DELIVERY ROLLBACK COMMAND IMPLEMENTADO
+VERIFICADO LOCALMENTE Y EN WINDOWS
+END-TO-END SELF-ROLLBACK PASS
 ```
 
 Componentes:
@@ -1091,45 +1183,66 @@ Componentes:
 velocity_submit_contract.py
 velocity_submit_git.py
 velocity_submit.py
+velocity_submit_rollback.py
 velocity_submit.ps1
 velocity_submit.bat
 test_velocity_submit.py
 ```
 
-Baseline propia:
+Baseline propia 1.0.0 preservada:
 
 ```text
 Ran 44 tests
 OK
-skipped=1 esperado por symlink restriction de Windows
+skipped=1 esperado por restricción de symlink en Windows
 ```
 
-Tooling regression:
+Baseline propia 1.1.0:
 
 ```text
-Velocity Submit Tool: 44
+Ran 62 tests
+OK
+```
+
+Tooling regression 1.1.0:
+
+```text
+Velocity Submit Tool: 62
+Dashboard Web:        47
 Dashboard Logic:      17
-Total:                61
+Total:               126
 RESULT: OK
+RollbackTests Repeat 5: 18 tests por run PASS
+Web VTD Repeat 5:        47 tests por run PASS
 ```
 
-Windows verification:
+Defensas añadidas durante auditoría del backup:
+
+- addition faltante se rechaza como drift;
+- receipt `installing` se rechaza;
+- branch mismatch se rechaza;
+- UID sidecar tracked se rechaza;
+- prompt Web `ROLLBACK` recibe entrada textual real;
+- Web VTD Reload Safety 0.5.1 se preserva.
+
+Acceptance Windows ejecutada:
 
 ```text
-PowerShell launcher:        PASS
-Process-scoped Bypass:      PASS
-Tkinter native file picker: PASS
-Bootstrap ZIP validation:   PASS
-Manifest files:             13
-Dirty-worktree safety gate: PASS
+Validation delivery installed: PASS
+Windows tooling: 125 tests OK (skipped=1 symlink)
+Rollback button enabled: PASS
+Textual ROLLBACK: PASS
+Replacements restored: 13
+Additions removed: 2
+UID sidecars removed: 0
+Baseline restored: d36c7ee
+Git status: clean
+Receipt cleared: PASS
 ```
 
-Commit:
+La Delivery final añade únicamente presentación Environment/alineación sobre el core ya aceptado y debe ejecutar 126 tooling tests antes de Submit.
 
-```text
-f7bd176
-feat(tools): add guided package delivery
-```
+No se reutilizó ni instaló la Factory histórica preservada en el backup.
 
 Entrada principal:
 
@@ -1137,6 +1250,4 @@ Entrada principal:
 tools\git\velocity_submit.bat
 ```
 
-El milestone queda cerrado.
-
-Production Runtime Adapters vuelve a ser el siguiente problema recomendado.
+El milestone puede someterse después de instalar la Delivery final y repetir la regresión de 126 tests.

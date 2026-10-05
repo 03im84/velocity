@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO — IMPLEMENTADO Y VERIFICADO |
-| Versión | 1.3 |
-| Producto objetivo | Velocity Tooling Dashboard 0.5.1 |
+| Versión | 1.4 |
+| Producto objetivo | Velocity Tooling Dashboard 0.5.2 |
 | Fecha | 04/10/2026 |
 | Backend | Python 3.10+ standard library |
 | Frontend | HTML, CSS y JavaScript vanilla |
@@ -795,3 +795,76 @@ Estado:
 VELOCITY TOOLING DASHBOARD 0.5.1
 RELOAD SAFETY IMPLEMENTADA Y VERIFICADA
 ```
+
+## 40. Delivery Rollback Integration 0.5.2
+
+Web VTD expone el comando seguro de Velocity Submit Tool 1.1.0 mediante:
+
+```text
+POST /api/delivery/rollback
+```
+
+Control:
+
+```text
+rollback button enabled
+↔ receipt_state == installed
+and no test or Delivery operation is active
+```
+
+Flujo:
+
+```text
+user selects rollback
+→ backend starts rollback worker
+→ tool validates receipt, branch, HEAD, index, allowlist and hashes
+→ delivery_prompt requests textual ROLLBACK
+→ frontend verifies prompt against /api/state
+→ user confirms
+→ exact baseline restored
+→ receipt/backups cleared only after clean status
+```
+
+Reload Safety 0.5.1 permanece vigente:
+
+- fresh browser page no reproduce prompts históricos;
+- pending prompt real se restaura una vez;
+- `ROLLBACK` se trata como entrada textual explícita;
+- SSE reconnect conserva `Last-Event-ID`;
+- Install recarga tests y roadmap.
+
+Estados no aptos:
+
+```text
+receipt none              → rollback disabled
+receipt installing        → backend rejects
+receipt local_commit_only → backend rejects
+operation busy            → rollback disabled
+```
+
+## 41. Baseline 0.5.2
+
+```text
+VTD Web:         47 tests PASS
+Submit Tool:     62 tests PASS
+Dashboard Logic: 17 tests PASS
+Total tooling:   126 tests PASS
+Web Repeat 5:    47 tests per run PASS
+Rollback Repeat 5: 18 tests per run PASS
+Windows E2E self-rollback: PASS
+```
+
+Estado:
+
+```text
+VELOCITY TOOLING DASHBOARD 0.5.2
+ROLLBACK INTEGRATION IMPLEMENTADA
+LOCAL VERIFICATION PASS
+WINDOWS END-TO-END SELF-ROLLBACK PASS
+```
+
+Presentación final:
+
+- versión VTD visible en Environment;
+- Delivery ID completo disponible como tooltip;
+- cuatro acciones Delivery alineadas en una sola fila.

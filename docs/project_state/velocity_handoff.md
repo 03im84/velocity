@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.22 |
+| Versión | 1.23 |
 | Fecha de actualización | 04/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -723,12 +723,12 @@ CompositionRuntime Design:          1.1
 Managed Runtime Adapter Design:      1.1
 Distance Sensor Runtime Design:     1.1
 Input Runtime Slice Design:         1.1
-Velocity Submit Tool Design:         1.2
-Velocity Tooling Dashboard Web:      1.3
+Velocity Submit Tool Design:         1.4
+Velocity Tooling Dashboard Web:      1.4
 Product Roadmap:                    1.1
 Playable Vertical Slice Design:     1.1
-Project Handoff:                    1.22
-Resume Prompt:                      1.22
+Project Handoff:                    1.23
+Resume Prompt:                      1.23
 Collaboration Contract:             1.5
 ```
 
@@ -756,19 +756,27 @@ f4345cb feat(input): add input runtime unit
 80c5118 test(input): add runtime pipeline integration
 ```
 
-Estado confirmado antes de esta baseline documental:
+Commits posteriores aceptados:
+
+```text
+26002da docs(input): record input runtime baseline
+d36c7ee fix(tools): make web dashboard reload-safe
+```
+
+Estado confirmado antes del candidato Rollback:
 
 ```text
 ## main...origin/main
+HEAD d36c7ee
 ```
 
 ## 25. Tooling
 
 ```text
 Velocity Test Dashboard:          0.4.0
-Velocity Tooling Dashboard Web:   0.5.1
+Velocity Tooling Dashboard Web:   0.5.2 verified
 Runner Metrics Protocol:          1
-Velocity Submit Tool:             1.0.0
+Velocity Submit Tool:             1.1.0 verified
 ```
 
 Suites automáticas:
@@ -809,7 +817,17 @@ successful Install reloads tests and roadmap
 43 Web tests PASS
 ```
 
-`Velocity Submit Tool Rollback 1.1` es un candidato separado, todavía no aceptado ni versionado.
+Velocity Submit Tool Rollback 1.1 fue reconstruido sobre `d36c7ee` sin restaurar archivos obsoletos del backup.
+
+```text
+Submit Tool:     62 tests PASS
+Web VTD:         47 tests PASS
+Dashboard Logic: 17 tests PASS
+Total tooling:  126 tests PASS
+Windows E2E self-rollback: PASS
+```
+
+Self-rollback real restauró `d36c7ee`, dejó Git limpio y eliminó el receipt. La Delivery final incorpora solo correcciones visuales adicionales y requiere 126 tooling tests antes de Submit.
 
 ## 26. Convenciones GDScript
 
@@ -939,8 +957,9 @@ Trabajo operativo separado:
 
 ```text
 Velocity Submit Tool Rollback 1.1
-CANDIDATO NO ACEPTADO
-AUDITORÍA PENDIENTE
+RECONSTRUIDO Y VERIFICADO
+WINDOWS END-TO-END SELF-ROLLBACK PASS
+FINAL DELIVERY PENDIENTE DE SUBMIT
 ```
 
 Backup externo preservado:

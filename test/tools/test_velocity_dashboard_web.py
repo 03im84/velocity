@@ -391,6 +391,59 @@ class DeliveryBridgeTests(unittest.TestCase):
         self.assertEqual(self.refresh_count, 1)
         package.unlink()
 
+    def test_rollback_runs_in_worker(self) -> None:
+        captured: dict[str, object] = {}
+
+        def fake_run_tool(**kwargs: object) -> ExitCode:
+            captured.update(kwargs)
+            output = kwargs["output_function"]
+            assert callable(output)
+            output("VELOCITY DELIVERY ROLLBACK: PASS")
+            return ExitCode.PASS
+
+        with mock.patch(
+            "velocity_dashboard_delivery.run_tool",
+            side_effect=fake_run_tool,
+        ):
+            self.service.start_rollback()
+            self.assertTrue(self.service.wait(1.0))
+
+        self.assertEqual(captured["mode"], "rollback")
+        self.assertIsNone(captured["package_path"])
+        snapshot = self.service.snapshot()
+        self.assertEqual(snapshot["operation"], "COMPLETE")
+        self.assertEqual(snapshot["last_result"], "PASS")
+        self.assertEqual(self.refresh_count, 0)
+
+    def test_rollback_prompt_waits_for_ui_answer(self) -> None:
+        answers: list[str] = []
+
+        def fake_run_tool(**kwargs: object) -> ExitCode:
+            input_function = kwargs["input_function"]
+            assert callable(input_function)
+            answers.append(
+                input_function("Type ROLLBACK to restore")
+            )
+            return ExitCode.PASS
+
+        with mock.patch(
+            "velocity_dashboard_delivery.run_tool",
+            side_effect=fake_run_tool,
+        ):
+            self.service.start_rollback()
+            for _ in range(50):
+                if self.service.snapshot()["pending_prompt"]:
+                    break
+                threading.Event().wait(0.01)
+            self.assertIn(
+                "ROLLBACK",
+                self.service.snapshot()["pending_prompt"],
+            )
+            self.service.answer_prompt("ROLLBACK")
+            self.assertTrue(self.service.wait(1.0))
+
+        self.assertEqual(answers, ["ROLLBACK"])
+
     def test_submit_prompt_waits_for_ui_answer(self) -> None:
         answers: list[str] = []
 
@@ -488,9 +541,35 @@ class StaticFrontendContractTests(unittest.TestCase):
             "/api/delivery/select",
             "/api/delivery/install",
             "/api/delivery/prepare-submit",
+            "/api/delivery/rollback",
             "/api/delivery/answer",
         ):
             self.assertIn(endpoint, self.js)
+
+    def test_rollback_control_contract(self) -> None:
+        self.assertIn('id="rollback-delivery"', self.html)
+        self.assertIn(
+            'receipt_state !== "installed"',
+            self.js,
+        )
+        self.assertIn(
+            'promptText.includes("ROLLBACK")',
+            self.js,
+        )
+        self.assertIn(
+            "start_rollback",
+            self.delivery_bridge,
+        )
+
+    def test_delivery_layout_and_environment_version(self) -> None:
+        self.assertIn('id="env-version"', self.html)
+        self.assertIn("state.app = data.app", self.js)
+        self.assertIn('$("#env-version")', self.js)
+        self.assertIn('$("#env-delivery").title', self.js)
+        self.assertIn(
+            "grid-template-columns: repeat(4, max-content);",
+            self.css,
+        )
 
     def test_terminal_preserves_fixed_width_formatting(self) -> None:
         self.assertIn("white-space: pre;", self.css)
@@ -588,7 +667,7 @@ class HttpSecurityTests(unittest.TestCase):
                 timeout=1.0,
             )
         )
-        self.assertEqual(data["app"]["version"], "0.5.1")
+        self.assertEqual(data["app"]["version"], "0.5.2")
         self.assertEqual(data["server"]["host"], "127.0.0.1")
         self.assertGreaterEqual(len(data["tests"]), 85)
         self.assertIsInstance(data["event_cursor"], int)

@@ -1,10 +1,8 @@
 from __future__ import annotations
 
 import argparse
-import os
 import shutil
 import sys
-import uuid
 
 from dataclasses import replace
 from pathlib import Path, PurePosixPath
@@ -12,6 +10,7 @@ from typing import Callable, Sequence
 
 from velocity_submit_contract import (
     RECEIPT_SCHEMA,
+    TOOL_VERSION,
     ExitCode,
     InstallReceipt,
     ManifestFile,
@@ -19,8 +18,10 @@ from velocity_submit_contract import (
     SubmitError,
     SubmitManifest,
     ValidatedPackage,
+    atomic_copy,
     manifest_digest,
     open_validated_package,
+    remove_tree,
     sha256_file,
     validate_repository_target,
     write_receipt,
@@ -31,6 +32,8 @@ from velocity_submit_git import (
     RepositoryController,
     SubmitPreflight,
 )
+
+from velocity_submit_rollback import DeliveryRollback
 
 
 OutputFunction = Callable[[str], None]
@@ -720,34 +723,6 @@ class SubmitCoordinator:
         output_function("")
 
 
-def atomic_copy(
-    source: Path,
-    target: Path,
-) -> None:
-    temporary = target.with_name(
-        target.name
-        + ".velocity-submit-"
-        + uuid.uuid4().hex
-        + ".tmp"
-    )
-
-    try:
-        shutil.copyfile(source, temporary)
-        os.replace(temporary, target)
-    finally:
-        if temporary.exists():
-            temporary.unlink()
-
-
-def remove_tree(
-    path: Path,
-) -> None:
-    if not path.exists():
-        return
-
-    shutil.rmtree(path)
-
-
 def compare_package_to_receipt(
     package: ValidatedPackage,
     receipt: InstallReceipt,
@@ -960,6 +935,45 @@ def run_tool(
             validate_package_only(selected, output_function)
             return ExitCode.PASS
 
+        if mode == "rollback":
+            if receipt is None:
+                raise SubmitError(
+                    ExitCode.INSTALL_STATE_ERROR,
+                    "INSTALL_STATE_ERROR",
+                    "No active delivery receipt exists.",
+                    "Nothing to roll back.",
+                )
+
+            coordinator = DeliveryRollback(repository)
+            result = coordinator.rollback(
+                receipt,
+                input_function=input_function,
+            )
+            output_function("VELOCITY DELIVERY ROLLBACK: PASS")
+            output_function(
+                "Delivery: " + result.delivery_id
+            )
+            output_function(
+                "Baseline restored: "
+                + result.base_commit[:7]
+            )
+            output_function(
+                "Replacements restored: "
+                + str(result.replacements_restored)
+            )
+            output_function(
+                "Additions removed: "
+                + str(result.additions_removed)
+            )
+            output_function(
+                "UID sidecars removed: "
+                + str(result.uid_sidecars_removed)
+            )
+            output_function(
+                "State: receipt and backups cleared"
+            )
+            return ExitCode.PASS
+
         if mode == "guided":
             if receipt is None:
                 actual_mode = "install"
@@ -1120,10 +1134,18 @@ def build_argument_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Validate package without repository changes.",
     )
+    modes.add_argument(
+        "--rollback",
+        action="store_true",
+        help=(
+            "Restore the baseline of the installed delivery "
+            "and clear its receipt."
+        ),
+    )
     parser.add_argument(
         "--version",
         action="version",
-        version="Velocity Submit Tool 1.0.0",
+        version="Velocity Submit Tool " + TOOL_VERSION,
     )
     return parser
 
@@ -1139,6 +1161,8 @@ def main(
         mode = "submit"
     elif parsed.validate_package:
         mode = "validate-package"
+    elif parsed.rollback:
+        mode = "rollback"
     else:
         mode = "guided"
 

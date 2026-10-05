@@ -2,6 +2,7 @@
 
 const state = {
   csrf: "",
+  app: {},
   tests: [],
   suites: [],
   execution: {},
@@ -163,10 +164,12 @@ function renderDelivery() {
   $("#package-path").title = delivery.selected_package || "";
   $("#receipt-state").textContent = delivery.receipt_state || "none";
   $("#env-delivery").textContent = delivery.delivery_id || "none";
+  $("#env-delivery").title = delivery.delivery_id || "";
   updateActionStates();
 }
 
 function renderEnvironment() {
+  $("#env-version").textContent = state.app.version || "—";
   $("#env-project").textContent = state.environment.project_root || "—";
   $("#env-project").title = state.environment.project_root || "";
   $("#env-server").textContent = state.server.url || "—";
@@ -306,6 +309,7 @@ function updateActionStates() {
   $("#select-package").disabled = blocked;
   $("#install-package").disabled = blocked || !state.delivery.selected_package;
   $("#prepare-submit").disabled = blocked || state.delivery.receipt_state === "none";
+  $("#rollback-delivery").disabled = blocked || state.delivery.receipt_state !== "installed";
   $("#shutdown-button").disabled = deliveryBusy;
 }
 
@@ -407,7 +411,9 @@ async function handleDeliveryPrompt(data) {
     if (currentDelivery.pending_prompt !== promptText) return;
 
     let answer = "";
-    if (promptText.includes("SUBMIT")) {
+    if (promptText.includes("ROLLBACK")) {
+      answer = window.prompt(promptText) || "";
+    } else if (promptText.includes("SUBMIT")) {
       answer = window.prompt(promptText) || "";
     } else if (promptText.toLowerCase().includes("delete")) {
       answer = window.confirm(promptText) ? "y" : "n";
@@ -609,6 +615,7 @@ function bindActions() {
   });
   $("#install-package").addEventListener("click", () => post("/api/delivery/install"));
   $("#prepare-submit").addEventListener("click", () => post("/api/delivery/prepare-submit"));
+  $("#rollback-delivery").addEventListener("click", () => post("/api/delivery/rollback"));
 
   $("#browser-select").addEventListener("change", updateCustomBrowserVisibility);
   $("#browse-browser").addEventListener("click", async () => {
@@ -649,6 +656,7 @@ async function bootstrap() {
   try {
     const data = await api("/api/bootstrap");
     state.csrf = data.csrf_token;
+    state.app = data.app;
     state.tests = data.tests;
     state.suites = data.suites;
     state.execution = data.execution;

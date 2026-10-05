@@ -4,8 +4,10 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import stat
 import tempfile
+import uuid
 import zipfile
 
 from contextlib import contextmanager
@@ -15,7 +17,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Iterator
 
 
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.1.0"
 MANIFEST_SCHEMA = "velocity-submit-manifest/v1"
 RECEIPT_SCHEMA = "velocity-submit-receipt/v1"
 PROJECT_NAME = "velocity"
@@ -516,6 +518,34 @@ def sha256_file(
             digest.update(block)
 
     return digest.hexdigest()
+
+
+def atomic_copy(
+    source: Path,
+    target: Path,
+) -> None:
+    temporary = target.with_name(
+        target.name
+        + ".velocity-submit-"
+        + uuid.uuid4().hex
+        + ".tmp"
+    )
+
+    try:
+        shutil.copyfile(source, temporary)
+        os.replace(temporary, target)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+
+
+def remove_tree(
+    path: Path,
+) -> None:
+    if not path.exists():
+        return
+
+    shutil.rmtree(path)
 
 
 def canonical_manifest_bytes(

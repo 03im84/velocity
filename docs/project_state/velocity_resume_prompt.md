@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.22 |
+| Versión | 1.23 |
 | Fecha | 04/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -75,7 +75,9 @@ Estado arquitectónico esperado:
 - Run All: 85 tests / 2418 checks PASS.
 - 0 failures, 0 timeout, 0 engine errors y 0 missing metrics.
 - Último commit del Slice: 80c5118 test(input): add runtime pipeline integration.
-- main estaba sincronizada con origin/main después de ese commit.
+- Input baseline documental: 26002da docs(input): record input runtime baseline.
+- Web VTD Reload Safety: d36c7ee fix(tools): make web dashboard reload-safe.
+- main estaba sincronizada con origin/main en d36c7ee.
 
 Target de producto:
 Playable Vertical Slice 1.0.
@@ -85,10 +87,13 @@ Propulsion Runtime Slice 1.0.
 Problema, alternativas, ADR y diseño todavía pendientes.
 
 Trabajo operativo separado:
-Velocity Submit Tool Rollback 1.1 es un candidato no aceptado.
-Está preservado fuera del repositorio en:
+Velocity Submit Tool Rollback 1.1 fue reconstruido sobre d36c7ee.
+Windows self-rollback restauró d36c7ee con Git limpio y receipt ausente.
+Baseline final local: 126 tooling tests PASS.
+Install final, regresión Windows y Submit permanecen pendientes.
+El backup original sigue preservado fuera del repositorio en:
 C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
-Debe auditarse por separado y no mezclarse con Propulsion.
+No mezclar con Propulsion.
 
 Antes de responder:
 1. Lee completamente los tres documentos de Project State.
@@ -366,12 +371,12 @@ CompositionRuntime Design:          1.1
 Managed Runtime Adapter Design:      1.1
 Distance Sensor Runtime Design:     1.1
 Input Runtime Slice Design:         1.1
-Velocity Submit Tool Design:         1.2
-Velocity Tooling Dashboard Web:      1.3
+Velocity Submit Tool Design:         1.4
+Velocity Tooling Dashboard Web:      1.4
 Product Roadmap:                    1.1
 Playable Vertical Slice Design:     1.1
-Project Handoff:                    1.22
-Resume Prompt:                      1.22
+Project Handoff:                    1.23
+Resume Prompt:                      1.23
 Collaboration Contract:             1.5
 ```
 
@@ -459,25 +464,67 @@ Total tooling: 104 tests PASS
 
 ```text
 Velocity Submit Tool Rollback 1.1
-Estado: CANDIDATO NO ACEPTADO
+Estado: RECONSTRUIDO; WINDOWS E2E SELF-ROLLBACK PASS
+Base vigente: d36c7ee
 ```
 
-Backup externo:
+Backup externo original:
 
 ```text
 C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
 ```
 
-El backup contiene trabajo de tooling y estado de recuperación preservado.
+El backup fue auditado fuera del repositorio. No restaurar literalmente.
 
-Reglas:
+Excluidos:
 
-- no mezclar con Input baseline;
-- no mezclar con Propulsion;
-- auditar código, tests y diseño antes de instalar;
-- preparar Delivery propia;
-- no asumir los conteos declarados hasta ejecutar tooling tests;
-- conservar el backup hasta commit y push aceptados.
+- Factory Input antigua;
+- escena snake_case antigua;
+- receipt histórico;
+- logs Git históricos.
+
+Candidato reconstruido:
+
+```text
+DeliveryRollback
+--rollback / -Rollback
+Web endpoint y botón rollback
+confirmación textual ROLLBACK
+exact receipt/branch/HEAD/index/allowlist/hash gates
+safe derived UID removal
+reverse restore
+clean-status postcondition
+```
+
+Baseline local:
+
+```text
+Submit Tool:     62 tests PASS
+Web VTD:         47 tests PASS
+Dashboard Logic: 17 tests PASS
+Total tooling:  126 tests PASS
+```
+
+Acceptance ejecutada:
+
+```text
+validation candidate installed
+→ 125 Windows tooling tests PASS
+→ self-rollback PASS
+→ d36c7ee clean
+→ receipt none
+```
+
+Pendiente:
+
+```text
+install final delivery
+→ 126 Windows tooling tests
+→ visual Environment/alignment check
+→ Submit
+```
+
+No mezclar este candidato con Propulsion.
 
 ## 14. Fuera de alcance actual
 

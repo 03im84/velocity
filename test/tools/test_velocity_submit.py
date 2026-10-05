@@ -24,11 +24,14 @@ if str(TOOL_DIRECTORY) not in sys.path:
 
 import velocity_submit  # noqa: E402
 import velocity_submit_contract as contract  # noqa: E402
+import velocity_submit_rollback  # noqa: E402
 
 from velocity_submit import (  # noqa: E402
     DeliveryInstaller,
     delete_original_package,
 )
+
+from velocity_submit_rollback import DeliveryRollback  # noqa: E402
 
 from velocity_submit_contract import (  # noqa: E402
     ExitCode,
@@ -726,6 +729,408 @@ class InstallTests(unittest.TestCase):
         self.assertEqual(
             self.fixture.git("status", "--porcelain").stdout,
             "",
+        )
+
+
+class RollbackTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.fixture = VelocityFixture()
+        self.repository = RepositoryController.discover(
+            self.fixture.work
+        )
+        self.installer = DeliveryInstaller(self.repository)
+        self.coordinator = DeliveryRollback(self.repository)
+
+    def tearDown(self) -> None:
+        self.fixture.cleanup()
+
+    def install_files(
+        self,
+        files: list[tuple[str, str, str]],
+    ) -> Any:
+        package_path = self.fixture.build_package(files)
+
+        with open_validated_package(package_path) as package:
+            return self.installer.install(package)
+
+    def rollback(
+        self,
+        answer: str = "ROLLBACK",
+    ) -> Any:
+        receipt = self.repository.load_receipt()
+        self.assertIsNotNone(receipt)
+        return self.coordinator.rollback(
+            receipt,
+            input_function=lambda _prompt: answer,
+        )
+
+    def assert_clean_without_state(self) -> None:
+        self.assertEqual(
+            self.fixture.git("status", "--porcelain").stdout,
+            "",
+        )
+        self.assertFalse(
+            self.repository.paths.state_directory.exists()
+        )
+
+    def assert_delivery_preserved(self) -> None:
+        receipt = self.repository.load_receipt()
+        self.assertIsNotNone(receipt)
+        self.assertEqual(receipt.state, "installed")
+
+    def test_rollback_restores_baseline(self) -> None:
+        self.install_files(
+            [
+                ("docs/new.txt", "new\n", "add"),
+                ("docs/replace.txt", "replacement\n", "replace"),
+            ]
+        )
+
+        result = self.rollback()
+
+        self.assertEqual(result.replacements_restored, 1)
+        self.assertEqual(result.additions_removed, 1)
+        self.assertEqual(result.uid_sidecars_removed, 0)
+        self.assertEqual(
+            (self.fixture.work / "docs/replace.txt").read_text(),
+            "baseline\n",
+        )
+        self.assertFalse(
+            (self.fixture.work / "docs/new.txt").exists()
+        )
+        self.assert_clean_without_state()
+
+    def test_rollback_removes_created_directories(self) -> None:
+        self.install_files(
+            [("docs/created/deep/new.txt", "new\n", "add")]
+        )
+
+        self.rollback()
+
+        self.assertFalse(
+            (self.fixture.work / "docs/created").exists()
+        )
+        self.assert_clean_without_state()
+
+    def test_rollback_removes_derived_untracked_uid(self) -> None:
+        self.install_files(
+            [("core/feature.gd", "extends RefCounted\n", "add")]
+        )
+        self.fixture.write(
+            "core/feature.gd.uid",
+            "uid://feature123\n",
+        )
+
+        result = self.rollback()
+
+        self.assertEqual(result.uid_sidecars_removed, 1)
+        self.assertFalse(
+            (self.fixture.work / "core/feature.gd").exists()
+        )
+        self.assertFalse(
+            (self.fixture.work / "core/feature.gd.uid").exists()
+        )
+        self.assert_clean_without_state()
+
+    def test_rollback_rejects_invalid_derived_uid(self) -> None:
+        self.install_files(
+            [("core/feature.gd", "extends RefCounted\n", "add")]
+        )
+        self.fixture.write(
+            "core/feature.gd.uid",
+            "not a godot uid\n",
+        )
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.UID_ERROR,
+        )
+        self.assertTrue(
+            (self.fixture.work / "core/feature.gd").exists()
+        )
+        self.assert_delivery_preserved()
+
+    def test_rollback_rejects_tracked_derived_uid(self) -> None:
+        self.fixture.write(
+            "core/feature.gd.uid",
+            "uid://trackedfeature123\n",
+        )
+        self.fixture.git("add", "--", "core/feature.gd.uid")
+        self.fixture.git(
+            "commit",
+            "-m",
+            "test: add tracked derived uid fixture",
+        )
+        self.fixture.git("push", "origin", "main")
+        self.fixture.base_commit = self.fixture.head()
+        self.install_files(
+            [("core/feature.gd", "extends RefCounted\n", "add")]
+        )
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.UID_ERROR,
+        )
+        self.assertTrue(
+            (self.fixture.work / "core/feature.gd").exists()
+        )
+        self.assert_delivery_preserved()
+
+    def test_rollback_rejects_unexpected_changes(self) -> None:
+        self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        self.fixture.write("local.txt", "unexpected\n")
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.WORKTREE_ERROR,
+        )
+        self.assertTrue(
+            (self.fixture.work / "docs/new.txt").exists()
+        )
+        self.assert_delivery_preserved()
+
+    def test_rollback_rejects_staged_changes(self) -> None:
+        self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        self.fixture.git("add", "--", "docs/new.txt")
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.STAGING_ERROR,
+        )
+        self.assert_delivery_preserved()
+
+    def test_rollback_rejects_drifted_target(self) -> None:
+        self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        self.fixture.write("docs/new.txt", "edited on top\n")
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.HASH_ERROR,
+        )
+        self.assert_delivery_preserved()
+
+    def test_rollback_rejects_missing_addition(self) -> None:
+        self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        (self.fixture.work / "docs/new.txt").unlink()
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.HASH_ERROR,
+        )
+        self.assert_delivery_preserved()
+
+    def test_rollback_rejects_missing_backup(self) -> None:
+        self.install_files(
+            [("docs/replace.txt", "replacement\n", "replace")]
+        )
+        backup = self.repository.paths.backup_directory.joinpath(
+            "docs",
+            "replace.txt",
+        )
+        backup.unlink()
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.INSTALL_STATE_ERROR,
+        )
+        self.assertEqual(
+            (self.fixture.work / "docs/replace.txt").read_text(),
+            "replacement\n",
+        )
+        self.assert_delivery_preserved()
+
+    def test_rollback_rejects_moved_head(self) -> None:
+        self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        self.fixture.git(
+            "commit",
+            "--allow-empty",
+            "-m",
+            "test: move head",
+        )
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.BASELINE_ERROR,
+        )
+        self.assert_delivery_preserved()
+
+    def test_rollback_rejects_branch_mismatch(self) -> None:
+        self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        self.fixture.git("switch", "-c", "other")
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.BASELINE_ERROR,
+        )
+        self.assertTrue(
+            (self.fixture.work / "docs/new.txt").exists()
+        )
+        self.assert_delivery_preserved()
+
+    def test_rollback_rejects_installing_state(self) -> None:
+        self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        receipt_path = self.repository.paths.receipt_path
+        data = json.loads(
+            receipt_path.read_text(encoding="utf-8")
+        )
+        data["state"] = "installing"
+        receipt_path.write_text(
+            json.dumps(data, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.INSTALL_STATE_ERROR,
+        )
+        self.assertTrue(
+            (self.fixture.work / "docs/new.txt").exists()
+        )
+
+    def test_rollback_rejects_local_commit_only_state(self) -> None:
+        self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        receipt_path = self.repository.paths.receipt_path
+        data = json.loads(
+            receipt_path.read_text(encoding="utf-8")
+        )
+        data["state"] = "local_commit_only"
+        receipt_path.write_text(
+            json.dumps(data, indent=2) + "\n",
+            encoding="utf-8",
+        )
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.INSTALL_STATE_ERROR,
+        )
+
+    def test_cancelled_confirmation_preserves_delivery(self) -> None:
+        self.install_files(
+            [("docs/replace.txt", "replacement\n", "replace")]
+        )
+
+        with self.assertRaises(SubmitError) as context:
+            self.rollback(answer="no")
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.CANCELLED,
+        )
+        self.assertEqual(
+            (self.fixture.work / "docs/replace.txt").read_text(),
+            "replacement\n",
+        )
+        self.assert_delivery_preserved()
+
+    def test_partial_failure_preserves_evidence(self) -> None:
+        self.install_files(
+            [("docs/replace.txt", "replacement\n", "replace")]
+        )
+
+        with mock.patch.object(
+            velocity_submit_rollback,
+            "atomic_copy",
+            side_effect=OSError("controlled restore failure"),
+        ):
+            with self.assertRaises(SubmitError) as context:
+                self.rollback()
+
+        self.assertEqual(
+            context.exception.code,
+            ExitCode.INSTALL_ERROR,
+        )
+        self.assertTrue(
+            self.repository.paths.backup_directory.joinpath(
+                "docs",
+                "replace.txt",
+            ).is_file()
+        )
+        self.assert_delivery_preserved()
+
+    def test_run_tool_rollback_reports_pass(self) -> None:
+        self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        lines: list[str] = []
+
+        code = velocity_submit.run_tool(
+            start_directory=self.fixture.work,
+            mode="rollback",
+            input_function=lambda _prompt: "ROLLBACK",
+            output_function=lines.append,
+            package_selector=lambda: None,
+        )
+
+        self.assertEqual(code, ExitCode.PASS)
+        self.assertIn(
+            "VELOCITY DELIVERY ROLLBACK: PASS",
+            lines,
+        )
+        self.assert_clean_without_state()
+
+    def test_run_tool_rollback_without_receipt_fails(self) -> None:
+        lines: list[str] = []
+
+        code = velocity_submit.run_tool(
+            start_directory=self.fixture.work,
+            mode="rollback",
+            input_function=lambda _prompt: "ROLLBACK",
+            output_function=lines.append,
+            package_selector=lambda: None,
+        )
+
+        self.assertEqual(
+            code,
+            ExitCode.INSTALL_STATE_ERROR,
         )
 
 
