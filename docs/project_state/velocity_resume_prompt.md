@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.20 |
-| Fecha | 03/10/2026 |
+| Versión | 1.21 |
+| Fecha | 04/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
 ## 1. Archivos a adjuntar
@@ -20,9 +20,9 @@ velocity_collaboration_contract.md
 También adjuntar cuando sea posible:
 
 ```text
-composition_runtime_design.md
-ADR-011 — Composition Runtime Activation, Ownership and Rollback.md
-system_composition_pipeline_design.md
+input_runtime_slice_design.md
+ADR-014 — Input Intent Sampling and Runtime Publication.md
+velocity_roadmap.json
 git status -sb
 git log -1 --oneline
 ```
@@ -31,6 +31,12 @@ Repositorio:
 
 ```text
 https://github.com/03im84/velocity
+```
+
+Engine:
+
+```text
+Godot Engine 4.7.1 stable
 ```
 
 ## 2. Prompt listo para copiar
@@ -48,139 +54,79 @@ Rama:
 main
 
 He adjuntado:
-
 - velocity_handoff.md
 - velocity_resume_prompt.md
 - velocity_collaboration_contract.md
 
 Estado arquitectónico esperado:
-
-- Runtime Construction Contract 1.0 está implementado y verificado.
-- RuntimeFactoryRegistry 1.0 está implementado y verificado.
-- CompositionPlan 1.0 está implementado y verificado.
-- CompositionCompiler 1.0 está implementado y verificado.
-- ADR-011 1.1 está aceptado, implementado y verificado.
-- CompositionRuntimeOperationResult 1.0 está implementado y verificado.
+- DeviceBus y Runtime Safety están implementados.
+- Topic y Message Contracts están implementados.
+- Device Core, Profiles, Configuration y DeviceGraph están implementados.
+- SystemProfile, DeviceCatalog y DeviceGraphAssembler están implementados.
+- Runtime Construction Contract 1.0 está implementado.
+- RuntimeFactoryRegistry, CompositionPlan y CompositionCompiler están implementados.
 - CompositionRuntime 1.0 está implementado y verificado.
-- Full Composition Runtime Pipeline está verificado hasta ACTIVE y SHUTDOWN.
-- Velocity Submit Tool 1.0.0 está implementado y verificado.
-- Guided ZIP picker, transactional Install y Submit están activos.
-- 44 tests propios y 61 tests de tooling pasan.
-- Windows launcher, process Bypass y Tkinter picker están verificados.
-- ADR-012 está aceptado.
-- Managed Runtime Adapter Boundary Design 1.0 está activo.
 - Managed Runtime Adapter Boundary 1.0 está implementado y verificado.
-- Runtime Suite: 17 tests / 420 checks PASS.
-- Run All: 76 tests / 2262 checks PASS.
+- Distance Sensor Runtime Slice 1.0 está implementado y verificado.
+- Input Runtime Slice 1.0 está implementado y verificado.
+- ADR-014 1.1 está aceptado, implementado y verificado.
+- Input Suite: 6 tests / 101 checks PASS.
+- Runtime Suite: 20 tests / 475 checks PASS.
+- Run All: 85 tests / 2418 checks PASS.
+- 0 failures, 0 timeout, 0 engine errors y 0 missing metrics.
+- Último commit del Slice: 80c5118 test(input): add runtime pipeline integration.
+- main estaba sincronizada con origin/main después de ese commit.
 
-Baseline esperada:
+Target de producto:
+Playable Vertical Slice 1.0.
 
-- 69 tests.
-- 2156 checks.
-- 0 failures.
-- 0 missing metrics.
-- Plan ExitCode 0.
-- RESULT PASS.
+Siguiente milestone de producto:
+Propulsion Runtime Slice 1.0.
+Problema, alternativas, ADR y diseño todavía pendientes.
 
-Composition Suite esperada:
-
-- 16 tests.
-- 702 checks.
-- 0 failures.
-
-Último commit de implementación esperado:
-
-cc9a7ae feat(runtime): add transactional composition runtime
-
-Milestone actual:
-
-Velocity Submit Tool 1.0.0
-IMPLEMENTADO Y VERIFICADO
-
-Managed Runtime Adapter Boundary tiene ADR y diseño aceptados; su implementación está autorizada después del commit documental.
+Trabajo operativo separado:
+Velocity Submit Tool Rollback 1.1 es un candidato no aceptado.
+Está preservado fuera del repositorio en:
+C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
+Debe auditarse por separado y no mezclarse con Propulsion.
 
 Antes de responder:
-
 1. Lee completamente los tres documentos de Project State.
-
-2. Revisa ADR-011 y CompositionRuntime Design 1.1.
-
-3. No inventes APIs, clases, rutas, versiones o decisiones.
-
-4. Respeta código versionado, pruebas aceptadas, ADR y diseños.
-
-5. Las pruebas aceptadas son baselines inmutables.
-
-6. Una arquitectura nueva requiere prueba sucesora.
-
-7. Toda modificación se entrega como archivo completo consolidado.
-
-8. No uses parches, diffs, fragmentos, inserciones parciales o cirugía manual.
-
-9. Antes de instalar Velocity Submit Tool, los paquetes se extraen fuera de Velocity y solo repository_files/ entra al repositorio.
-
-10. Después de su baseline, el ZIP permanece externo y guided mode ejecuta Install; README.txt, SHA256SUMS.txt, SUBMIT_MANIFEST.json, carpeta y ZIP nunca entran al repositorio.
-
-11. Si una prueba falla, solicita el primer error completo con ruta y línea.
-
-12. La ejecución autoritativa utiliza Godot Console, headless y Velocity Test Runner.
-
-13. No uses Run Current Scene como evidencia autoritativa.
-
-14. No escribas código durante problema, análisis, ADR o diseño abierto.
-
-15. Propón alternativas y tradeoffs.
-
-16. No aceptes automáticamente mis ideas ni las tuyas.
-
-17. Mantén una responsabilidad por componente.
-
-18. Prefiere composición sobre herencia.
-
-19. No añadas singleton o autoload por comodidad.
-
-20. Aplica:
-
-    El usuario o el entorno pueden equivocarse.
-    El simulador debe permanecer seguro.
-
-21. Trabaja en español.
-
-22. Mantén tono claro, didáctico, directo, cercano y honesto.
-
-23. CompositionRuntime 1.0 es Simulation-only, one-shot y transaccional.
-
-24. SHUTDOWN y FAILED son terminales.
-
-25. Last Known Good y hot swap pertenecen a un Supervisor futuro.
-
-26. Hardware Runtime permanece bloqueado.
-
-27. Production collaborators no pueden convertirse en service locators.
+2. Revisa ADR-014, Input Runtime Slice Design y velocity_roadmap.json.
+3. Revisa Git; no inventes el estado actual.
+4. No inventes APIs, clases, rutas, versiones o decisiones.
+5. Respeta código versionado, tests aceptados, ADR y diseños.
+6. Las pruebas aceptadas son baselines inmutables.
+7. Una arquitectura nueva requiere prueba sucesora.
+8. Toda modificación se entrega como archivo completo mediante Web VTD Delivery.
+9. No uses parches, fragmentos ni cirugía manual.
+10. Si una prueba falla, detente y solicita el primer error completo con archivo, línea y backtrace.
+11. La autoridad de pruebas es Godot Console, headless y Velocity Tooling Dashboard Web.
+12. No uses Run Current Scene como evidencia autoritativa.
+13. No escribas implementación antes de cerrar problema, análisis, ADR y diseño.
+14. Propón alternativas y tradeoffs.
+15. Mantén una responsabilidad por componente.
+16. Prefiere composición sobre herencia.
+17. No añadas singleton, autoload o service locator por comodidad.
+18. Hardware Runtime permanece bloqueado sin diseño sucesor.
+19. Trabaja en español con tono claro, didáctico, directo, cercano, riguroso y honesto.
+20. No existe trabajo en background: cada entrega se realiza en tiempo real.
 
 Tu primera respuesta debe incluir únicamente:
-
 A. confirmación de lectura;
 B. visión del proyecto;
 C. último milestone completado;
-D. baseline global y Composition Suite;
+D. baseline global, Input Suite y Runtime Suite;
 E. último commit y estado Git conocido;
-F. milestone recomendado;
-G. decisiones aceptadas;
-H. riesgos o contradicciones;
-I. archivos adicionales requeridos;
+F. siguiente milestone de producto;
+G. trabajo operativo pendiente;
+H. decisiones aceptadas;
+I. riesgos o contradicciones;
 J. pregunta de confirmación.
 
 No escribas implementación en la primera respuesta.
 
-Si no puedes acceder a un archivo:
-
-- indícalo;
-- solicita la ruta;
-- no reconstruyas por intuición.
-
 Jerarquía de autoridad:
-
 1. código versionado;
 2. pruebas aceptadas;
 3. ADR aceptados;
@@ -191,13 +137,31 @@ Jerarquía de autoridad:
 8. velocity_collaboration_contract.md;
 9. journals;
 10. conversación.
-
-Espera confirmación antes de avanzar.
 ```
 
-## 3. Estado técnico esperado
+## 3. Visión
 
-Milestones completados:
+Velocity es una plataforma y juego modular de carreras antigravitatorias inspirado en Wipeout.
+
+Objetivos:
+
+- nave antigravitatoria jugable;
+- arquitectura modular;
+- composición explícita;
+- simulación segura;
+- hardware futuro;
+- telemetría futura;
+- aprendizaje técnico.
+
+Regla canónica:
+
+> El usuario o el entorno pueden equivocarse. Una operación puede ser rechazada o abortada. El simulador debe permanecer seguro, consistente y recuperable.
+
+Lema:
+
+> El usuario puede fallar. El simulador no.
+
+## 4. Arquitectura implementada
 
 ```text
 DeviceBus y Runtime Safety
@@ -214,9 +178,12 @@ RuntimeFactoryRegistry 1.0
 CompositionPlan 1.0
 CompositionCompiler 1.0
 CompositionRuntime 1.0
+Managed Runtime Adapter Boundary 1.0
+Distance Sensor Runtime Slice 1.0
+Input Runtime Slice 1.0
 ```
 
-Pipeline implementado:
+## 5. Pipeline runtime
 
 ```text
 DeviceProfiles
@@ -242,415 +209,332 @@ ACTIVE
 SHUTDOWN
 ```
 
-## 4. CompositionRuntime 1.0
-
-Componentes:
-
-```text
-res://core/composition/composition_runtime_operation_result.gd
-res://core/composition/composition_runtime.gd
-```
-
-Constructor:
-
-```text
-RuntimeFactoryRegistry
-RuntimeDependencyValueResolver behavior
-RuntimeHost behavior
-RuntimeLifecycleAdapter behavior
-RuntimeCommunicationBinder behavior
-```
-
-Estados:
-
-```text
-CREATED
-ACTIVATING
-ACTIVE
-SHUTTING_DOWN
-SHUTDOWN
-FAILED
-```
-
-Características:
+CompositionRuntime 1.0 es:
 
 - Simulation-only;
 - stateful;
 - one-shot;
 - transaccional;
-- DeviceBus owned;
-- phase barriers;
-- commit ACTIVE completo;
-- rollback inverso;
-- shutdown inverso;
-- cleanup best effort;
-- sin hot swap;
-- sin service locator;
-- sin singleton;
-- sin IO;
-- sin threads.
+- owner de DeviceBus;
+- phase-barriered;
+- best-effort cleanup;
+- terminal después de `SHUTDOWN` o `FAILED`.
 
-## 5. Activation y rollback
+Last Known Good y hot swap pertenecen a un Supervisor futuro.
 
-Activation:
+## 6. Input Runtime Slice 1.0
+
+Flujo:
 
 ```text
-Preflight
-├── validate Plan, Registry and collaborators
-└── resolve declared Dependency Values
-→ Create Bus
-→ Configure Policy
-→ Create Bindings and Build All
-→ Attach All
-→ Bind All
-→ Initialize All
-→ Ready All
-→ Start All
+Godot Input
+→ GodotInputSource
+→ GodotInputIntentProvider
+→ InputSamplingNode
+→ InputRuntimeUnit
+→ VehicleControlCommand
+→ DeviceBus
+```
+
+Factory Key:
+
+```text
+velocity.input.player / 1 / Simulation
+```
+
+Dependency:
+
+```text
+input_intent_provider / BORROWED
+```
+
+Effective Configuration:
+
+```text
+capability: vehicle_control_input
+publishes: vehicle_control_command
+subscribes: none
+```
+
+Lifecycle:
+
+```text
+CREATED → INITIALIZED → READY → RUNNING → SHUTDOWN
+```
+
+Invariantes:
+
+- Provider fuera de Core;
+- Factory construct-only;
+- Sampler es Host Object owned;
+- sampling solo en `RUNNING`;
+- neutral command válido;
+- valores finitos y acotados;
+- source identity preservada;
+- Provider `BORROWED` sobrevive release;
+- sin autoload, singleton, service locator o thread.
+
+## 7. Input tests
+
+```text
+VehicleControlCommandTest:                   12 checks
+GodotInputIntentProviderTest:                17 checks
+InputSamplingNodeTest:                       10 checks
+InputRuntimeUnitTest:                        18 checks
+InputRuntimeFactoryTest:                     21 checks
+InputRuntimePipelineIntegrationTest:         23 checks
+```
+
+```text
+Input Suite
+Planned: 6
+Passed: 6
+Checks: 101
+Failures: 0
+RESULT: PASS
+```
+
+La integración concreta verifica:
+
+```text
+Profile
+→ Catalog
+→ SystemProfile
+→ Graph
+→ Registry
+→ Plan
+→ Runtime
 → ACTIVE
+→ physics tick
+→ command
+→ SHUTDOWN
 ```
 
-Rollback y shutdown:
+`output_port_unconnected / INFO` es esperado para este Device source-only.
+
+## 8. Baseline vigente
+
+Runtime Suite:
 
 ```text
-shutdown reverse
-→ unbind reverse
-→ detach reverse
-→ release reverse
-→ DeviceBus.clear
+Planned: 20
+Completed: 20
+Passed: 20
+Checks: 475
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+RESULT: PASS
 ```
 
-Si initialize falla parcialmente, el Handle actual entra en shutdown best effort.
-
-Cleanup no se detiene por el primer error.
-
-## 6. Runtime tests
+Run All:
 
 ```text
-CompositionRuntimeOperationResultTest
-17 checks
-PASS
-
-CompositionRuntimeTest
-62 checks
-PASS
-
-CompositionRuntimeIntegrationTest
-57 checks
-PASS
-
-FullCompositionRuntimePipelineIntegrationTest
-50 checks
-PASS
-```
-
-Total:
-
-```text
-4 tests
-186 checks
-0 failures
-```
-
-## 7. Baseline global
-
-```text
-Planned: 69
-Completed: 69
-Passed: 69
+Planned: 85
+Completed: 85
+Passed: 85
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 69
-Checks: 2156
+Total Runs: 85
+Checks: 2418
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
 RESULT: PASS
 ```
 
-Composition Suite:
+## 9. Documentos canónicos
 
 ```text
-Planned: 16
-Completed: 16
-Passed: 16
-Failed: 0
-Checks: 702
-Check Failures: 0
-Missing Metrics: 0
-RESULT: PASS
-```
-
-## 8. Documentos canónicos
-
-```text
-Core Architecture:                  2.26
+Core Architecture:                  2.27
 Engineering Standards:              1.9
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
 ADR-011:                            1.1
 ADR-012:                            1.1
-System Composition Pipeline Design: 1.16
+ADR-013:                            1.1
+ADR-014:                            1.1
+System Composition Pipeline Design: 1.17
 Runtime Construction Contract:      1.1
 RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
 CompositionCompiler Design:         1.4
 CompositionRuntime Design:          1.1
-Velocity Submit Tool Design:         1.2
-Velocity Tooling Dashboard Web:      1.2
 Managed Runtime Adapter Design:      1.1
 Distance Sensor Runtime Design:     1.1
-Product Roadmap:                    1.0
-Playable Vertical Slice Design:     1.0
-Project Handoff:                    1.20
-Resume Prompt:                      1.20
+Input Runtime Slice Design:         1.1
+Velocity Submit Tool Design:         1.2
+Velocity Tooling Dashboard Web:      1.2
+Product Roadmap:                    1.1
+Playable Vertical Slice Design:     1.1
+Project Handoff:                    1.21
+Resume Prompt:                      1.21
 Collaboration Contract:             1.5
 ```
 
-## 9. Git
+## 10. Git
 
-Último commit de implementación:
-
-```text
-cc9a7ae
-feat(runtime): add transactional composition runtime
-```
-
-Commit de diseño anterior:
+Commits del Input Runtime Slice:
 
 ```text
-0563dd5
-docs(runtime): define composition runtime activation
+f06d76a docs(input): define input runtime slice
+5522583 feat(input): add vehicle control command
+bd3098f feat(input): add godot input intent provider
+393e878 feat(input): add input sampling node
+f4345cb feat(input): add input runtime unit
+0b0b233 feat(input): add input runtime factory
+80c5118 test(input): add runtime pipeline integration
 ```
 
-Estado esperado después del push de implementación:
+Estado confirmado después de `80c5118`:
 
 ```text
 ## main...origin/main
 ```
 
-Último commit documental:
+El estado Git actual debe comprobarse en cada reanudación.
 
-```text
-38a5ea7
-docs(runtime): record composition runtime 1.0 baseline
-```
-
-Tooling baseline:
-
-```text
-f7bd176 feat(tools): add guided package delivery
-19d1be8 docs(tools): record guided package delivery baseline
-```
-
-Próximo commit documental:
-
-```text
-docs(runtime): define managed adapter boundary
-```
-
-## 10. RuntimeFactoryRegistry y Plan
-
-Registry:
-
-- lookup exacto;
-- inmutable;
-- no ejecuta;
-- no fallback;
-- no latest;
-- no overwrite.
-
-CompositionPlan:
-
-- inmutable;
-- no ejecutable;
-- conserva Keys y Specs;
-- no contiene factory, Callable, Value activo, Handle o Bus;
-- conserva DeviceBusDispatchPolicy;
-- deriva órdenes forward y reverse.
-
-CompositionCompiler y CompositionRuntime utilizan la misma Registry explícita durante una activación.
-
-## 11. Velocity Submit Tool 1.0.0
-
-Estado:
-
-```text
-IMPLEMENTADO Y VERIFICADO
-```
-
-Entrada principal:
-
-```text
-tools\git\velocity_submit.bat
-```
-
-Contrato:
-
-```text
-native ZIP picker
-→ Install
-→ authoritative tests
-→ second invocation
-→ Submit
-```
-
-Baseline:
-
-```text
-44 own tests PASS
-17 Dashboard Logic PASS
-61 total tooling PASS
-Windows launcher PASS
-Tkinter picker PASS
-```
-
-Commit:
-
-```text
-f7bd176 feat(tools): add guided package delivery
-```
-
-## 12. Ownership
-
-```text
-BORROWED
-```
-
-Owner original permanece.
-
-```text
-TRANSFERRED
-```
-
-Transferencia comienza en `factory.build(request)`.
-
-Factory limpia el request actual si build falla.
-
-Runtime libera Handles exitosos anteriores en orden inverso.
-
-## 13. Last Known Good
-
-CompositionRuntime 1.0 no reemplaza otra instancia activa.
-
-Un Supervisor futuro será owner de Last Known Good.
-
-Hot swap no está diseñado para 1.0.
-
-No añadirlo como parche.
-
-## 14. Current direction
+## 11. Dirección actual
 
 ```text
 Product target: Playable Vertical Slice 1.0
-Current milestone: Input Runtime Slice 1.0
+Completed: Input Runtime Slice 1.0
+Current product milestone: Propulsion Runtime Slice 1.0
 ```
 
-Roadmap/Gantt is data-driven from `velocity_roadmap.json`.
-
-## 15. Fuera de alcance actual
+Roadmap:
 
 ```text
-Distance Sensor Runtime Slice
+docs/project_state/velocity_roadmap.json
+Version: 1.1
+current_milestone: propulsion_runtime_slice
+```
+
+Propulsion todavía requiere:
+
+```text
+Problem
+Analysis
+Alternatives and tradeoffs
+ADR
+Design
+Review and approval
+Documentation commit
+```
+
+## 12. Candidato Rollback separado
+
+```text
+Velocity Submit Tool Rollback 1.1
+Estado: CANDIDATO NO ACEPTADO
+```
+
+Backup externo:
+
+```text
+C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
+```
+
+El backup contiene trabajo de tooling y estado de recuperación preservado.
+
+Reglas:
+
+- no mezclar con Input baseline;
+- no mezclar con Propulsion;
+- auditar código, tests y diseño antes de instalar;
+- preparar Delivery propia;
+- no asumir los conteos declarados hasta ejecutar tooling tests;
+- conservar el backup hasta commit y push aceptados.
+
+## 13. Fuera de alcance actual
+
+```text
+Propulsion implementation antes de ADR
+Hover Physics
+Playable Vehicle Composition
+track
+camera
+HUD
+lap system
 CompositionRuntimeSupervisor
 Last Known Good manager
 hot swap
-multi-runtime
 Hardware Runtime
-production factories
-persistence
-telemetry concreta
-automatic recovery
+telemetry persistente
 ```
 
-## 16. Señales de pérdida de contexto
-
-Detener si un asistente propone:
-
-- DeviceBus como autoload;
-- singleton global;
-- DeviceCatalog con factories;
-- DeviceGraph transportando mensajes;
-- latest o fallback;
-- Callable como factory;
-- factory dentro de Plan;
-- factory inicia lifecycle;
-- factory adjunta Nodes;
-- service locator;
-- Registry mutable;
-- Registry dentro de Plan;
-- RuntimeDependencySpec con Value activo;
-- Plan sin Dispatch Policy;
-- Compiler ejecutando runtime;
-- Runtime reutilizable después de FAILED o SHUTDOWN;
-- hot swap dentro de Runtime 1.0;
-- Hardware activation sin diseño sucesor;
-- tests aceptados modificados;
-- archivos por fragmentos;
-- código antes de diseño.
-
-## 17. Protocolo de fallo
+## 14. Protocolo de fallo
 
 ```text
 1. Detener.
-2. Copiar primer error completo.
-3. Incluir archivo y línea.
-4. Clasificar parser, contrato o comportamiento.
-5. Revisar responsabilidad.
-6. Entregar archivo completo corregido.
-7. Ejecutar prueba aislada.
-8. Ejecutar regresión.
-9. Aceptar baseline solo en PASS.
+2. No modificar archivos.
+3. Capturar primer error completo.
+4. Incluir archivo, línea y backtrace.
+5. Clasificar parser, contract o behavior.
+6. Revisar responsabilidad.
+7. Corregir mediante archivo completo.
+8. Ejecutar prueba aislada.
+9. Ejecutar Suite relevante.
+10. Ejecutar Run All.
 ```
 
-## 18. Protocolo Git
+## 15. Protocolo Git y Delivery
 
-Antes de commit:
+Flujo normal:
 
-```powershell
-git status --short
-git diff --check
-git diff --cached --name-status
-git diff --cached --check
-```
-
-No usar:
-
-```powershell
-git add .
-```
-
-Después:
-
-```powershell
-git log -1 --oneline
-git status --short
-git push origin main
-git status -sb
+```text
+Select ZIP
+→ Install
+→ authoritative tests
+→ Prepare Submit
+→ textual SUBMIT confirmation
+→ exact staging
+→ commit
+→ push
 ```
 
 `Submit` significa staging + commit + push.
 
-## 19. Tooling
-
-Velocity Test Dashboard:
+No usar:
 
 ```text
-0.4.0
+git add .
+git add -A
+git commit -a
+git reset --hard
+git clean -fd
+git clean -fdx
+git restore .
+git checkout -- .
+force push
+amend de commit publicado
 ```
 
-Runner Metrics Protocol:
+Los ZIP permanecen fuera del repositorio.
+
+## 16. Metodología
 
 ```text
-1
+1. Problema
+2. Análisis
+3. Alternativas y tradeoffs
+4. ADR
+5. Diseño
+6. Revisión y aprobación
+7. Commit documental
+8. Implementación
+9. Unit tests
+10. Integración
+11. Refactor audit
+12. Regresión
+13. Baseline
+14. Submit
 ```
 
-El experimento Java VTD permanece externo.
-
-Python VTD permanece canónico.
-
-## 20. Regla final
+## 17. Regla final
 
 Un nuevo chat no necesita imitar una voz exacta.
 
@@ -677,5 +561,5 @@ Diseños
 +
 Tests
 +
-Project State Package
+Project State
 ```

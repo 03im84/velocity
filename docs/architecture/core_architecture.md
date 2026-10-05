@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.26 |
+| Versión | 2.27 |
 | Fecha inicial | 2026-08-14 |
-| Última revisión | 03/10/2026 |
+| Última revisión | 04/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
 
 ## 1. Propósito
@@ -60,6 +60,8 @@ Conceptos actuales:
 - CompositionCompiler;
 - CompositionRuntime;
 - Managed Runtime Adapter Boundary;
+- VehicleControlCommand;
+- Input Runtime Slice;
 - System Composition;
 - estado;
 - health;
@@ -130,11 +132,18 @@ core/runtime/
 		Runtime Construction Contracts
 		y RuntimeFactoryRegistry.
 
+core/input/
+		Intención normalizada de control del vehículo.
+
 core/debug/
 		Observación y diagnóstico.
 
 integration/godot/runtime/
 		Adapters explícitos de Node host.
+
+integration/godot/input/
+		Source, Provider, Sampler, RuntimeUnit
+		y Factory de Input Simulation.
 
 profiles/
 		Estructura persistente futura.
@@ -231,6 +240,12 @@ SceneTree no define Core.
 | GodotNodeRuntimeHost | Adjuntar Host Objects Node bajo parent explícito | Implementado y verificado |
 | DistanceSensorRuntimeUnit | Adaptar DistanceSensorDevice a managed lifecycle | Implementado y verificado |
 | DistanceSensorRuntimeFactory | Construir Handle concreto de Distance Sensor Simulation | Implementado y verificado |
+| VehicleControlCommand | Representar intención acotada de throttle, steering y brake | Implementado y verificado |
+| GodotInputSource | Adaptar Godot Input a strengths acotados | Implementado y verificado |
+| GodotInputIntentProvider | Normalizar intención sin conocer DeviceBus | Implementado y verificado |
+| InputSamplingNode | Muestrear en physics tick mientras RuntimeUnit está RUNNING | Implementado y verificado |
+| InputRuntimeUnit | Publicar VehicleControlCommand mediante managed lifecycle | Implementado y verificado |
+| InputRuntimeFactory | Construir Handle concreto de Input Simulation | Implementado y verificado |
 | CompositionRuntimeSupervisor | Preservar Last Known Good y hot swap | Futuro |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
@@ -1388,102 +1403,112 @@ Runtime supervision
 ## 36. Estado implementado
 
 ```text
-DeviceBus
-
-Runtime Safety
-
+DeviceBus y Runtime Safety
 Topic y Message Contracts
-
 Provider System
-
 Device Core
-
-DeviceProfile Draft–Snapshot
-
-DeviceConfiguration Draft–Snapshot
-
+DeviceProfile y DeviceConfiguration
 DeviceGraph 1.0
-
 SystemProfile 1.0
-
 DeviceCatalog 1.0
-
 DeviceGraphAssembler 1.0
-
 Runtime Construction Contract 1.0
-
 RuntimeFactoryRegistry 1.0
-
 CompositionPlan 1.0
-
 CompositionCompiler 1.0
-
 CompositionRuntime 1.0
-
-Velocity Test Runner
-
-Velocity Test Dashboard 0.4.0
-```
-
-## 37. Milestone cerrado
-
-```text
-CompositionRuntime 1.0
-IMPLEMENTADO Y VERIFICADO
-```
-
-ADR-011 1.1 está aceptado, implementado y verificado.
-
-Full pipeline alcanza `ACTIVE → SHUTDOWN` con identidades y ownership preservados.
-
-## 38. Último milestone y trabajo pendiente
-
-```text
 Managed Runtime Adapter Boundary 1.0
+Distance Sensor Runtime Slice 1.0
+Input Runtime Slice 1.0
+Velocity Test Runner
+Velocity Test Dashboard 0.4.0
+Velocity Tooling Dashboard Web 0.5.0
+```
+
+## 37. Último milestone cerrado
+
+```text
+Input Runtime Slice 1.0
 IMPLEMENTADO Y VERIFICADO
 ```
 
-Baseline:
+ADR-014 1.1 está aceptado, implementado y verificado.
+
+Flujo concreto:
 
 ```text
-7 tests / 106 checks
-Runtime Suite: 17 / 420
-Run All: 76 / 2262
-RESULT: PASS
+Godot Input
+→ GodotInputSource
+→ GodotInputIntentProvider
+→ InputSamplingNode
+→ InputRuntimeUnit
+→ VehicleControlCommand
+→ DeviceBus
 ```
 
-Pendiente siguiente:
+Factory Key:
 
 ```text
-Distance Sensor Runtime Slice 1.0
-Composition Root concreto
-CompositionRuntimeSupervisor
-Last Known Good manager
-Hot swap
-Factories de producción adicionales
-Measurement Identity
-Provenance
-Temporal Boundaries
-Persistence
-GraphEditor
-Hardware Mode
-Calibration
-AdaptationPolicy
-RuntimeAllocation
+velocity.input.player / 1 / Simulation
 ```
 
-Distance Sensor Slice debe reconciliar Profile, Configuration y runtime Manifest.
+Dependency:
+
+```text
+input_intent_provider / BORROWED
+```
+
+El full pipeline alcanza `ACTIVE → physics tick → VehicleControlCommand → SHUTDOWN` con identidad y ownership preservados.
+
+## 38. Baseline del milestone
+
+```text
+VehicleControlCommandTest:                   12 checks
+GodotInputIntentProviderTest:                17 checks
+InputSamplingNodeTest:                       10 checks
+InputRuntimeUnitTest:                        18 checks
+InputRuntimeFactoryTest:                     21 checks
+InputRuntimePipelineIntegrationTest:         23 checks
+
+Input Suite:                         6 tests / 101 checks
+Runtime Suite:                      20 tests / 475 checks
+Run All:                            85 tests / 2418 checks
+Failures:                           0
+Timeout:                            0
+Engine Error:                       0
+Missing Metrics:                    0
+Plan ExitCode:                      0
+RESULT:                             PASS
+```
+
+Refactor audit:
+
+```text
+PASS
+SIN CAMBIO OBLIGATORIO
+```
+
+Último commit del Slice:
+
+```text
+80c5118 test(input): add runtime pipeline integration
+```
 
 ## 39. Baseline global
 
-Dashboard 0.4.0 confirma:
+Dashboard confirma:
 
 ```text
-Tests: 76
-Checks: 2262
-Failures: 0
+Planned: 85
+Completed: 85
+Passed: 85
+Failed: 0
 Timeout: 0
 Engine Error: 0
+Not Run: 0
+Total Runs: 85
+Checks: 2418
+Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
 RESULT: PASS
@@ -1492,93 +1517,73 @@ RESULT: PASS
 Runtime Suite:
 
 ```text
-Tests: 17
-Checks: 420
+Tests: 20
+Checks: 475
 Failures: 0
 RESULT: PASS
 ```
 
-Managed Runtime Adapter Boundary:
+Input Suite:
 
 ```text
-Tests: 7
-Checks: 106
+Tests: 6
+Checks: 101
 Failures: 0
 RESULT: PASS
 ```
 
 ## 40. Tooling
 
-Velocity Test Dashboard:
-
 ```text
-0.4.0
-```
-
-Metrics Protocol:
-
-```text
-1
+Velocity Test Dashboard:          0.4.0
+Velocity Tooling Dashboard Web:   0.5.0
+Runner Metrics Protocol:          1
+Velocity Submit Tool:             1.0.0
 ```
 
 Suites automáticas:
 
 ```text
-10 dominios
+11 dominios
+Input incluido
 0 Other
 ```
 
-Unittest lógico:
-
-```text
-17 tests
-OK
-```
+El candidato `Velocity Submit Tool Rollback 1.1` no pertenece a esta baseline y permanece pendiente de auditoría separada.
 
 ## 41. Project State
 
 ```text
-docs/project_state/
-velocity_handoff.md
-
-docs/project_state/
-velocity_resume_prompt.md
-
-docs/project_state/
-velocity_collaboration_contract.md
+docs/project_state/velocity_handoff.md
+docs/project_state/velocity_resume_prompt.md
+docs/project_state/velocity_collaboration_contract.md
+docs/project_state/velocity_roadmap.json
 ```
 
-Estos documentos permiten reanudar en un chat nuevo.
+Estos documentos permiten reanudar el proyecto y visualizar el siguiente milestone.
 
 ## 42. Decisiones vigentes
 
 ```text
 VP-001
-
 VP-002
-
 ADR-001
-
 ADR-002
-
 ADR-003
-
 ADR-004
-
 ADR-005
-
 ADR-006
-
 ADR-007
-
 ADR-008
-
 ADR-009
-
 ADR-010
-
 ADR-011
+ADR-012
+ADR-013
+ADR-014
 ```
+
+ADR-013 y ADR-014 están aceptados, implementados y verificados.
 
 ## 43. Regla de evolución
 
@@ -1592,10 +1597,25 @@ Si no, se rediseña.
 
 No se parchea una responsabilidad equivocada.
 
-Toda modificación se entrega como archivo completo.
+Toda modificación se entrega como archivo completo mediante Delivery controlada.
 
 ## 44. Siguiente paso
 
-Distance Sensor Runtime Slice 1.0 está cerrado.
+Producto:
 
-Siguiente milestone requiere nuevo problema y análisis antes de implementación.
+```text
+Playable Vertical Slice 1.0
+Siguiente milestone: Propulsion Runtime Slice 1.0
+```
+
+Antes de implementar Propulsion deben cerrarse problema, alternativas, ADR y diseño.
+
+Operación separada:
+
+```text
+Velocity Submit Tool Rollback 1.1
+CANDIDATO NO ACEPTADO
+AUDITORÍA PENDIENTE
+```
+
+El trabajo de Rollback Tool no debe mezclarse con el milestone de producto.

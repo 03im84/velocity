@@ -1,9 +1,9 @@
 {
   "schema": "velocity-roadmap/v1",
-  "version": "1.0",
+  "version": "1.1",
   "title": "Velocity Product Roadmap",
   "target": "playable_vertical_slice",
-  "current_milestone": "input_runtime_slice",
+  "current_milestone": "propulsion_runtime_slice",
   "phase_count": 24,
   "milestones": [
     {
@@ -116,27 +116,27 @@
       "purpose": "Make project direction and current position visible.",
       "deliverables": ["roadmap JSON", "Gantt view", "milestone details"],
       "acceptance": ["data-driven", "three themes", "current marker"],
-      "commit": "pending"
+      "commit": "82c4274"
     },
     {
       "id": "input_runtime_slice",
       "group": "Playable Vehicle",
       "name": "Input Runtime Slice",
-      "status": "active",
+      "status": "completed",
       "phase": 9,
       "duration": 2,
-      "progress": 0,
+      "progress": 100,
       "dependencies": ["runtime_pipeline"],
       "purpose": "Convert player intent into validated runtime messages.",
       "deliverables": ["Input Profile", "Input RuntimeUnit", "Input Factory"],
       "acceptance": ["keyboard/controller", "BusMessage", "full pipeline"],
-      "commit": ""
+      "commit": "80c5118"
     },
     {
       "id": "propulsion_runtime_slice",
       "group": "Playable Vehicle",
       "name": "Propulsion Runtime Slice",
-      "status": "planned",
+      "status": "active",
       "phase": 11,
       "duration": 2,
       "progress": 0,

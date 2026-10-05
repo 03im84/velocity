@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.16 |
-| Fecha | 03/10/2026 |
-| ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback; ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries; ADR-013 — Distance Sensor Simulation Runtime Slice and Configuration Fidelity |
+| Versión | 1.17 |
+| Fecha | 04/10/2026 |
+| ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback; ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries; ADR-013 — Distance Sensor Simulation Runtime Slice and Configuration Fidelity; ADR-014 — Input Intent Sampling and Runtime Publication |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
 
 ## 1. Propósito
@@ -41,14 +41,16 @@ DeviceProfiles
 → SHUTDOWN
 ```
 
-Diseño activo:
+Slices concretos activos:
 
 ```text
 Managed Runtime Adapter Boundary 1.0
-IMPLEMENTADO Y VERIFICADO
+Distance Sensor Runtime Slice 1.0
+Input Runtime Slice 1.0
+IMPLEMENTADOS Y VERIFICADOS
 ```
 
-Baseline: 7 tests, 106 checks, PASS.
+Baseline global: 85 tests, 2418 checks, PASS.
 
 ## 2. Pipeline completo
 
@@ -110,6 +112,7 @@ DeviceProfiles
 → SystemProfile
 → DeviceGraphAssembler
 → DeviceGraphSnapshot
+→ RuntimeFactoryRegistry
 → CompositionCompiler
 → CompositionPlan
 → CompositionRuntime
@@ -117,7 +120,7 @@ DeviceProfiles
 → SHUTDOWN
 ```
 
-### Diseñado y autorizado
+Collaborators de producción:
 
 ```text
 RuntimeDependencyValue
@@ -128,10 +131,24 @@ ManagedRuntimeCommunicationBinder
 GodotNodeRuntimeHost
 ```
 
+Slices concretos:
+
+```text
+Distance Sensor Runtime Slice 1.0
+Input Runtime Slice 1.0
+```
+
+### Siguiente diseño de producto
+
+```text
+Propulsion Runtime Slice 1.0
+```
+
 ### Futuro
 
 ```text
-Distance Sensor Runtime Slice
+Hover Physics Slice
+Playable Vehicle Composition
 CompositionRuntimeSupervisor
 Last Known Good manager
 Hot swap
@@ -178,15 +195,7 @@ core/runtime/
 ├── runtime_factory_registry_draft.gd
 ├── runtime_factory_registry.gd
 ├── runtime_factory_registry_compile_result.gd
-└── runtime_factory_registry_compiler.gd
-```
-
-## 5. Estructura siguiente
-
-Después del commit documental:
-
-```text
-core/runtime/
+├── runtime_factory_registry_compiler.gd
 ├── runtime_dependency_value.gd
 ├── scoped_runtime_dependency_resolver.gd
 ├── managed_runtime_lifecycle_adapter.gd
@@ -199,7 +208,27 @@ integration/godot/runtime/
 └── godot_node_runtime_host.gd
 ```
 
-Concrete factories y Distance Sensor Runtime Slice permanecen posteriores.
+## 5. Slices concretos implementados
+
+```text
+integration/godot/devices/distance_sensor/
+├── distance_sensor_runtime_unit.gd
+└── distance_sensor_runtime_factory.gd
+```
+
+```text
+core/input/
+└── vehicle_control_command.gd
+
+integration/godot/input/
+├── godot_input_source.gd
+├── godot_input_intent_provider.gd
+├── input_sampling_node.gd
+├── input_runtime_unit.gd
+└── input_runtime_factory.gd
+```
+
+Ambos Slices atraviesan Profile, Catalog, SystemProfile, Graph, Registry, Plan, Runtime, `ACTIVE` y `SHUTDOWN`.
 
 ## 6. SystemProfile
 
@@ -952,79 +981,79 @@ No descubre:
 SystemProfile:
 
 ```text
-3 tests
-142 checks
+3 tests / 142 checks
 ```
 
 DeviceCatalog:
 
 ```text
-3 tests
-89 checks
+3 tests / 89 checks
 ```
 
 DeviceGraphAssembler:
 
 ```text
-2 tests
-114 checks
+2 tests / 114 checks
 ```
 
 Runtime Construction:
 
 ```text
-6 tests
-173 checks
+6 tests / 173 checks
 ```
 
 RuntimeFactoryRegistry:
 
 ```text
-4 tests
-141 checks
-```
-
-Runtime Suite preservada:
-
-```text
-10 tests
-314 checks
+4 tests / 141 checks
 ```
 
 CompositionPlan:
 
 ```text
-4 tests
-141 checks
+4 tests / 141 checks
 ```
 
 CompositionCompiler:
 
 ```text
-3 tests
-119 checks
+3 tests / 119 checks
 ```
 
 CompositionRuntime:
 
 ```text
-4 tests
-186 checks
+4 tests / 186 checks
 ```
 
-Composition Suite vigente:
+Distance Sensor Runtime Slice:
 
 ```text
-16 tests
-702 checks
+3 tests / 55 checks
+```
+
+Input Runtime Slice:
+
+```text
+6 tests / 101 checks
+```
+
+Suites vigentes:
+
+```text
+Composition Suite: 16 tests / 702 checks
+Runtime Suite:     20 tests / 475 checks
+Input Suite:        6 tests / 101 checks
 ```
 
 Global vigente:
 
 ```text
-69 tests
-2156 checks
+85 tests
+2418 checks
 0 failures
+0 timeout
+0 engine errors
 0 missing metrics
 Plan ExitCode: 0
 RESULT: PASS
@@ -1032,22 +1061,18 @@ RESULT: PASS
 
 ## 43. Tooling
 
-Velocity Test Dashboard:
-
 ```text
-0.4.0
-```
-
-Runner Metrics Protocol:
-
-```text
-1
+Velocity Test Dashboard:        0.4.0
+Velocity Tooling Dashboard Web: 0.5.0
+Runner Metrics Protocol:        1
+Velocity Submit Tool:           1.0.0
 ```
 
 Automatic suites:
 
 ```text
-10 domains
+11 domains
+Input incluido
 0 Other
 ```
 
@@ -1055,72 +1080,35 @@ Automatic suites:
 
 ```text
 1. RuntimeFactoryRegistry 1.0.
-   IMPLEMENTADO Y VERIFICADO.
-
 2. CompositionPlan 1.0.
-   IMPLEMENTADO Y VERIFICADO.
-
 3. CompositionCompiler 1.0.
-   IMPLEMENTADO Y VERIFICADO.
+4. CompositionRuntime 1.0.
+5. Managed Runtime Adapter Boundary 1.0.
+6. Distance Sensor Runtime Slice 1.0.
+7. Input Runtime Slice 1.0.
 
-4. ADR-011 y CompositionRuntime Design.
-   ACEPTADOS.
-
-5. CompositionRuntimeOperationResult.
-   PASS — 17 checks.
-
-6. CompositionRuntime.
-   PASS — 62 checks.
-
-7. Runtime transaction integration.
-   PASS — 57 checks.
-
-8. Full runtime pipeline integration.
-   PASS — 50 checks.
-
-9. Composition Suite.
-   PASS — 16 tests, 702 checks.
-
-10. Run All.
-    PASS — 69 tests, 2156 checks.
-
-11. Feature commit.
-    cc9a7ae.
-
-12. Registrar baseline documental.
-    COMPLETADO EN ESTA REVISIÓN.
+Todos IMPLEMENTADOS Y VERIFICADOS.
 ```
 
-Siguiente trabajo:
+Últimos milestones concretos:
 
 ```text
-Managed Runtime Adapter Boundary 1.0
-Implementación autorizada después del commit documental
+53ffe1d feat(runtime): add distance sensor runtime slice
+80c5118 test(input): add runtime pipeline integration
 ```
 
 ## 45. Baselines preservadas
 
-No se modifican:
+Las pruebas aceptadas de Runtime Construction, Registry, Plan, Compiler, CompositionRuntime, Managed Adapters y Distance Sensor no fueron modificadas para hacer pasar Input Runtime Slice.
 
-```text
-RuntimeFactoryKeyTest
-
-RuntimeDependencyBindingTest
-
-RuntimeConstructionRequestTest
-
-RuntimeDeviceHandleTest
-
-RuntimeFactoryBuildResultTest
-
-RuntimeConstructionContractIntegrationTest
-```
+Input añade una prueba sucesora de full pipeline y conserva las baselines anteriores.
 
 ## 46. Fuera de alcance
 
-- concrete Distance Sensor Runtime Slice;
-- concrete RuntimeFactories;
-- Composition Root production;
+- Propulsion Runtime Slice;
+- Hover Physics Slice;
+- Playable Vehicle Composition;
+- Composition Runtime Root de producto;
 - CompositionRuntimeSupervisor;
 - Last Known Good manager;
 - hot swap;
@@ -1132,44 +1120,31 @@ RuntimeConstructionContractIntegrationTest
 - Calibration;
 - AdaptationPolicy;
 - RuntimeAllocation;
-- telemetry concreta;
+- telemetría concreta;
 - automatic recovery.
 
 ## 47. Invariantes
 
 1. Registry es inmutable.
-
 2. Registry lookup es exacto.
-
 3. Descriptor contiene Key, factory y Specs.
-
 4. Registry no ejecuta.
-
 5. Plan guarda Key, no factory.
-
 6. Plan no contiene Callable.
-
 7. Plan no contiene recursos activos.
-
 8. Dependency Specs no contienen Values.
-
 9. Device Entries son tipadas.
-
 10. Connection Directives son tipadas.
-
 11. Dispatch Policy es obligatoria.
-
 12. Forward order deriva de Entries.
-
 13. Reverse order invierte Entries.
-
 14. Plan vacío es válido.
-
 15. Ciclos no requieren topological sort.
-
 16. CompositionCompiler no ejecuta.
-
 17. CompositionRuntime posee recursos.
+18. Factories concretas son construct-only.
+19. RuntimeUnit publica solo mientras está RUNNING.
+20. Dependencias BORROWED sobreviven shutdown y release.
 
 ## 48. Estado
 
@@ -1183,6 +1158,8 @@ COMPOSITIONPLAN 1.0
 COMPOSITIONCOMPILER 1.0
 COMPOSITIONRUNTIME 1.0
 MANAGED RUNTIME ADAPTER BOUNDARY 1.0
+DISTANCE SENSOR RUNTIME SLICE 1.0
+INPUT RUNTIME SLICE 1.0
 
 IMPLEMENTADOS Y VERIFICADOS
 ```
@@ -1190,23 +1167,23 @@ IMPLEMENTADOS Y VERIFICADOS
 Baseline vigente:
 
 ```text
-Runtime Suite: 17 tests / 420 checks
-Run All: 76 tests / 2262 checks
+Input Suite: 6 tests / 101 checks
+Runtime Suite: 20 tests / 475 checks
+Run All: 85 tests / 2418 checks
 Failures: 0
 Missing Metrics: 0
 RESULT: PASS
 ```
 
-Último feature commit:
+Último feature/test commit:
 
 ```text
-236e031 feat(runtime): add managed runtime adapters
+80c5118 test(input): add runtime pipeline integration
 ```
 
-Diseño activo:
+Siguiente milestone de producto:
 
 ```text
-Distance Sensor Runtime Slice 1.0
-IMPLEMENTADO Y VERIFICADO
-3 tests / 55 checks
+Propulsion Runtime Slice 1.0
+PROBLEMA Y DISEÑO PENDIENTES
 ```

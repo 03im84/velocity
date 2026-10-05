@@ -1,0 +1,159 @@
+PJ0053 – Input Runtime Slice 1.0 Baseline
+
+Fecha: 04/10/2026
+
+Objetivo:
+
+Completar la primera entrada de jugador del Playable Vertical Slice mediante el pipeline runtime real.
+
+Arquitectura implementada:
+
+Godot Input
+→ GodotInputSource
+→ GodotInputIntentProvider
+→ InputSamplingNode
+→ InputRuntimeUnit
+→ VehicleControlCommand
+→ BusMessage
+→ DeviceBus
+
+Componentes:
+
+VehicleControlCommand
+BusTopics.VEHICLE_CONTROL_COMMAND
+GodotInputSource
+GodotInputIntentProvider
+InputSamplingNode
+InputRuntimeUnit
+InputRuntimeFactory
+InputRuntimePipelineIntegrationTest
+
+Decisiones:
+
+- Simulation-only.
+- Input no aplica fuerzas.
+- Topic canónico vehicle_control_command.
+- Provider behavior sample_intent().
+- input_intent_provider es BORROWED.
+- Sampler es el único Host Object owned.
+- Factory es construct-only.
+- Sampling solo mientras RuntimeUnit está RUNNING.
+- Shutdown detiene sampling antes de detach/release.
+- Factory libera Sampler y preserva Provider.
+- Sin autoload, singleton, service locator o thread.
+- El INFO output_port_unconnected es esperado para un source-only Device.
+
+Factory Key:
+
+velocity.input.player / 1 / Simulation
+
+Effective Configuration:
+
+capability: vehicle_control_input
+publishes: vehicle_control_command
+subscribes: none
+
+Pipeline verificado:
+
+DeviceProfile
+→ DeviceCatalog
+→ SystemProfile
+→ DeviceGraph
+→ Factory Registry
+→ CompositionCompiler
+→ CompositionPlan
+→ CompositionRuntime
+→ ACTIVE
+→ physics tick
+→ VehicleControlCommand
+→ SHUTDOWN
+→ detach
+→ release
+
+Baselines aisladas:
+
+VehicleControlCommandTest:
+12 checks PASS
+
+GodotInputIntentProviderTest:
+17 checks PASS
+
+InputSamplingNodeTest:
+10 checks PASS
+
+InputRuntimeUnitTest:
+18 checks PASS
+
+InputRuntimeFactoryTest:
+21 checks PASS
+
+InputRuntimePipelineIntegrationTest:
+23 checks PASS
+Repeat 5 PASS
+
+Input Suite:
+
+6 tests
+101 checks
+0 failures
+0 timeout
+0 engine errors
+0 missing metrics
+RESULT: PASS
+
+Runtime Suite:
+
+20 tests
+475 checks
+0 failures
+0 timeout
+0 engine errors
+0 missing metrics
+RESULT: PASS
+
+Run All:
+
+85 tests
+2418 checks
+0 failures
+0 timeout
+0 engine errors
+0 missing metrics
+Plan ExitCode: 0
+RESULT: PASS
+
+Refactor audit:
+
+PASS.
+No se requirió cambio de producción.
+Naming, responsibility, lifecycle, ownership, determinismo y package scope son correctos.
+
+Commits:
+
+f06d76a docs(input): define input runtime slice
+5522583 feat(input): add vehicle control command
+bd3098f feat(input): add godot input intent provider
+393e878 feat(input): add input sampling node
+f4345cb feat(input): add input runtime unit
+0b0b233 feat(input): add input runtime factory
+80c5118 test(input): add runtime pipeline integration
+
+Incidente de entrega:
+
+Una entrega Factory con nombre de escena snake_case fue instalada localmente pero nunca committed ni pushed.
+Main permaneció intacto.
+Se creó backup externo antes de recuperación.
+La entrega incorrecta fue retirada mediante recuperación acotada.
+La entrega canónica r1 usó InputRuntimeFactoryTest.tscn, pasó 21 checks y fue submitted en 0b0b233.
+
+El trabajo experimental de Velocity Submit Tool Rollback 1.1 permanece separado y no forma parte de este milestone.
+Su backup externo es:
+
+C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
+
+Estado:
+
+ADR-014 1.1 ACEPTADO
+INPUT RUNTIME SLICE 1.0 IMPLEMENTADO Y VERIFICADO
+BASELINE GLOBAL 85 / 2418 PASS
+BASELINE DOCUMENTAL PREPARADA
