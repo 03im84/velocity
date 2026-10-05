@@ -2,9 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACEPTADO |
-| Versión | 1.0 |
+| Estado | ACEPTADO — IMPLEMENTADO — VERIFICADO |
+| Versión | 1.1 |
 | Fecha | 04/10/2026 |
+| Fecha de verificación | 04/10/2026 |
 | Alcance | Propulsion Simulation, command especializado y salida longitudinal de fuerza |
 | Decisión previa | Propulsion Runtime Slice Alternative D — aprobada |
 
@@ -486,11 +487,44 @@ Costes:
 - se requieren dos dependencias runtime;
 - adapter de física queda para otro milestone.
 
-## 20. Estado
+## 20. Baseline
 
 ```text
-ADR-015 1.0
+PropulsionCommandTest:                    18 checks
+LongitudinalPropulsionModelTest:          28 checks
+LongitudinalPropulsionProfileTest:        12 checks
+PropulsionRuntimeUnitTest:                35 checks
+PropulsionRuntimeFactoryTest:             25 checks
+PropulsionRuntimePipelineIntegrationTest: 25 checks
+
+Propulsion Suite:                 6 tests / 143 checks
+Runtime Suite:                   20 tests / 475 checks
+Run All:                         91 tests / 2561 checks
+Failures:                        0
+Timeout:                         0
+Engine Error:                    0
+Missing Metrics:                 0
+Plan ExitCode:                   0
+RESULT:                          PASS
+```
+
+Commits:
+
+```text
+8d34b66 feat(propulsion): add propulsion command
+8502861 feat(propulsion): add longitudinal propulsion model
+62eaf8a feat(propulsion): add longitudinal propulsion profile
+7945181 feat(propulsion): add propulsion runtime unit
+7b9fa3f feat(propulsion): add propulsion runtime factory
+bc838d8 test(propulsion): add runtime pipeline integration
+```
+
+## 21. Estado
+
+```text
+ADR-015 1.1
 ACEPTADO
-ALTERNATIVA D APROBADA
-IMPLEMENTACIÓN AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
+IMPLEMENTADO
+VERIFICADO
+BASELINE REGISTRADA
 ```

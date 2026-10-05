@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | OBJETIVO ACTIVO |
-| Versión | 1.1 |
+| Versión | 1.2 |
 | Fecha | 03/10/2026 |
 | Última revisión | 04/10/2026 |
 | Alcance | Primera vuelta jugable completa |
@@ -52,8 +52,8 @@ El jugador puede:
 
 ```text
 Input Runtime Slice                 COMPLETED
-Propulsion Runtime Slice            ACTIVE
-Hover Physics Slice                 PLANNED
+Propulsion Runtime Slice            COMPLETED
+Hover Physics Slice                 ACTIVE
 Playable Vehicle Composition        PLANNED
 Simple Track Scene                  PLANNED
 Chase Camera                        PLANNED
@@ -63,8 +63,6 @@ Minimal HUD                         PLANNED
 
 ## 5. Input Runtime Slice completado
 
-Flujo disponible:
-
 ```text
 Godot Input
 → GodotInputIntentProvider
@@ -73,32 +71,57 @@ Godot Input
 → DeviceBus
 ```
 
+```text
+Input Suite: 6 tests / 101 checks PASS
+```
+
+## 6. Propulsion Runtime Slice completado
+
+```text
+PropulsionCommand
+→ PropulsionRuntimeUnit
+→ LongitudinalPropulsionModel
+→ PropulsionForceSink
+```
+
+Contrato físico:
+
+```text
+resultante longitudinal escalar
+transferencia lineal
+sin dispersión radial
+```
+
 Baseline:
 
 ```text
-Input Suite:    6 tests / 101 checks
-Runtime Suite: 20 tests / 475 checks
-Run All:       85 tests / 2418 checks
+Propulsion Suite: 6 tests / 143 checks
+Runtime Suite:   20 tests / 475 checks
+Run All:         91 tests / 2561 checks
 RESULT: PASS
 ```
 
 Último commit del Slice:
 
 ```text
-80c5118 test(input): add runtime pipeline integration
+bc838d8 test(propulsion): add runtime pipeline integration
 ```
 
-## 6. Siguiente milestone de producto
+Tradeoff preservado:
+
+Propulsion 1.0 entrega un actuator seguro, no un `RigidBody3D` móvil. Playable Vehicle Composition añadirá el router y el sink físico alrededor de esta baseline.
+
+## 7. Siguiente milestone de producto
 
 ```text
-Propulsion Runtime Slice 1.0
+Hover Physics Slice 1.0
 ```
 
-Debe convertir intención de propulsion validada en una salida de fuerza controlada y acotada, sin mezclar todavía hover, steering físico, cámara o pista.
+Debe mantener altura antigravitatoria estable mediante fuerzas acotadas y una política spring-damper segura, reutilizando Distance Sensor Runtime sin mezclar todavía vehicle composition, cámara o pista final.
 
 Su problema, alternativas, ADR y diseño deben cerrarse antes de implementar.
 
-## 7. Fuera de alcance del Vertical Slice 1.0
+## 8. Fuera de alcance del Vertical Slice 1.0
 
 - arte final;
 - IA;
@@ -114,7 +137,7 @@ Su problema, alternativas, ADR y diseño deben cerrarse antes de implementar.
 - telemetría persistente;
 - optimización final.
 
-## 8. Regla de prioridad
+## 9. Regla de prioridad
 
 Cada milestone nuevo debe responder:
 
@@ -122,11 +145,12 @@ Cada milestone nuevo debe responder:
 
 Si no y tampoco desbloquea un requisito, se difiere.
 
-## 9. Estado actual
+## 10. Estado actual
 
 ```text
-Foundation técnica:       COMPLETA
-Input Runtime Slice 1.0:  COMPLETADO
-Propulsion Runtime Slice: YOU ARE HERE
-Target:                    PLAYABLE VERTICAL SLICE 1.0
+Foundation técnica:          COMPLETA
+Input Runtime Slice 1.0:     COMPLETADO
+Propulsion Runtime Slice 1.0: COMPLETADO
+Hover Physics Slice 1.0:     YOU ARE HERE
+Target:                       PLAYABLE VERTICAL SLICE 1.0
 ```

@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.27 |
+| Versión | 2.28 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 04/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -62,6 +62,7 @@ Conceptos actuales:
 - Managed Runtime Adapter Boundary;
 - VehicleControlCommand;
 - Input Runtime Slice;
+- Propulsion Runtime Slice;
 - System Composition;
 - estado;
 - health;
@@ -135,6 +136,9 @@ core/runtime/
 core/input/
 		Intención normalizada de control del vehículo.
 
+core/propulsion/
+		Command y modelo longitudinal acotado.
+
 core/debug/
 		Observación y diagnóstico.
 
@@ -144,6 +148,9 @@ integration/godot/runtime/
 integration/godot/input/
 		Source, Provider, Sampler, RuntimeUnit
 		y Factory de Input Simulation.
+
+integration/godot/propulsion/
+		RuntimeUnit y Factory del actuator longitudinal.
 
 profiles/
 		Estructura persistente futura.
@@ -246,6 +253,10 @@ SceneTree no define Core.
 | InputSamplingNode | Muestrear en physics tick mientras RuntimeUnit está RUNNING | Implementado y verificado |
 | InputRuntimeUnit | Publicar VehicleControlCommand mediante managed lifecycle | Implementado y verificado |
 | InputRuntimeFactory | Construir Handle concreto de Input Simulation | Implementado y verificado |
+| PropulsionCommand | Representar orden longitudinal normalizada | Implementado y verificado |
+| LongitudinalPropulsionModel | Convertir command a fuerza escalar acotada | Implementado y verificado |
+| PropulsionRuntimeUnit | Entregar fuerza longitudinal a sink BORROWED | Implementado y verificado |
+| PropulsionRuntimeFactory | Construir Handle concreto sin Host Objects | Implementado y verificado |
 | CompositionRuntimeSupervisor | Preservar Last Known Good y hot swap | Futuro |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
@@ -1420,65 +1431,65 @@ CompositionRuntime 1.0
 Managed Runtime Adapter Boundary 1.0
 Distance Sensor Runtime Slice 1.0
 Input Runtime Slice 1.0
+Propulsion Runtime Slice 1.0
 Velocity Test Runner
 Velocity Test Dashboard 0.4.0
-Velocity Tooling Dashboard Web 0.5.0
+Velocity Tooling Dashboard Web 0.5.2
+Velocity Submit Tool 1.1.0
 ```
 
 ## 37. Último milestone cerrado
 
 ```text
-Input Runtime Slice 1.0
+Propulsion Runtime Slice 1.0
 IMPLEMENTADO Y VERIFICADO
 ```
 
-ADR-014 1.1 está aceptado, implementado y verificado.
+ADR-015 1.1 está aceptado, implementado y verificado.
 
 Flujo concreto:
 
 ```text
-Godot Input
-→ GodotInputSource
-→ GodotInputIntentProvider
-→ InputSamplingNode
-→ InputRuntimeUnit
-→ VehicleControlCommand
-→ DeviceBus
+PropulsionCommand
+→ PropulsionRuntimeUnit
+→ LongitudinalPropulsionModel
+→ PropulsionForceSink
 ```
 
 Factory Key:
 
 ```text
-velocity.input.player / 1 / Simulation
+velocity.propulsion.longitudinal / 1 / Simulation
 ```
 
-Dependency:
+Dependencies:
 
 ```text
-input_intent_provider / BORROWED
+propulsion_model / BORROWED
+propulsion_force_sink / BORROWED
 ```
 
-El full pipeline alcanza `ACTIVE → physics tick → VehicleControlCommand → SHUTDOWN` con identidad y ownership preservados.
+La fuerza 1.0 es una resultante longitudinal escalar con transferencia lineal y sin dispersión radial.
 
 ## 38. Baseline del milestone
 
 ```text
-VehicleControlCommandTest:                   12 checks
-GodotInputIntentProviderTest:                17 checks
-InputSamplingNodeTest:                       10 checks
-InputRuntimeUnitTest:                        18 checks
-InputRuntimeFactoryTest:                     21 checks
-InputRuntimePipelineIntegrationTest:         23 checks
+PropulsionCommandTest:                    18 checks
+LongitudinalPropulsionModelTest:          28 checks
+LongitudinalPropulsionProfileTest:        12 checks
+PropulsionRuntimeUnitTest:                35 checks
+PropulsionRuntimeFactoryTest:             25 checks
+PropulsionRuntimePipelineIntegrationTest: 25 checks
 
-Input Suite:                         6 tests / 101 checks
-Runtime Suite:                      20 tests / 475 checks
-Run All:                            85 tests / 2418 checks
-Failures:                           0
-Timeout:                            0
-Engine Error:                       0
-Missing Metrics:                    0
-Plan ExitCode:                      0
-RESULT:                             PASS
+Propulsion Suite:                 6 tests / 143 checks
+Runtime Suite:                   20 tests / 475 checks
+Run All:                         91 tests / 2561 checks
+Failures:                        0
+Timeout:                         0
+Engine Error:                    0
+Missing Metrics:                 0
+Plan ExitCode:                   0
+RESULT:                          PASS
 ```
 
 Refactor audit:
@@ -1491,65 +1502,45 @@ SIN CAMBIO OBLIGATORIO
 Último commit del Slice:
 
 ```text
-80c5118 test(input): add runtime pipeline integration
+bc838d8 test(propulsion): add runtime pipeline integration
 ```
 
 ## 39. Baseline global
 
-Dashboard confirma:
-
 ```text
-Planned: 85
-Completed: 85
-Passed: 85
+Planned: 91
+Completed: 91
+Passed: 91
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 85
-Checks: 2418
+Total Runs: 91
+Checks: 2561
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
 RESULT: PASS
 ```
 
-Runtime Suite:
+Suites relevantes:
 
 ```text
-Tests: 20
-Checks: 475
-Failures: 0
-RESULT: PASS
-```
-
-Input Suite:
-
-```text
-Tests: 6
-Checks: 101
-Failures: 0
-RESULT: PASS
+Propulsion Suite:  6 tests / 143 checks PASS
+Runtime Suite:    20 tests / 475 checks PASS
+Input Suite:       6 tests / 101 checks PASS
 ```
 
 ## 40. Tooling
 
 ```text
-Velocity Test Dashboard:          0.4.0
-Velocity Tooling Dashboard Web:   0.5.0
-Runner Metrics Protocol:          1
-Velocity Submit Tool:             1.0.0
+Velocity Test Dashboard:        0.4.0
+Velocity Tooling Dashboard Web: 0.5.2
+Velocity Submit Tool:           1.1.0
+Runner Metrics Protocol:        1
 ```
 
-Suites automáticas:
-
-```text
-11 dominios
-Input incluido
-0 Other
-```
-
-El candidato `Velocity Submit Tool Rollback 1.1` no pertenece a esta baseline y permanece pendiente de auditoría separada.
+Delivery rollback está implementado y verificado end-to-end en Windows.
 
 ## 41. Project State
 
@@ -1559,8 +1550,6 @@ docs/project_state/velocity_resume_prompt.md
 docs/project_state/velocity_collaboration_contract.md
 docs/project_state/velocity_roadmap.json
 ```
-
-Estos documentos permiten reanudar el proyecto y visualizar el siguiente milestone.
 
 ## 42. Decisiones vigentes
 
@@ -1581,9 +1570,10 @@ ADR-011
 ADR-012
 ADR-013
 ADR-014
+ADR-015
 ```
 
-ADR-013 y ADR-014 están aceptados, implementados y verificados.
+ADR-013 a ADR-015 están implementados y verificados.
 
 ## 43. Regla de evolución
 
@@ -1597,7 +1587,7 @@ Si no, se rediseña.
 
 No se parchea una responsabilidad equivocada.
 
-Toda modificación se entrega como archivo completo mediante Delivery controlada.
+Las baselines aceptadas evolucionan mediante pruebas sucesoras.
 
 ## 44. Siguiente paso
 
@@ -1605,17 +1595,9 @@ Producto:
 
 ```text
 Playable Vertical Slice 1.0
-Siguiente milestone: Propulsion Runtime Slice 1.0
+Siguiente milestone: Hover Physics Slice 1.0
 ```
 
-Antes de implementar Propulsion deben cerrarse problema, alternativas, ADR y diseño.
+Antes de implementar Hover deben cerrarse problema, alternativas, ADR, diseño y aprobación.
 
-Operación separada:
-
-```text
-Velocity Submit Tool Rollback 1.1
-CANDIDATO NO ACEPTADO
-AUDITORÍA PENDIENTE
-```
-
-El trabajo de Rollback Tool no debe mezclarse con el milestone de producto.
+Playable Vehicle Composition añadirá posteriormente VehicleControlRouter y RigidBodyPropulsionForceSink alrededor de Propulsion Runtime 1.0; no reescribirá el actuator aceptado.

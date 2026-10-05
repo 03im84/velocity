@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ALTERNATIVA D APROBADA |
+| Estado | ALTERNATIVA D IMPLEMENTADA Y VERIFICADA |
 | Fecha | 04/10/2026 |
 | Baseline | 3a1f7de — docs(tools): record delivery rollback baseline |
 | Target | Playable Vertical Slice 1.0 |
@@ -546,6 +546,7 @@ Decisión registrada:
 
 ```text
 ALTERNATIVA D APROBADA
+IMPLEMENTADA Y VERIFICADA
 04/10/2026
 ```
 
@@ -556,3 +557,26 @@ Consecuencia:
 3. revisar nombres y contratos;
 4. preparar commit documental;
 5. solo después comenzar implementación.
+
+
+## 22. Resultado de implementación
+
+```text
+PropulsionCommand
+→ PropulsionRuntimeUnit
+→ LongitudinalPropulsionModel
+→ PropulsionForceSink
+```
+
+```text
+Propulsion Suite: 6 tests / 143 checks PASS
+Runtime Suite: 20 tests / 475 checks PASS
+Run All: 91 tests / 2561 checks PASS
+Refactor audit: PASS
+```
+
+Último commit del Slice:
+
+```text
+bc838d8 test(propulsion): add runtime pipeline integration
+```

@@ -1,9 +1,9 @@
 {
   "schema": "velocity-roadmap/v1",
-  "version": "1.1",
+  "version": "1.2",
   "title": "Velocity Product Roadmap",
   "target": "playable_vertical_slice",
-  "current_milestone": "propulsion_runtime_slice",
+  "current_milestone": "hover_physics_slice",
   "phase_count": 24,
   "milestones": [
     {
@@ -136,21 +136,21 @@
       "id": "propulsion_runtime_slice",
       "group": "Playable Vehicle",
       "name": "Propulsion Runtime Slice",
-      "status": "active",
+      "status": "completed",
       "phase": 11,
       "duration": 2,
-      "progress": 0,
+      "progress": 100,
       "dependencies": ["input_runtime_slice"],
       "purpose": "Turn propulsion commands into controlled forward force.",
       "deliverables": ["Propulsion Profile", "RuntimeUnit", "Factory"],
       "acceptance": ["bounded command", "force output", "full pipeline"],
-      "commit": ""
+      "commit": "bc838d8"
     },
     {
       "id": "hover_physics_slice",
       "group": "Playable Vehicle",
       "name": "Hover Physics Slice",
-      "status": "planned",
+      "status": "active",
       "phase": 13,
       "duration": 3,
       "progress": 0,

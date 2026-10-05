@@ -2,13 +2,14 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACTIVO |
-| Versión | 1.0 |
+| Estado | ACTIVO — IMPLEMENTADO — VERIFICADO |
+| Versión | 1.1 |
 | Fecha | 04/10/2026 |
+| Fecha de baseline | 04/10/2026 |
 | ADR | ADR-015 — Propulsion Command Actuation and Force Sink Boundary |
 | Alternativa | D — Actuator especializado con modelo y sink explícitos |
 | Alcance | PropulsionCommand hasta fuerza longitudinal acotada |
-| Implementación | AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL |
+| Implementación | COMPLETA Y VERIFICADA |
 
 ## 1. Propósito
 
@@ -772,11 +773,46 @@ Tooling: 126 tests PASS
 
 Los conteos nuevos se fijarán únicamente mediante Dashboard autoritativo.
 
-## 29. Estado
+## 29. Baseline aceptada
 
 ```text
-PROPULSION RUNTIME SLICE DESIGN 1.0
-ACTIVO
-ALTERNATIVA D APROBADA
-IMPLEMENTACIÓN AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
+PropulsionCommandTest:                    18 checks
+LongitudinalPropulsionModelTest:          28 checks
+LongitudinalPropulsionProfileTest:        12 checks
+PropulsionRuntimeUnitTest:                35 checks
+PropulsionRuntimeFactoryTest:             25 checks
+PropulsionRuntimePipelineIntegrationTest: 25 checks
+                                                ---
+Propulsion Suite:                 6 tests / 143 checks
+Runtime Suite:                   20 tests / 475 checks
+Run All:                         91 tests / 2561 checks
+RESULT:                          PASS
+```
+
+Refactor audit:
+
+```text
+PASS
+SIN CAMBIO OBLIGATORIO
+```
+
+Commits:
+
+```text
+629b83c docs(propulsion): define propulsion runtime slice
+8d34b66 feat(propulsion): add propulsion command
+8502861 feat(propulsion): add longitudinal propulsion model
+62eaf8a feat(propulsion): add longitudinal propulsion profile
+7945181 feat(propulsion): add propulsion runtime unit
+7b9fa3f feat(propulsion): add propulsion runtime factory
+bc838d8 test(propulsion): add runtime pipeline integration
+```
+
+## 30. Estado
+
+```text
+PROPULSION RUNTIME SLICE 1.0
+IMPLEMENTADO
+VERIFICADO
+BASELINE ACEPTADA
 ```

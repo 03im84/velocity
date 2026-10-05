@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.24 |
+| Versión | 1.25 |
 | Fecha de actualización | 04/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -243,11 +243,12 @@ ADR-011 — Composition Runtime Activation, Ownership and Rollback
 ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries
 ADR-013 — Distance Sensor Simulation Runtime Slice and Configuration Fidelity
 ADR-014 — Input Intent Sampling and Runtime Publication
+ADR-015 — Propulsion Command Actuation and Force Sink Boundary
 ```
 
 Todos aceptados.
 
-ADR-010 a ADR-014 están implementados y verificados en sus baselines vigentes.
+ADR-010 a ADR-015 están implementados y verificados.
 
 ## 10. Arquitectura implementada
 
@@ -269,11 +270,12 @@ CompositionRuntime 1.0
 Managed Runtime Adapter Boundary 1.0
 Distance Sensor Runtime Slice 1.0
 Input Runtime Slice 1.0
+Propulsion Runtime Slice 1.0
 Velocity Test Runner
 Velocity Test Dashboard 0.4.0
-Velocity Tooling Dashboard Web 0.5.1
-Velocity Submit Tool 1.0.0
-Product Roadmap y Gantt 1.0
+Velocity Tooling Dashboard Web 0.5.2
+Velocity Submit Tool 1.1.0
+Product Roadmap y Gantt 1.2
 ```
 
 ## 11. Pipeline completo verificado
@@ -618,54 +620,58 @@ RESULT: PASS
 
 ## 21. Input Runtime Slice 1.0
 
-Componentes:
-
-```text
-VehicleControlCommand
-BusTopics.VEHICLE_CONTROL_COMMAND
-GodotInputSource
-GodotInputIntentProvider
-InputSamplingNode
-InputRuntimeUnit
-InputRuntimeFactory
-```
-
-Flujo:
-
 ```text
 Godot Input
-→ GodotInputSource
 → GodotInputIntentProvider
-→ InputSamplingNode
 → InputRuntimeUnit
 → VehicleControlCommand
 → DeviceBus
 ```
 
-Contrato runtime:
-
 ```text
-Factory Key: velocity.input.player / 1 / Simulation
-Dependency: input_intent_provider / BORROWED
-Capability: vehicle_control_input
-Publishes: vehicle_control_command
-Subscribes: none
+Input Suite: 6 tests / 101 checks PASS
 ```
 
-Full pipeline verificado hasta `ACTIVE → physics tick → command → SHUTDOWN`.
-
-## 22. Baseline global
+## 22. Propulsion Runtime Slice 1.0
 
 ```text
-Planned: 85
-Completed: 85
-Passed: 85
+PropulsionCommand
+→ PropulsionRuntimeUnit
+→ LongitudinalPropulsionModel
+→ PropulsionForceSink
+```
+
+Contrato:
+
+```text
+Factory Key: velocity.propulsion.longitudinal / 1 / Simulation
+Dependencies: propulsion_model + propulsion_force_sink / BORROWED
+Capability: longitudinal_propulsion_force
+Publishes: none
+Subscribes: propulsion_command
+```
+
+Fuerza 1.0:
+
+```text
+escalar firmada
+resultante longitudinal
+transferencia lineal
+sin dispersión radial
+```
+
+## 23. Baseline global y refactor
+
+```text
+Planned: 91
+Completed: 91
+Passed: 91
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 85
-Checks: 2418
+Total Runs: 91
+Checks: 2561
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
@@ -675,30 +681,19 @@ RESULT: PASS
 Suites:
 
 ```text
-Input Suite:    6 tests / 101 checks PASS
-Runtime Suite: 20 tests / 475 checks PASS
+Propulsion Suite: 6 tests / 143 checks PASS
+Runtime Suite:   20 tests / 475 checks PASS
+Input Suite:      6 tests / 101 checks PASS
 ```
 
-## 23. Refactor audit
-
-Input Runtime Slice fue revisado después de aislamiento, integración, Suites y Run All.
-
-Se verificó:
-
-- responsabilidad;
-- límites Core/Godot;
-- ownership `BORROWED`;
-- lifecycle;
-- determinismo;
-- naming;
-- package scope;
-- cleanup y release.
-
-Resultado:
+Refactor audit Propulsion:
 
 ```text
-PASS
-SIN CAMBIO OBLIGATORIO
+13 GDScript files
+0 TODO/FIXME/HACK
+0 líneas iniciadas con punto
+sin RigidBody3D o Vector3 espacial en producción
+PASS — SIN CAMBIO OBLIGATORIO
 ```
 
 ## 24. Documentos y Git
@@ -706,7 +701,7 @@ SIN CAMBIO OBLIGATORIO
 Documentos vigentes:
 
 ```text
-Core Architecture:                  2.27
+Core Architecture:                  2.28
 Engineering Standards:              1.9
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
@@ -714,7 +709,8 @@ ADR-011:                            1.1
 ADR-012:                            1.1
 ADR-013:                            1.1
 ADR-014:                            1.1
-System Composition Pipeline Design: 1.17
+ADR-015:                            1.1
+System Composition Pipeline Design: 1.18
 Runtime Construction Contract:      1.1
 RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
@@ -723,52 +719,33 @@ CompositionRuntime Design:          1.1
 Managed Runtime Adapter Design:      1.1
 Distance Sensor Runtime Design:     1.1
 Input Runtime Slice Design:         1.1
+Propulsion Runtime Slice Design:    1.1
 Velocity Submit Tool Design:         1.4
 Velocity Tooling Dashboard Web:      1.4
-Product Roadmap:                    1.1
-Playable Vertical Slice Design:     1.1
-Project Handoff:                    1.24
-Resume Prompt:                      1.24
+Product Roadmap:                    1.2
+Playable Vertical Slice Design:     1.2
+Project Handoff:                    1.25
+Resume Prompt:                      1.25
 Collaboration Contract:             1.5
 ```
 
-Repositorio:
+Commits de Propulsion Runtime Slice:
 
 ```text
-https://github.com/03im84/velocity
+629b83c docs(propulsion): define propulsion runtime slice
+8d34b66 feat(propulsion): add propulsion command
+8502861 feat(propulsion): add longitudinal propulsion model
+62eaf8a feat(propulsion): add longitudinal propulsion profile
+7945181 feat(propulsion): add propulsion runtime unit
+7b9fa3f feat(propulsion): add propulsion runtime factory
+bc838d8 test(propulsion): add runtime pipeline integration
 ```
 
-Último commit del Input Runtime Slice:
-
-```text
-80c5118 test(input): add runtime pipeline integration
-```
-
-Commits del Slice:
-
-```text
-f06d76a docs(input): define input runtime slice
-5522583 feat(input): add vehicle control command
-bd3098f feat(input): add godot input intent provider
-393e878 feat(input): add input sampling node
-f4345cb feat(input): add input runtime unit
-0b0b233 feat(input): add input runtime factory
-80c5118 test(input): add runtime pipeline integration
-```
-
-Commits posteriores aceptados:
-
-```text
-26002da docs(input): record input runtime baseline
-d36c7ee fix(tools): make web dashboard reload-safe
-b219462 feat(tools): add delivery rollback command
-```
-
-Estado confirmado después de Rollback 1.1:
+Estado confirmado antes de esta baseline documental:
 
 ```text
 ## main...origin/main
-HEAD b219462
+HEAD bc838d8
 ```
 
 ## 25. Tooling
@@ -795,6 +772,7 @@ DeviceCatalog
 Runtime
 Debug
 Input
+Propulsion
 ```
 
 ```text
@@ -941,43 +919,29 @@ Estado sincronizado:
 ```text
 Target: Playable Vertical Slice 1.0
 Completed: Input Runtime Slice 1.0
-Current product milestone: Propulsion Runtime Slice 1.0
+Completed: Propulsion Runtime Slice 1.0
+Current product milestone: Hover Physics Slice 1.0
 ```
 
-Roadmap versionado:
+Roadmap:
 
 ```text
 docs/project_state/velocity_roadmap.json
-Version: 1.1
-Current milestone: propulsion_runtime_slice
+Version: 1.2
+Current milestone: hover_physics_slice
 ```
 
-Antes de Propulsion se requieren problema, alternativas, ADR, diseño y aprobación.
+Antes de Hover se requieren problema, alternativas, ADR, diseño y aprobación.
 
-Trabajo operativo separado:
-
-```text
-Velocity Submit Tool Rollback 1.1
-IMPLEMENTADO Y VERIFICADO
-WINDOWS END-TO-END SELF-ROLLBACK PASS
-126 TOOLING TESTS PASS
-COMMIT b219462
-```
-
-Backup externo preservado:
-
-```text
-C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
-```
-
-Rollback 1.1 queda cerrado. El siguiente trabajo de producto, Propulsion, comienza desde problema y análisis separados.
+Velocity Submit Tool Rollback 1.1 permanece implementado y verificado en `b219462`.
 
 ## 30. Trabajo futuro explícito
 
 ```text
-Propulsion Runtime Slice
 Hover Physics Slice
 Playable Vehicle Composition
+VehicleControlRouter
+RigidBodyPropulsionForceSink
 Simple Track Scene
 Chase Camera
 Checkpoint and Lap Loop

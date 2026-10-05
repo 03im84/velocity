@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.24 |
+| Versión | 1.25 |
 | Fecha | 04/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
@@ -69,22 +69,26 @@ Estado arquitectónico esperado:
 - Managed Runtime Adapter Boundary 1.0 está implementado y verificado.
 - Distance Sensor Runtime Slice 1.0 está implementado y verificado.
 - Input Runtime Slice 1.0 está implementado y verificado.
+- Propulsion Runtime Slice 1.0 está implementado y verificado.
+- ADR-015 1.1 está aceptado, implementado y verificado.
 - ADR-014 1.1 está aceptado, implementado y verificado.
 - Input Suite: 6 tests / 101 checks PASS.
 - Runtime Suite: 20 tests / 475 checks PASS.
-- Run All: 85 tests / 2418 checks PASS.
+- Propulsion Suite: 6 tests / 143 checks PASS.
+- Run All: 91 tests / 2561 checks PASS.
 - 0 failures, 0 timeout, 0 engine errors y 0 missing metrics.
 - Último commit del Slice: 80c5118 test(input): add runtime pipeline integration.
 - Input baseline documental: 26002da docs(input): record input runtime baseline.
 - Web VTD Reload Safety: d36c7ee fix(tools): make web dashboard reload-safe.
 - Delivery Rollback 1.1: b219462 feat(tools): add delivery rollback command.
-- main está sincronizada con origin/main en b219462.
+- Propulsion finaliza en bc838d8 test(propulsion): add runtime pipeline integration.
+- main está sincronizada con origin/main en bc838d8.
 
 Target de producto:
 Playable Vertical Slice 1.0.
 
 Siguiente milestone de producto:
-Propulsion Runtime Slice 1.0.
+Hover Physics Slice 1.0.
 Problema, alternativas, ADR y diseño todavía pendientes.
 
 Trabajo operativo separado:
@@ -95,7 +99,7 @@ Feature commit: b219462 feat(tools): add delivery rollback command.
 main quedó sincronizada con origin/main.
 El backup original sigue preservado fuera del repositorio en:
 C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
-No mezclar con Propulsion.
+Rollback está cerrado y no debe mezclarse con Hover.
 
 Antes de responder:
 1. Lee completamente los tres documentos de Project State.
@@ -188,6 +192,7 @@ CompositionRuntime 1.0
 Managed Runtime Adapter Boundary 1.0
 Distance Sensor Runtime Slice 1.0
 Input Runtime Slice 1.0
+Propulsion Runtime Slice 1.0
 ```
 
 ## 5. Pipeline runtime
@@ -231,93 +236,46 @@ Last Known Good y hot swap pertenecen a un Supervisor futuro.
 
 ## 6. Input Runtime Slice 1.0
 
-Flujo:
-
 ```text
 Godot Input
-→ GodotInputSource
 → GodotInputIntentProvider
-→ InputSamplingNode
 → InputRuntimeUnit
 → VehicleControlCommand
 → DeviceBus
 ```
 
-Factory Key:
-
 ```text
-velocity.input.player / 1 / Simulation
+Input Suite: 6 tests / 101 checks PASS
 ```
 
-Dependency:
+## 7. Propulsion Runtime Slice 1.0
 
 ```text
-input_intent_provider / BORROWED
-```
-
-Effective Configuration:
-
-```text
-capability: vehicle_control_input
-publishes: vehicle_control_command
-subscribes: none
-```
-
-Lifecycle:
-
-```text
-CREATED → INITIALIZED → READY → RUNNING → SHUTDOWN
-```
-
-Invariantes:
-
-- Provider fuera de Core;
-- Factory construct-only;
-- Sampler es Host Object owned;
-- sampling solo en `RUNNING`;
-- neutral command válido;
-- valores finitos y acotados;
-- source identity preservada;
-- Provider `BORROWED` sobrevive release;
-- sin autoload, singleton, service locator o thread.
-
-## 7. Input tests
-
-```text
-VehicleControlCommandTest:                   12 checks
-GodotInputIntentProviderTest:                17 checks
-InputSamplingNodeTest:                       10 checks
-InputRuntimeUnitTest:                        18 checks
-InputRuntimeFactoryTest:                     21 checks
-InputRuntimePipelineIntegrationTest:         23 checks
+PropulsionCommand
+→ PropulsionRuntimeUnit
+→ LongitudinalPropulsionModel
+→ PropulsionForceSink
 ```
 
 ```text
-Input Suite
-Planned: 6
-Passed: 6
-Checks: 101
-Failures: 0
-RESULT: PASS
+Factory Key: velocity.propulsion.longitudinal / 1 / Simulation
+Dependencies: propulsion_model + propulsion_force_sink / BORROWED
+Capability: longitudinal_propulsion_force
+Subscribes: propulsion_command
 ```
 
-La integración concreta verifica:
+Force contract:
 
 ```text
-Profile
-→ Catalog
-→ SystemProfile
-→ Graph
-→ Registry
-→ Plan
-→ Runtime
-→ ACTIVE
-→ physics tick
-→ command
-→ SHUTDOWN
+signed scalar
+longitudinal resultant
+linear transfer
+no radial dispersion
 ```
 
-`output_port_unconnected / INFO` es esperado para este Device source-only.
+```text
+Propulsion Suite: 6 tests / 143 checks PASS
+```
 
 ## 8. Baseline vigente
 
@@ -329,24 +287,21 @@ Completed: 20
 Passed: 20
 Checks: 475
 Failures: 0
-Timeout: 0
-Engine Error: 0
-Missing Metrics: 0
 RESULT: PASS
 ```
 
 Run All:
 
 ```text
-Planned: 85
-Completed: 85
-Passed: 85
+Planned: 91
+Completed: 91
+Passed: 91
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 85
-Checks: 2418
+Total Runs: 91
+Checks: 2561
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
@@ -356,7 +311,7 @@ RESULT: PASS
 ## 9. Documentos canónicos
 
 ```text
-Core Architecture:                  2.27
+Core Architecture:                  2.28
 Engineering Standards:              1.9
 Project Decision VP-002:            2.0
 ADR-010:                            1.1
@@ -364,7 +319,8 @@ ADR-011:                            1.1
 ADR-012:                            1.1
 ADR-013:                            1.1
 ADR-014:                            1.1
-System Composition Pipeline Design: 1.17
+ADR-015:                            1.1
+System Composition Pipeline Design: 1.18
 Runtime Construction Contract:      1.1
 RuntimeFactoryRegistry Design:      1.5
 CompositionPlan Design:             1.5
@@ -373,73 +329,55 @@ CompositionRuntime Design:          1.1
 Managed Runtime Adapter Design:      1.1
 Distance Sensor Runtime Design:     1.1
 Input Runtime Slice Design:         1.1
+Propulsion Runtime Slice Design:    1.1
 Velocity Submit Tool Design:         1.4
 Velocity Tooling Dashboard Web:      1.4
-Product Roadmap:                    1.1
-Playable Vertical Slice Design:     1.1
-Project Handoff:                    1.24
-Resume Prompt:                      1.24
+Product Roadmap:                    1.2
+Playable Vertical Slice Design:     1.2
+Project Handoff:                    1.25
+Resume Prompt:                      1.25
 Collaboration Contract:             1.5
 ```
 
 ## 10. Git
 
-Commits del Input Runtime Slice:
+Commits de Propulsion Runtime Slice:
 
 ```text
-f06d76a docs(input): define input runtime slice
-5522583 feat(input): add vehicle control command
-bd3098f feat(input): add godot input intent provider
-393e878 feat(input): add input sampling node
-f4345cb feat(input): add input runtime unit
-0b0b233 feat(input): add input runtime factory
-80c5118 test(input): add runtime pipeline integration
-```
-
-Commits posteriores aceptados:
-
-```text
-26002da docs(input): record input runtime baseline
-d36c7ee fix(tools): make web dashboard reload-safe
-b219462 feat(tools): add delivery rollback command
+629b83c docs(propulsion): define propulsion runtime slice
+8d34b66 feat(propulsion): add propulsion command
+8502861 feat(propulsion): add longitudinal propulsion model
+62eaf8a feat(propulsion): add longitudinal propulsion profile
+7945181 feat(propulsion): add propulsion runtime unit
+7b9fa3f feat(propulsion): add propulsion runtime factory
+bc838d8 test(propulsion): add runtime pipeline integration
 ```
 
 Estado confirmado:
 
 ```text
 ## main...origin/main
-HEAD b219462
+HEAD bc838d8
 ```
-
-El estado Git actual debe comprobarse en cada reanudación.
 
 ## 11. Dirección actual
 
 ```text
 Product target: Playable Vertical Slice 1.0
 Completed: Input Runtime Slice 1.0
-Current product milestone: Propulsion Runtime Slice 1.0
+Completed: Propulsion Runtime Slice 1.0
+Current product milestone: Hover Physics Slice 1.0
 ```
 
 Roadmap:
 
 ```text
 docs/project_state/velocity_roadmap.json
-Version: 1.1
-current_milestone: propulsion_runtime_slice
+Version: 1.2
+current_milestone: hover_physics_slice
 ```
 
-Propulsion todavía requiere:
-
-```text
-Problem
-Analysis
-Alternatives and tradeoffs
-ADR
-Design
-Review and approval
-Documentation commit
-```
+Hover requiere problema, análisis, alternativas, ADR, diseño y aprobación antes de implementación.
 
 ## 12. Web VTD Reload Safety 0.5.1
 
@@ -537,13 +475,13 @@ final delivery installed
 → b219462 synchronized
 ```
 
-Rollback 1.1 está cerrado. No mezclar futuros cambios de tooling con Propulsion.
+Rollback 1.1 está cerrado. No mezclar futuros cambios de tooling con Hover.
 
 ## 14. Fuera de alcance actual
 
 ```text
-Propulsion implementation antes de ADR
-Hover Physics
+Hover Physics implementation antes de ADR
+Playable Vehicle Composition
 Playable Vehicle Composition
 track
 camera

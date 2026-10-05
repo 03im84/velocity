@@ -1,0 +1,141 @@
+PJ0057 – Propulsion Runtime Slice 1.0 Baseline
+
+Fecha: 04/10/2026
+
+Baseline inicial:
+
+629b83c docs(propulsion): define propulsion runtime slice
+
+Arquitectura implementada:
+
+PropulsionCommand
+→ PropulsionRuntimeUnit
+→ LongitudinalPropulsionModel
+→ PropulsionForceSink
+
+Geometría:
+
+- fuerza escalar firmada;
+- resultante longitudinal;
+- transferencia command-to-force lineal;
+- sin dispersión radial;
+- sin Vector3, punto de aplicación o torque en 1.0.
+
+Profile:
+
+velocity.propulsion.longitudinal / 1
+role: ACTUATOR
+capability: longitudinal_propulsion_force
+publishes: none
+subscribes: propulsion_command
+
+Factory Key:
+
+velocity.propulsion.longitudinal / 1 / Simulation
+
+Dependencies:
+
+propulsion_model / BORROWED
+propulsion_force_sink / BORROWED
+
+Componentes:
+
+PropulsionCommand
+LongitudinalPropulsionModel
+Builtin longitudinal propulsion Profile
+PropulsionRuntimeUnit
+PropulsionRuntimeFactory
+Propulsion Runtime Pipeline Integration
+
+Pipeline verificado:
+
+Propulsion Command Source
+→ DeviceBus
+→ source-filtered subscription
+→ PropulsionRuntimeUnit
+→ LongitudinalPropulsionModel
+→ PropulsionForceSink
+→ bounded longitudinal force
+→ SHUTDOWN
+
+Pruebas aisladas:
+
+PropulsionCommandTest:
+18 checks PASS
+
+LongitudinalPropulsionModelTest:
+28 checks PASS
+
+LongitudinalPropulsionProfileTest:
+12 checks PASS
+
+PropulsionRuntimeUnitTest:
+35 checks PASS
+
+PropulsionRuntimeFactoryTest:
+25 checks PASS
+
+PropulsionRuntimePipelineIntegrationTest:
+25 checks PASS
+Repeat 5 PASS
+
+Propulsion Suite:
+
+6 tests
+143 checks
+0 failures
+0 timeout
+0 engine errors
+0 missing metrics
+RESULT: PASS
+
+Runtime Suite:
+
+20 tests
+475 checks
+0 failures
+0 timeout
+0 engine errors
+0 missing metrics
+RESULT: PASS
+
+Run All:
+
+91 tests
+2561 checks
+0 failures
+0 timeout
+0 engine errors
+0 missing metrics
+Plan ExitCode: 0
+RESULT: PASS
+
+Refactor audit:
+
+13 GDScript files revisados.
+0 TODO/FIXME/HACK.
+0 líneas que comienzan con punto.
+No RigidBody3D o Vector3 espacial en producción.
+Sin cambio obligatorio.
+RESULT: PASS
+
+Commits:
+
+629b83c docs(propulsion): define propulsion runtime slice
+8d34b66 feat(propulsion): add propulsion command
+8502861 feat(propulsion): add longitudinal propulsion model
+62eaf8a feat(propulsion): add longitudinal propulsion profile
+7945181 feat(propulsion): add propulsion runtime unit
+7b9fa3f feat(propulsion): add propulsion runtime factory
+bc838d8 test(propulsion): add runtime pipeline integration
+
+Tradeoff preservado:
+
+Propulsion 1.0 no mueve todavía un RigidBody3D. Playable Vehicle Composition añadirá VehicleControlRouter y RigidBodyPropulsionForceSink alrededor del actuator aceptado, sin modificar su responsabilidad.
+
+Estado:
+
+ADR-015 1.1 IMPLEMENTADO Y VERIFICADO
+PROPULSION RUNTIME SLICE 1.0 CLOSED
+BASELINE 91 TESTS / 2561 CHECKS PASS
+BASELINE DOCUMENTAL PREPARADA
