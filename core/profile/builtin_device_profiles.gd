@@ -38,3 +38,29 @@ static func create_ideal_distance_sensor(
 		&"",
 		0
 	)
+
+
+static func create_longitudinal_propulsion_actuator(
+) -> DeviceProfile:
+
+	return DeviceProfile.new(
+		&"velocity.propulsion.longitudinal",
+		1,
+		"Longitudinal Propulsion Actuator",
+		(
+			"Simulation actuator that converts a bounded "
+			+ "propulsion command into longitudinal force."
+		),
+		DeviceRoles.ACTUATOR,
+		[
+			"longitudinal_propulsion_force",
+		],
+		[],
+		[
+			BusTopics.PROPULSION_COMMAND,
+		],
+		[],
+		true,
+		&"",
+		0
+	)
