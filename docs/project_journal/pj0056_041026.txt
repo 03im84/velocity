@@ -1,0 +1,128 @@
+PJ0056 – Propulsion Runtime Slice 1.0 Problem and Analysis
+
+Fecha: 04/10/2026
+
+Baseline:
+
+3a1f7de docs(tools): record delivery rollback baseline
+
+Target:
+
+Playable Vertical Slice 1.0
+
+Problema:
+
+Velocity produce VehicleControlCommand validado, pero todavía no posee un actuator que convierta un PropulsionCommand especializado en una salida longitudinal de fuerza finita y acotada.
+
+Restricciones:
+
+- Input no aplica fuerza;
+- Input no publica propulsion directamente;
+- Propulsion no interpreta steering o brake;
+- Core no depende de RigidBody3D;
+- Factory construct-only;
+- Simulation-only;
+- dependencies explícitas;
+- fuerza limitada antes del sink;
+- no singleton/autoload/service locator/thread.
+
+Alternativas:
+
+A. Input aplica fuerza directamente.
+Rechazada: viola ADR-014.
+
+B. Propulsion consume VehicleControlCommand.
+No seleccionada: mezcla routing del vehículo con actuation.
+
+C. Vehicle Control Router + Actuator completos ahora.
+Válida pero diferida: duplica el alcance y adelanta brake/steering.
+
+D. Actuator especializado con command, modelo y sink.
+Seleccionada.
+
+Decisión aprobada por el usuario:
+
+Aprobar Alternativa D.
+
+Arquitectura propuesta:
+
+PropulsionCommand
+→ PropulsionRuntimeUnit
+→ LongitudinalPropulsionModel
+→ PropulsionForceSink
+
+Geometría:
+
+- resultante longitudinal escalar y firmada;
+- transferencia command-to-force lineal;
+- sin dispersión radial;
+- sin cono de fuerza;
+- sin reparto entre toberas;
+- sin punto de aplicación o torque en 1.0.
+
+Topic:
+
+propulsion_command
+
+Command:
+
+normalized_thrust [-1, 1]
+timestamp >= 0
+
+Factory Key:
+
+velocity.propulsion.longitudinal / 1 / Simulation
+
+Effective Configuration:
+
+capability: longitudinal_propulsion_force
+publishes: none
+subscribes: propulsion_command
+
+Dependencies:
+
+propulsion_model / BORROWED
+propulsion_force_sink / BORROWED
+
+Tradeoff aceptado:
+
+El Slice 1.0 no mueve todavía una nave completa. Entrega un actuator seguro y componible.
+
+Evolución futura:
+
+VehicleControlCommand
+→ VehicleControlRouterRuntimeUnit
+→ PropulsionCommand
+→ PropulsionRuntimeUnit 1.0 sin modificar
+→ RigidBodyPropulsionForceSink
+→ RigidBody3D
+
+Documentos preparados:
+
+- propulsion_runtime_slice_problem_analysis.md;
+- ADR-015 — Propulsion Command Actuation and Force Sink Boundary.md;
+- propulsion_runtime_slice_design.md.
+
+Pruebas previstas:
+
+- PropulsionCommandTest;
+- LongitudinalPropulsionModelTest;
+- PropulsionRuntimeUnitTest;
+- PropulsionRuntimeFactoryTest;
+- PropulsionRuntimePipelineIntegrationTest.
+
+Baseline preservada:
+
+Input Suite: 6 / 101 PASS
+Runtime Suite: 20 / 475 PASS
+Run All: 85 / 2418 PASS
+Tooling: 126 PASS
+
+Estado:
+
+PROBLEMA CERRADO
+ANÁLISIS COMPLETO
+ALTERNATIVA D APROBADA
+ADR-015 1.0 ACEPTADO
+PROPULSION RUNTIME SLICE DESIGN 1.0 ACTIVO
+IMPLEMENTACIÓN AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
