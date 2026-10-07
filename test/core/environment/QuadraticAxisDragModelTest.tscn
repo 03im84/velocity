@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://test/core/environment/quadratic_axis_drag_model_test.gd" id="1_qad"]
+
+[node name="QuadraticAxisDragModelTest" type="Node"]
+script = ExtResource("1_qad")
