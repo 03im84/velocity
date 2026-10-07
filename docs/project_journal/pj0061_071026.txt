@@ -1,0 +1,76 @@
+PJ0061 – Web VTD Local Commit Retry Routing 0.5.3
+
+Fecha: 07/10/2026
+
+Baseline:
+
+097b616 feat(environment): add bounded latency buffer
+
+Incident:
+
+GitHub rechazó push con Internal Server Error después de crear commit local 097b616.
+Velocity Submit Tool preservó:
+
+- local commit;
+- receipt state local_commit_only;
+- package;
+- clean working tree.
+
+Web VTD Prepare Submit volvió a invocar mode submit explícito.
+Normal submit preflight comparó HEAD 097b616 contra manifest expected_head 0ffedb6 y produjo BASELINE_ERROR.
+
+CLI guided launcher detectó local_commit_only, solicitó PUSH y sincronizó 097b616 correctamente.
+
+Causa:
+
+DeliveryService.start_submit() enviaba:
+
+mode = submit
+
+Eso evitaba state routing existente en velocity_submit.run_tool guided mode.
+
+Corrección:
+
+DeliveryService.start_submit() envía:
+
+mode = guided
+
+Routing autoritativo:
+
+receipt none → install
+receipt installed → submit
+receipt local_commit_only → retry-push
+
+Seguridad preservada:
+
+- package exact match;
+- HEAD preserved commit;
+- branch exact;
+- clean worktree;
+- textual PUSH confirmation;
+- no duplicate commit;
+- receipt cleared only after synchronized push.
+
+Tests:
+
+- start_submit uses guided mode;
+- submit prompt flow preserved;
+- rollback flow preserved;
+- full Web VTD suite;
+- Submit Tool suite;
+- Dashboard Logic suite.
+
+Baseline local:
+
+Web VTD: 48 tests PASS
+Web Repeat 5: PASS
+Submit Tool: 62 tests PASS
+Dashboard Logic: 17 tests PASS
+Total tooling: 127 tests PASS
+Python compile: PASS
+
+Estado:
+
+WEB VTD 0.5.3 FIX IMPLEMENTADO
+VERIFICACIÓN LOCAL PASS
+WINDOWS ACCEPTANCE PENDIENTE

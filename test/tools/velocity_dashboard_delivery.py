@@ -112,7 +112,7 @@ class DeliveryService:
             self._last_result = ""
             self._thread = threading.Thread(
                 target=self._worker,
-                args=("submit", self._selected_package),
+                args=("guided", self._selected_package),
                 daemon=True,
                 name="vtd-delivery-submit",
             )

@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO — IMPLEMENTADO Y VERIFICADO |
-| Versión | 1.4 |
-| Producto objetivo | Velocity Tooling Dashboard 0.5.2 |
+| Versión | 1.5 |
+| Producto objetivo | Velocity Tooling Dashboard 0.5.3 |
 | Fecha | 04/10/2026 |
 | Backend | Python 3.10+ standard library |
 | Frontend | HTML, CSS y JavaScript vanilla |
@@ -882,4 +882,74 @@ Feature commit:
 
 ```text
 b219462 feat(tools): add delivery rollback command
+```
+
+## 42. Local Commit Retry Routing 0.5.3
+
+Problema observado:
+
+```text
+Submit local commit created
+→ GitHub push returns remote 500
+→ receipt state local_commit_only
+→ Web Prepare Submit invoked explicit submit mode
+→ normal baseline preflight rejected moved HEAD
+```
+
+CLI guided mode ya resolvía correctamente:
+
+```text
+installed receipt         → submit
+local_commit_only receipt → retry-push
+```
+
+Decisión:
+
+`DeliveryService.start_submit()` invoca `guided` en lugar de `submit` explícito.
+
+El backend mantiene la autoridad de state routing. Frontend no interpreta receipt para decidir operation mode.
+
+Prompt esperado para preserved local commit:
+
+```text
+Type PUSH to retry the preserved local commit:
+```
+
+El usuario confirma `PUSH`, no `SUBMIT`.
+
+Preconditions de `retry_push_preflight` permanecen:
+
+- receipt `local_commit_only`;
+- commit_hash presente;
+- HEAD igual al commit preservado;
+- branch exacta;
+- working tree limpio;
+- remote disponible;
+- package exacto.
+
+Regression:
+
+```text
+start_submit passes mode guided
+normal submit prompt remains supported
+rollback routing remains explicit
+```
+
+Baseline:
+
+```text
+Web VTD:         48 tests PASS
+Web Repeat 5:    PASS
+Submit Tool:     62 tests PASS
+Dashboard Logic: 17 tests PASS
+Total tooling:  127 tests PASS
+Python compile:  PASS
+```
+
+Estado:
+
+```text
+WEB VTD 0.5.3
+LOCAL_COMMIT_ONLY ROUTING CORREGIDO
+VERIFICACIÓN LOCAL PASS
 ```

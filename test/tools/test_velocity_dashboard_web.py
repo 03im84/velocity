@@ -460,6 +460,26 @@ class DeliveryBridgeTests(unittest.TestCase):
 
         self.assertEqual(answers, ["ROLLBACK"])
 
+    def test_submit_uses_guided_mode_for_receipt_state_routing(self) -> None:
+        captured: dict[str, object] = {}
+
+        def fake_run_tool(**kwargs: object) -> ExitCode:
+            captured.update(kwargs)
+            return ExitCode.PASS
+
+        with mock.patch(
+            "velocity_dashboard_delivery.run_tool",
+            side_effect=fake_run_tool,
+        ):
+            self.service.start_submit()
+            self.assertTrue(self.service.wait(1.0))
+
+        self.assertEqual(captured["mode"], "guided")
+        self.assertEqual(
+            self.service.snapshot()["last_result"],
+            "PASS",
+        )
+
     def test_submit_prompt_waits_for_ui_answer(self) -> None:
         answers: list[str] = []
 
@@ -683,7 +703,7 @@ class HttpSecurityTests(unittest.TestCase):
                 timeout=1.0,
             )
         )
-        self.assertEqual(data["app"]["version"], "0.5.2")
+        self.assertEqual(data["app"]["version"], "0.5.3")
         self.assertEqual(data["server"]["host"], "127.0.0.1")
         self.assertGreaterEqual(len(data["tests"]), 85)
         self.assertIsInstance(data["event_cursor"], int)

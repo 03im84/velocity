@@ -41,7 +41,7 @@ from velocity_dashboard_service import (
 
 
 APP_NAME = "Velocity Tooling Dashboard"
-APP_VERSION = "0.5.2"
+APP_VERSION = "0.5.3"
 MAX_REQUEST_BYTES = 1024 * 1024
 COOKIE_NAME = "vtd_session"
 STATIC_ALLOWLIST = {
