@@ -1,0 +1,172 @@
+PJ0060 – Playable Vehicle Composition 1.0 Problem and Analysis
+
+Fecha: 07/10/2026
+
+Baseline:
+
+6079a2d docs(hover): record hover physics baseline
+
+Problema:
+
+Componer Input, Propulsion, Distance Sensors y Hover alrededor de un RigidBody3D real sin amalgamar routing, steering, braking, hover y scene ownership.
+
+Brechas detectadas:
+
+- VehicleControlRouter inexistente;
+- SteeringCommand/Runtime inexistentes;
+- BrakeCommand/Runtime inexistentes;
+- physical sinks inexistentes;
+- body ownership no definido;
+- distance sampling no automatizado;
+- root activation/shutdown/reset no definidos.
+
+Decisiones aprobadas:
+
+- composición escalonada;
+- body scene-owned;
+- VehicleControlRouter managed;
+- Steering Runtime separado;
+- Active Braking Runtime separado;
+- cuatro Hover Points independientes;
+- physical adapters explícitos;
+- physics coordinator scene-owned;
+- SimulationEnvironmentProfile;
+- gravity and atmospheric density configurable;
+- quadratic axis drag and lateral stability;
+- per-point Proximity Lift;
+- deterministic sensor noise;
+- bounded sensor and actuator latency;
+- read-only VehicleMotionState 6DOF seam for future cockpit modules.
+
+Future cockpit boundary:
+
+Vehicle Composition exposes motion snapshots only.
+Motion Cueing, PlatformPoseCommand, Stewart inverse kinematics and hardware actuator sinks remain deferred to a future Motion Platform Runtime Slice.
+
+Brake routing:
+
+effective_thrust = throttle * (1 - brake)
+normalized_brake = brake
+
+Brake boundary:
+
+BrakeCommand
+→ BrakeRuntimeUnit
+→ LongitudinalBrakeModel
+→ LongitudinalMotionSource
+→ BrakeForceSink
+
+Brake force siempre se opone a velocidad longitudinal y queda en cero dentro de speed deadzone. No modifica Hover.
+
+Steering boundary:
+
+SteeringCommand
+→ SteeringRuntimeUnit
+→ YawSteeringModel
+→ YawMotionSource
+→ SteeringTorqueSink
+
+Body convention:
+
+forward -Z
+up +Y
+right +X
+
+Hover points:
+
+front_left
+front_right
+rear_left
+rear_right
+
+Root ownership:
+
+RigidBody3D
+CollisionShape3D
+Markers/RayCasts
+providers/sinks
+CompositionRuntime
+models
+physics coordinator
+spawn transform
+
+Safe activation:
+
+body frozen
+→ activate runtime
+→ validate handles/adapters
+→ coordinator enabled
+→ body unfreezed
+
+Safe shutdown:
+
+coordinator disabled
+→ body frozen
+→ runtime shutdown
+→ zero velocities
+
+No amalgamation:
+
+- routing no aplica force;
+- steering no contiene propulsion/brake/hover;
+- braking no contiene propulsion/hover;
+- sinks tienen una responsabilidad;
+- root solo coordina.
+
+Environment realism:
+
+- atmosphere-aware quadratic drag;
+- per-axis coefficients/areas;
+- lateral drag separate from steering;
+- vacuum produces zero aerodynamic drag;
+- gravity configurable by environment;
+- Hover equilibrium derived from mass/gravity shares;
+- bounded proximity lift per point;
+- deterministic seeded/sequence noise;
+- bounded latency queues;
+- zero-noise/zero-latency mode preserves baseline behavior.
+
+Stages:
+
+0. environment/aerodynamics/proximity lift/signal conditioning;
+1. commands/policies;
+2. steering/brake models;
+3. router runtime;
+4. steering/brake runtimes;
+5. body adapters;
+6. coordinator;
+7. root/scene;
+8. physical integration.
+
+Documentos preparados:
+
+- playable_vehicle_composition_problem_analysis.md;
+- ADR-017 — Scene-Owned Vehicle Body and Staged Physical Composition.md;
+- playable_vehicle_composition_design.md.
+
+Baseline preservada:
+
+Input 6 / 101 PASS
+Propulsion 6 / 143 PASS
+Hover 7 / 151 PASS
+Runtime 20 / 475 PASS
+Run All 98 / 2712 PASS
+Tooling 126 PASS
+
+Workspace:
+
+56 MB < 80 MB
+
+Estado:
+
+PROBLEMA CERRADO
+ANÁLISIS COMPLETO
+COMPOSICIÓN ESCALONADA APROBADA
+BODY SCENE-OWNED APROBADO
+STEERING RUNTIME SEPARADO APROBADO
+ACTIVE BRAKING RUNTIME SEPARADO APROBADO
+ADR-017 1.0 ACEPTADO
+PLAYABLE VEHICLE COMPOSITION DESIGN 1.0 ACTIVO
+ENVIRONMENT/ATMOSPHERE/PROXIMITY LIFT/LATENCY/NOISE APROBADOS
+VEHICLE MOTION STATE SEAM APROBADO
+IMPLEMENTACIÓN AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
