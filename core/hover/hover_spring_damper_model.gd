@@ -134,8 +134,14 @@ func is_sample_interval_valid(
 		is_valid()
 		and is_finite(delta_seconds)
 		and delta_seconds > 0.0
-		and delta_seconds
-		<= _max_sample_interval_seconds
+		and (
+			delta_seconds
+			<= _max_sample_interval_seconds
+			or is_equal_approx(
+				delta_seconds,
+				_max_sample_interval_seconds
+			)
+		)
 	)
 
 
