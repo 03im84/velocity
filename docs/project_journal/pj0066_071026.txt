@@ -1,0 +1,147 @@
+PJ0066 – Delayed Scalar Sink Adapter 1.0
+
+Fecha: 07/10/2026
+
+Baseline:
+
+de4f016 feat(environment): add conditioned distance provider
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 0 – Environment and Realism Foundations
+
+Problema:
+
+Vehicle Composition necesita actuator latency para force/torque outputs
+sin modificar Propulsion, Hover, Steering o Brake RuntimeUnits, sin timers
+y sin queues no acotadas.
+
+Requisitos aprobados:
+
+- BoundedLatencyBuffer;
+- finite signed scalar values;
+- monotonic capture/flush timestamps;
+- fixed delay;
+- explicit flush(timestamp) from coordinator;
+- capacity and overflow observable;
+- zero-delay equivalent to baseline in the same tick;
+- no RigidBody, RuntimeUnit or SceneTree ownership.
+
+Alternativas:
+
+1. Añadir delay dentro de cada RuntimeUnit.
+
+Rechazada. Duplica policy y mezcla actuation timing con command/model
+responsibilities.
+
+2. Adapter con métodos de Propulsion/Hover/Steering/Brake combinados.
+
+Rechazada. Introduce APIs de módulos futuros y viola no amalgamation.
+
+3. Foundation genérica basada en Callable.
+
+Seleccionada. Wrappers actuator-specific implementarán apply_* y
+delegarán a submit_scalar; este componente solo gestiona scalar timing.
+
+Contrato:
+
+DelayedScalarSinkAdapter(
+    target_callable(value, application_timestamp) -> bool,
+    bounded_latency_buffer
+)
+
+submit_scalar(value, capture_timestamp) -> bool
+flush(current_timestamp) -> bool
+clear()
+
+Semántica:
+
+- target Callable debe ser válido y aceptar dos argumentos;
+- value puede ser positivo, negativo o cero, pero siempre finite;
+- conceptual application timestamp = capture + configured delay;
+- submit nunca llama al target directamente;
+- zero-delay requiere submit + flush en el mismo tick;
+- capture timestamps y flush timestamps son monotónicos no decrecientes;
+- full queue rechaza newest;
+- flush drena FIFO con budget máximo igual a capacity;
+- false/non-boolean target result detiene flush;
+- el comando rechazado se descarta;
+- comandos posteriores permanecen pendientes;
+- no se reintenta efecto físico de resultado desconocido;
+- clear reinicia queue, timestamp epochs y counters.
+
+Observabilidad:
+
+- pending count;
+- maximum pending entries;
+- delay seconds;
+- last flush accepted count;
+- total applied count.
+
+Ubicación:
+
+core/environment/delayed_scalar_sink_adapter.gd
+
+test/core/environment/delayed_scalar_sink_adapter_test.gd
+test/core/environment/DelayedScalarSinkAdapterTest.tscn
+
+Cobertura diseñada:
+
+- dependency validation and callable arity;
+- finite signed scalar acceptance;
+- invalid scalar/timestamp rejection;
+- application timestamp overflow;
+- explicit zero-delay flush;
+- delayed conceptual timestamp;
+- FIFO multi-release;
+- capacity and reject-newest overflow;
+- reusable capacity after flush;
+- capture/flush monotonicity;
+- target false rejection;
+- target non-boolean rejection;
+- later-command preservation;
+- clear and epoch reset;
+- responsibility boundary.
+
+Expected isolated baseline:
+
+DelayedScalarSinkAdapterTest: 40 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Environment Suite: 6 tests / 161 checks
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+RESULT: PASS
+
+Static review:
+
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- explicit Callable + buffer dependencies: PASS;
+- bounded release loop: PASS;
+- isolated checks: 40;
+- Web VTD discovery: PASS;
+- discovered suite: Environment;
+- Environment scenes: 6;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: de4f016;
+- replacements restored: 2;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING

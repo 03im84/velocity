@@ -260,17 +260,56 @@ se modifican.
 
 ## 10. Actuator latency
 
-Sinks físicos pueden envolverse con delayed scalar adapters:
+`DelayedScalarSinkAdapter` es una foundation genérica, sin semántica de
+force/torque, configurada con:
+
+```text
+target_callable(value, application_timestamp) -> bool
+BoundedLatencyBuffer
+```
+
+API:
+
+```text
+submit_scalar(value, capture_timestamp) -> bool
+flush(current_timestamp) -> bool
+clear()
+```
+
+Pipeline:
 
 ```text
 RuntimeUnit output
-→ bounded delayed scalar sink
-→ matured force/torque
-→ RigidBody sink
+→ actuator-specific wrapper
+→ submit_scalar(value, command timestamp)
+→ bounded latency buffer
+→ coordinator flush(timestamp)
+→ target Callable(value, capture timestamp + configured delay)
+→ physical RigidBody sink
 ```
 
-Coordinator ejecuta `flush(timestamp)` una vez por physics tick.
+El conceptual application timestamp es independiente de la cadencia de
+`flush`: siempre es `capture + delay`. `submit_scalar` acepta escalares
+firmados finitos y nunca llama al target directamente, incluso con delay
+cero. Zero-delay preserva baseline mediante `submit` seguido de `flush`
+en el mismo physics tick.
 
+Capture timestamps y flush timestamps son monotónicos no decrecientes.
+La cola rechaza newest al alcanzar capacity. Pending count, capacity,
+delay, last flush count y total applied count son observables.
+
+`flush()` drena FIFO con budget máximo igual a capacity. Si el target
+retorna `false` o un valor no booleano, el comando actual se descarta, el
+flush retorna `false` y comandos posteriores permanecen pendientes. No se
+reintenta un comando cuyo efecto físico es desconocido.
+
+`clear()` vacía queue y reinicia capture/flush epochs y counters.
+
+Wrappers específicos implementarán `apply_propulsion_force`,
+`apply_hover_force`, `apply_steering_torque` o `apply_brake_force` y
+delegarán a esta foundation. No forman parte de Stage 0.
+
+Coordinator ejecuta `flush(timestamp)` una vez por physics tick.
 Propulsion, Steering, Brake y Hover RuntimeUnits no cambian.
 
 Initial Vehicle Composition debe demostrar al menos:

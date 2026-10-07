@@ -579,7 +579,22 @@ observables. Invalidity madura con el mismo delay y conserva Last Known
 Good distance. Zero-noise permite source nulo y no consume source state.
 `clear()` reinicia queue, timestamp epoch y current reading.
 
-Delayed sink adapters proporcionan actuator latency y se vacían mediante `flush(timestamp)` del coordinator.
+`DelayedScalarSinkAdapter` recibe un target `Callable(value, timestamp)` y
+una `BoundedLatencyBuffer`. Wrappers actuator-specific delegan
+`apply_*` a `submit_scalar`; el coordinator llama `flush(timestamp)` una
+vez por physics tick.
+
+```text
+submit_scalar(signed finite value, capture timestamp)
+→ bounded FIFO
+→ flush(current timestamp)
+→ target(value, capture timestamp + delay)
+```
+
+El adapter no llama al target durante submit, no posee RigidBody y no
+conoce propulsion/hover/steering/brake semantics. Target rejection detiene
+el flush, descarta solo el comando rechazado y preserva posteriores
+entries. Counters y pending capacity son observables.
 
 Toda queue tiene capacity fija, monotonic timestamps y overflow report observable.
 
@@ -611,7 +626,7 @@ ProximityLiftPointRuntimeFactoryTest
 DistanceNoiseModelTest
 BoundedLatencyBufferTest
 ConditionedDistanceProviderTest
-DelayedScalarSinkTest
+DelayedScalarSinkAdapterTest
 ```
 
 ### Stage 1
