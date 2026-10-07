@@ -19,6 +19,7 @@ from velocity_submit_contract import (
     SubmitManifest,
     ValidatedPackage,
     atomic_copy,
+    delete_verified_external_zip,
     manifest_digest,
     open_validated_package,
     remove_tree,
@@ -885,25 +886,11 @@ def delete_original_package(
         return
 
     try:
-        if package_path.is_symlink() or not package_path.is_file():
-            raise OSError("package is not a regular file")
-
-        try:
-            package_path.resolve(strict=True).relative_to(
-                repository_root.resolve(strict=True)
-            )
-        except ValueError:
-            pass
-        else:
-            raise OSError("package is inside repository")
-
-        if package_path.suffix.casefold() != ".zip":
-            raise OSError("package is not a ZIP")
-
-        if sha256_file(package_path) != package_sha256:
-            raise OSError("package SHA-256 changed")
-
-        package_path.unlink()
+        delete_verified_external_zip(
+            package_path,
+            package_sha256,
+            repository_root,
+        )
         output_function("Package cleanup: original ZIP deleted")
     except OSError as error:
         output_function(
@@ -972,6 +959,7 @@ def run_tool(
             output_function(
                 "State: receipt and backups cleared"
             )
+            output_function(result.package_cleanup_message)
             return ExitCode.PASS
 
         if mode == "guided":

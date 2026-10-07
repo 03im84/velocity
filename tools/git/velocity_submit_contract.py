@@ -17,7 +17,7 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Iterator
 
 
-TOOL_VERSION = "1.1.0"
+TOOL_VERSION = "1.1.1"
 MANIFEST_SCHEMA = "velocity-submit-manifest/v1"
 RECEIPT_SCHEMA = "velocity-submit-receipt/v1"
 PROJECT_NAME = "velocity"
@@ -518,6 +518,40 @@ def sha256_file(
             digest.update(block)
 
     return digest.hexdigest()
+
+
+def delete_verified_external_zip(
+    package_path: Path,
+    package_sha256: str,
+    repository_root: Path,
+) -> None:
+    if package_path.is_symlink():
+        raise OSError("package is a symlink")
+
+    if not package_path.exists():
+        raise FileNotFoundError(
+            "original ZIP was not found at its last known path"
+        )
+
+    if not package_path.is_file():
+        raise OSError("package is not a regular file")
+
+    try:
+        package_path.resolve(strict=True).relative_to(
+            repository_root.resolve(strict=True)
+        )
+    except ValueError:
+        pass
+    else:
+        raise OSError("package is inside repository")
+
+    if package_path.suffix.casefold() != ".zip":
+        raise OSError("package is not a ZIP")
+
+    if sha256_file(package_path) != package_sha256:
+        raise OSError("package SHA-256 changed")
+
+    package_path.unlink()
 
 
 def atomic_copy(

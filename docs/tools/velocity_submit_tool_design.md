@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO — COMPLETO Y VERIFICADO |
-| Versión del documento | 1.4 |
-| Versión objetivo de la herramienta | 1.1.0 |
-| Fecha | 04/10/2026 |
+| Versión del documento | 1.5 |
+| Versión objetivo de la herramienta | 1.1.1 |
+| Fecha | 07/10/2026 |
 | Plataforma inicial | Windows |
 | Entrada principal | BAT guided launcher |
 | Selector | Diálogo nativo mediante Tkinter |
@@ -1263,3 +1263,114 @@ RESULT: PASS
 ```
 
 El milestone queda cerrado.
+
+## 51. Rejected package cleanup after rollback — 1.1.1
+
+Problema:
+
+Un rollback exitoso restauraba el repositorio y eliminaba receipt y
+backups, pero conservaba el ZIP de una entrega ya rechazada. El usuario
+debía recordar y localizar manualmente ese paquete obsoleto.
+
+Decisión aprobada el 07/10/2026:
+
+> Un rollback exitoso elimina automáticamente el ZIP rechazado usando
+> exclusivamente la última ubicación y el SHA-256 registrados en el
+> receipt activo.
+
+Autoridad:
+
+```text
+receipt.package_path
++
+receipt.package_sha256
+```
+
+Secuencia:
+
+```text
+validate rollback preconditions
+→ textual ROLLBACK confirmation
+→ restore exact repository baseline
+→ verify clean working tree
+→ clear receipt and backups
+→ inspect only the last known package path
+→ delete only when path and SHA-256 still match
+```
+
+Defensas:
+
+- no búsqueda recursiva;
+- no globbing;
+- no selección de otro archivo con el mismo nombre;
+- symlinks rechazados;
+- el target debe ser un archivo regular `.zip`;
+- el ZIP debe permanecer fuera del repositorio;
+- SHA-256 debe coincidir con el receipt;
+- una ruta ausente o movida se reporta como `skipped`;
+- un hash distinto se reporta como warning y el archivo se preserva;
+- un fallo de filesystem es best-effort y no invalida un rollback del
+  repositorio ya completado.
+
+La confirmación destructiva informa también la eliminación:
+
+```text
+Type ROLLBACK to restore baseline <head>, discard delivery <id>, and delete its verified source ZIP:
+```
+
+Resultado nominal:
+
+```text
+VELOCITY DELIVERY ROLLBACK: PASS
+Delivery: <id>
+Baseline restored: <head>
+Replacements restored: N
+Additions removed: N
+UID sidecars removed: N
+State: receipt and backups cleared
+Package cleanup: original ZIP deleted
+```
+
+Fallback seguro si el ZIP fue movido:
+
+```text
+Package cleanup: skipped — original ZIP was not found at its last known path
+```
+
+Fallback seguro si su identidad cambió:
+
+```text
+PACKAGE CLEANUP: WARNING — package SHA-256 changed
+```
+
+La eliminación posterior a `Submit PASS` reutiliza el mismo primitivo
+de validación de path, tipo, ubicación y hash. Su confirmación separada
+permanece vigente.
+
+Regresión local 1.1.1:
+
+```text
+Velocity Submit Tool: 65 tests PASS
+New rollback cleanup cases: 3 tests PASS
+Canonical Tooling: 136 tests PASS
+Canonical Repeat 5: PASS
+Package E2E self-rollback: PASS
+Resource warnings: 0
+Static checks: PASS
+Failures: 0
+Errors: 0
+```
+
+Windows esperado:
+
+```text
+TestsRun: 136
+Failures: 0
+Errors: 0
+Skipped: 1
+ExitCode: 0
+RESULT: PASS
+```
+
+El skip esperado sigue siendo la restricción condicional de symlink de
+Windows; no pertenece a la nueva lógica de cleanup.

@@ -781,12 +781,13 @@ class RollbackTests(unittest.TestCase):
         self.assertEqual(receipt.state, "installed")
 
     def test_rollback_restores_baseline(self) -> None:
-        self.install_files(
+        receipt = self.install_files(
             [
                 ("docs/new.txt", "new\n", "add"),
                 ("docs/replace.txt", "replacement\n", "replace"),
             ]
         )
+        package_path = Path(receipt.package_path)
 
         result = self.rollback()
 
@@ -799,6 +800,11 @@ class RollbackTests(unittest.TestCase):
         )
         self.assertFalse(
             (self.fixture.work / "docs/new.txt").exists()
+        )
+        self.assertFalse(package_path.exists())
+        self.assertEqual(
+            result.package_cleanup_message,
+            "Package cleanup: original ZIP deleted",
         )
         self.assert_clean_without_state()
 
@@ -1099,9 +1105,10 @@ class RollbackTests(unittest.TestCase):
         self.assert_delivery_preserved()
 
     def test_run_tool_rollback_reports_pass(self) -> None:
-        self.install_files(
+        receipt = self.install_files(
             [("docs/new.txt", "new\n", "add")]
         )
+        package_path = Path(receipt.package_path)
         lines: list[str] = []
 
         code = velocity_submit.run_tool(
@@ -1116,6 +1123,87 @@ class RollbackTests(unittest.TestCase):
         self.assertIn(
             "VELOCITY DELIVERY ROLLBACK: PASS",
             lines,
+        )
+        self.assertIn(
+            "Package cleanup: original ZIP deleted",
+            lines,
+        )
+        self.assertFalse(package_path.exists())
+        self.assert_clean_without_state()
+
+    def test_rollback_does_not_search_for_moved_package(self) -> None:
+        receipt = self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        package_path = Path(receipt.package_path)
+        moved_path = package_path.with_name("moved-package.zip")
+        package_path.rename(moved_path)
+        lines: list[str] = []
+
+        code = velocity_submit.run_tool(
+            start_directory=self.fixture.work,
+            mode="rollback",
+            input_function=lambda _prompt: "ROLLBACK",
+            output_function=lines.append,
+            package_selector=lambda: None,
+        )
+
+        self.assertEqual(code, ExitCode.PASS)
+        self.assertTrue(moved_path.is_file())
+        self.assertTrue(
+            any("last known path" in line for line in lines)
+        )
+        self.assert_clean_without_state()
+
+    def test_rollback_preserves_changed_package(self) -> None:
+        receipt = self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        package_path = Path(receipt.package_path)
+        package_path.write_bytes(
+            package_path.read_bytes() + b"changed"
+        )
+        lines: list[str] = []
+
+        code = velocity_submit.run_tool(
+            start_directory=self.fixture.work,
+            mode="rollback",
+            input_function=lambda _prompt: "ROLLBACK",
+            output_function=lines.append,
+            package_selector=lambda: None,
+        )
+
+        self.assertEqual(code, ExitCode.PASS)
+        self.assertTrue(package_path.is_file())
+        self.assertTrue(
+            any("SHA-256 changed" in line for line in lines)
+        )
+        self.assert_clean_without_state()
+
+    def test_rollback_cleanup_failure_is_best_effort(self) -> None:
+        receipt = self.install_files(
+            [("docs/new.txt", "new\n", "add")]
+        )
+        package_path = Path(receipt.package_path)
+        lines: list[str] = []
+
+        with mock.patch.object(
+            velocity_submit_rollback,
+            "delete_verified_external_zip",
+            side_effect=PermissionError("controlled denial"),
+        ):
+            code = velocity_submit.run_tool(
+                start_directory=self.fixture.work,
+                mode="rollback",
+                input_function=lambda _prompt: "ROLLBACK",
+                output_function=lines.append,
+                package_selector=lambda: None,
+            )
+
+        self.assertEqual(code, ExitCode.PASS)
+        self.assertTrue(package_path.is_file())
+        self.assertTrue(
+            any("controlled denial" in line for line in lines)
         )
         self.assert_clean_without_state()
 

@@ -11,6 +11,7 @@ from velocity_submit_contract import (
     SubmitError,
     UID_CONTENT_PATTERN,
     atomic_copy,
+    delete_verified_external_zip,
     remove_tree,
     sha256_file,
     validate_repository_target,
@@ -44,6 +45,7 @@ class RollbackResult:
     replacements_restored: int
     additions_removed: int
     uid_sidecars_removed: int
+    package_cleanup_message: str = ""
 
 
 class DeliveryRollback:
@@ -69,7 +71,17 @@ class DeliveryRollback:
             plan,
             input_function,
         )
-        return self._execute(plan)
+        result = self._execute(plan)
+        return RollbackResult(
+            delivery_id=result.delivery_id,
+            base_commit=result.base_commit,
+            replacements_restored=result.replacements_restored,
+            additions_removed=result.additions_removed,
+            uid_sidecars_removed=result.uid_sidecars_removed,
+            package_cleanup_message=(
+                self._cleanup_rejected_package(receipt)
+            ),
+        )
 
     def _require_installed_state(
         self,
@@ -365,9 +377,9 @@ class DeliveryRollback:
             + ROLLBACK_CONFIRMATION
             + " to restore baseline "
             + plan.receipt.base_commit[:7]
-            + " and discard delivery "
+            + ", discard delivery "
             + plan.receipt.delivery_id
-            + ": "
+            + ", and delete its verified source ZIP: "
         ).strip()
 
         if confirmation != ROLLBACK_CONFIRMATION:
@@ -489,6 +501,28 @@ class DeliveryRollback:
             additions_removed=additions_removed,
             uid_sidecars_removed=uid_sidecars_removed,
         )
+
+    def _cleanup_rejected_package(
+        self,
+        receipt: InstallReceipt,
+    ) -> str:
+        package_path = Path(receipt.package_path)
+
+        try:
+            delete_verified_external_zip(
+                package_path,
+                receipt.package_sha256,
+                self.repository.paths.root,
+            )
+        except FileNotFoundError:
+            return (
+                "Package cleanup: skipped — original ZIP was not "
+                "found at its last known path"
+            )
+        except OSError as error:
+            return "PACKAGE CLEANUP: WARNING — " + str(error)
+
+        return "Package cleanup: original ZIP deleted"
 
     def _prune_empty_directories(
         self,

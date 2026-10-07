@@ -1117,5 +1117,40 @@ Estado:
 CANONICAL TOOLING RUNNER 1.0.2
 WINDOWS LIVE PROGRESS IMPLEMENTED
 WINDOWS CHILD CONSOLES HIDDEN
-WINDOWS REVALIDATION PENDIENTE
+WINDOWS ACCEPTANCE PASS — 133 TESTS, SKIPPED 1
 ```
+
+## 46. Rollback rejected-package cleanup — Submit Tool 1.1.1
+
+Web VTD conserva el endpoint y la exclusión de operaciones de 0.5.2.
+No incorpora lógica de filesystem en JavaScript. La autoridad permanece
+en Velocity Submit Tool.
+
+Flujo ampliado:
+
+```text
+user confirms textual ROLLBACK
+→ tool restores and verifies exact baseline
+→ tool clears receipt and backups
+→ tool checks receipt.package_path only
+→ matching external regular ZIP + matching SHA-256
+   → original ZIP deleted
+→ absent/moved/mismatched package
+   → skipped or warning; no search and no substitute deletion
+→ complete result streams through existing Delivery SSE
+```
+
+El prompt informa que el ZIP verificado será eliminado. El frontend
+continúa transportando texto y no interpreta path, hash ni política de
+cleanup.
+
+Resultado Web nominal adicional:
+
+```text
+Package cleanup: original ZIP deleted
+```
+
+La operación sigue siendo `PASS` cuando el cleanup best-effort emite un
+warning después de restaurar correctamente el repositorio. Esto evita
+presentar como fallido o reversible un rollback que ya alcanzó su
+post-condición autoritativa.

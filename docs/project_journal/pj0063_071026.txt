@@ -1,0 +1,100 @@
+PJ0063 – Rejected Delivery Package Cleanup after Rollback 1.1.1
+
+Fecha: 07/10/2026
+
+Baseline:
+
+d115ad3 feat(tools): add canonical tooling test runner
+
+Problema:
+
+Velocity Submit Tool restauraba correctamente la baseline y limpiaba el
+receipt y los backups después de ROLLBACK, pero conservaba el ZIP de la
+entrega rechazada. La limpieza manual dependía de recordar qué paquete
+había sido instalado y dónde permanecía.
+
+Decisión aprobada:
+
+Después de un rollback autoritativo exitoso, eliminar automáticamente el
+paquete rechazado usando exclusivamente:
+
+- receipt.package_path como última ubicación conocida;
+- receipt.package_sha256 como identidad conocida.
+
+La herramienta no busca archivos movidos, no usa globbing y no elimina
+sustitutos por nombre.
+
+Diseño de seguridad:
+
+- confirmación textual ROLLBACK informa la eliminación del ZIP;
+- baseline exacta se restaura y verifica antes del cleanup;
+- receipt y backups se limpian únicamente después del estado Git limpio;
+- cleanup acepta solo un archivo regular .zip externo al repositorio;
+- symlinks se rechazan;
+- SHA-256 debe coincidir;
+- ruta ausente se reporta como skipped;
+- hash distinto o error de filesystem se reporta como warning;
+- cleanup es best-effort y no invalida un rollback del repositorio ya
+  completado.
+
+Implementación:
+
+- Velocity Submit Tool 1.1.1;
+- delete_verified_external_zip centraliza validación y eliminación;
+- Submit conserva su confirmación de cleanup existente;
+- Rollback elimina automáticamente el ZIP verificado;
+- RollbackResult transporta el resultado de cleanup a CLI y Web VTD;
+- Web VTD conserva su backend autoritativo y no duplica política en JS.
+
+Regresión aislada:
+
+Velocity Submit Tool: 65 tests PASS
+Failures: 0
+Errors: 0
+
+Nuevos casos:
+
+1. package exacto se elimina después de rollback;
+2. package movido no se busca ni elimina;
+3. package con hash cambiado se preserva;
+4. error de filesystem es best-effort y conserva Rollback PASS.
+
+Nota:
+
+El primer caso amplía una prueba existente. Los otros tres añaden tres
+pruebas a la baseline canónica.
+
+Regresión canónica local:
+
+Canonical Tooling: 136 tests PASS
+Repeat 5: PASS
+Package E2E self-rollback: PASS
+Replacements restored: 6
+Additions removed: 1
+Verified source ZIP deleted: PASS
+Baseline restored to d115ad3: PASS
+Failures: 0
+Errors: 0
+Skipped: 0 en Linux
+Resource warnings: 0
+Python compile: PASS
+JavaScript parse: PASS
+git diff check: PASS
+
+Windows esperado:
+
+TestsRun: 136
+Failures: 0
+Errors: 0
+Skipped: 1
+ExitCode: 0
+RESULT: PASS
+
+El skip esperado es test_zip_symlink_path_is_rejected por la restricción
+condicional de symlink en Windows.
+
+Estado:
+
+IMPLEMENTACIÓN LOCAL PASS
+CANONICAL TOOLING REGRESSION PASS
+WINDOWS ACCEPTANCE PENDIENTE
