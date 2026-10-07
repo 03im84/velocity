@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://test/core/environment/simulation_environment_profile_test.gd" id="1_sep"]
+
+[node name="SimulationEnvironmentProfileTest" type="Node"]
+script = ExtResource("1_sep")
