@@ -64,3 +64,29 @@ static func create_longitudinal_propulsion_actuator(
 		&"",
 		0
 	)
+
+
+static func create_spring_damper_hover_point(
+) -> DeviceProfile:
+
+	return DeviceProfile.new(
+		&"velocity.hover.spring_damper_point",
+		1,
+		"Spring-Damper Hover Point",
+		(
+			"Simulation actuator that converts distance "
+			+ "measurements into bounded lift force."
+		),
+		DeviceRoles.ACTUATOR,
+		[
+			"hover_lift_force",
+		],
+		[],
+		[
+			BusTopics.DISTANCE_MEASUREMENT,
+		],
+		[],
+		true,
+		&"",
+		0
+	)
