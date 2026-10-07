@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.18 |
+| Versión | 1.19 |
 | Fecha | 04/10/2026 |
-| ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback; ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries; ADR-013 — Distance Sensor Simulation Runtime Slice and Configuration Fidelity; ADR-014 — Input Intent Sampling and Runtime Publication; ADR-015 — Propulsion Command Actuation and Force Sink Boundary |
+| ADR relacionados | ADR-009 — System Composition Pipeline; ADR-010 — Runtime Construction and Factory Binding; ADR-011 — Composition Runtime Activation, Ownership and Rollback; ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries; ADR-013 — Distance Sensor Simulation Runtime Slice and Configuration Fidelity; ADR-014 — Input Intent Sampling and Runtime Publication; ADR-015 — Propulsion Command Actuation and Force Sink Boundary; ADR-016 — Per-Point Hover Spring-Damper and Temporal Safety |
 | Alcance | Definición, resolución, Graph assembly, construcción runtime, planificación, compilación y activación |
 
 ## 1. Propósito
@@ -48,10 +48,11 @@ Managed Runtime Adapter Boundary 1.0
 Distance Sensor Runtime Slice 1.0
 Input Runtime Slice 1.0
 Propulsion Runtime Slice 1.0
+Hover Physics Slice 1.0
 IMPLEMENTADOS Y VERIFICADOS
 ```
 
-Baseline global: 91 tests, 2561 checks, PASS.
+Baseline global: 98 tests, 2712 checks, PASS.
 
 ## 2. Pipeline completo
 
@@ -990,153 +991,95 @@ No descubre:
 
 ## 42. Baselines
 
-Baselines de composición preservadas:
-
-```text
-SystemProfile:            3 tests / 142 checks
-DeviceCatalog:            3 tests / 89 checks
-DeviceGraphAssembler:     2 tests / 114 checks
-Runtime Construction:     6 tests / 173 checks
-RuntimeFactoryRegistry:   4 tests / 141 checks
-CompositionPlan:          4 tests / 141 checks
-CompositionCompiler:      3 tests / 119 checks
-CompositionRuntime:       4 tests / 186 checks
-Distance Sensor Slice:    3 tests / 55 checks
-Input Runtime Slice:      6 tests / 101 checks
-Propulsion Runtime Slice: 6 tests / 143 checks
-```
-
-Suites vigentes:
-
 ```text
 Composition Suite: 16 tests / 702 checks
 Runtime Suite:     20 tests / 475 checks
 Input Suite:        6 tests / 101 checks
 Propulsion Suite:   6 tests / 143 checks
+Hover Suite:        7 tests / 151 checks
 ```
 
-Global vigente:
-
 ```text
-91 tests
-2561 checks
-0 failures
-0 timeout
-0 engine errors
-0 missing metrics
-Plan ExitCode: 0
+Run All: 98 tests / 2712 checks
+Failures: 0
+Missing Metrics: 0
 RESULT: PASS
 ```
 
 ## 43. Tooling
 
 ```text
-Velocity Test Dashboard:        0.4.0
-Velocity Tooling Dashboard Web: 0.5.2
-Velocity Submit Tool:           1.1.0
-Runner Metrics Protocol:        1
+Web VTD 0.5.2
+Submit Tool 1.1.0
+126 tooling tests PASS
 ```
 
 ## 44. Orden completado
 
 ```text
-RuntimeFactoryRegistry 1.0
-CompositionPlan 1.0
-CompositionCompiler 1.0
-CompositionRuntime 1.0
-Managed Runtime Adapter Boundary 1.0
-Distance Sensor Runtime Slice 1.0
-Input Runtime Slice 1.0
-Propulsion Runtime Slice 1.0
-
-Todos IMPLEMENTADOS Y VERIFICADOS.
-```
-
-Últimos milestones concretos:
-
-```text
-53ffe1d feat(runtime): add distance sensor runtime slice
-80c5118 test(input): add runtime pipeline integration
-bc838d8 test(propulsion): add runtime pipeline integration
-```
-
-## 45. Baselines preservadas
-
-Propulsion añadió pruebas sucesoras. No se modificaron tests aceptados de Runtime Construction, Registry, Plan, Compiler, CompositionRuntime, Managed Adapters, Distance Sensor o Input para hacerlo pasar.
-
-## 46. Fuera de alcance
-
-- VehicleControlRouter;
-- RigidBodyPropulsionForceSink;
-- Hover Physics Slice;
-- Playable Vehicle Composition;
-- CompositionRuntimeSupervisor;
-- Last Known Good manager;
-- hot swap;
-- multiple active runtimes;
-- Hardware Runtime;
-- persistence;
-- Calibration;
-- AdaptationPolicy;
-- RuntimeAllocation;
-- telemetría concreta;
-- automatic recovery.
-
-## 47. Invariantes
-
-1. Registry es inmutable.
-2. Registry lookup es exacto.
-3. Plan guarda Key, no factory.
-4. Plan no contiene recursos activos.
-5. Dependency Specs no contienen Values.
-6. Dispatch Policy es obligatoria.
-7. CompositionCompiler no ejecuta.
-8. CompositionRuntime posee recursos.
-9. Factories concretas son construct-only.
-10. RuntimeUnit actúa solo mientras está RUNNING.
-11. Dependencias BORROWED sobreviven shutdown y release.
-12. Propulsion output es finito, acotado y longitudinal.
-13. Propulsion 1.0 no define geometría RigidBody3D.
-
-## 48. Estado
-
-```text
-SYSTEMPROFILE 1.0
-DEVICECATALOG 1.0
-DEVICEGRAPHASSEMBLER 1.0
-RUNTIME CONSTRUCTION CONTRACT 1.0
-RUNTIMEFACTORYREGISTRY 1.0
-COMPOSITIONPLAN 1.0
-COMPOSITIONCOMPILER 1.0
-COMPOSITIONRUNTIME 1.0
-MANAGED RUNTIME ADAPTER BOUNDARY 1.0
-DISTANCE SENSOR RUNTIME SLICE 1.0
-INPUT RUNTIME SLICE 1.0
-PROPULSION RUNTIME SLICE 1.0
+Runtime pipeline foundation
+Managed adapters
+Distance Sensor Runtime Slice
+Input Runtime Slice
+Propulsion Runtime Slice
+Hover Physics Slice
 
 IMPLEMENTADOS Y VERIFICADOS
 ```
 
-Baseline vigente:
+## 45. Baselines preservadas
+
+Hover añadió pruebas sucesoras sin modificar tests aceptados de Runtime, Distance Sensor, Input o Propulsion para hacerlo pasar.
+
+## 46. Fuera de alcance
+
+- Playable Vehicle Composition;
+- VehicleControlRouter;
+- RigidBodyPropulsionForceSink;
+- RigidBodyHoverForceSink;
+- multi-point attitude controller;
+- track/camera/HUD;
+- Hardware Runtime;
+- hot swap y Last Known Good supervisor.
+
+## 47. Invariantes
+
+1. Registry y Plan permanecen declarativos.
+2. Factories son construct-only.
+3. Runtime actúa solo en RUNNING.
+4. Dependencies BORROWED sobreviven shutdown/release.
+5. Propulsion output es longitudinal y acotado.
+6. Hover output es lift-only y acotado.
+7. Hover history está limitada a un sample.
+8. RigidBody3D pertenece a Vehicle Composition.
+
+## 48. Estado
 
 ```text
-Propulsion Suite: 6 tests / 143 checks
-Runtime Suite: 20 tests / 475 checks
-Run All: 91 tests / 2561 checks
-Failures: 0
-Missing Metrics: 0
-RESULT: PASS
+SYSTEM COMPOSITION PIPELINE
+DISTANCE SENSOR RUNTIME 1.0
+INPUT RUNTIME 1.0
+PROPULSION RUNTIME 1.0
+HOVER PHYSICS 1.0
+
+IMPLEMENTADOS Y VERIFICADOS
 ```
 
-Último commit del Slice:
-
 ```text
-bc838d8 test(propulsion): add runtime pipeline integration
+Hover Suite: 7 / 151 PASS
+Runtime Suite: 20 / 475 PASS
+Run All: 98 / 2712 PASS
 ```
 
-Siguiente milestone de producto:
+Último commit:
 
 ```text
-Hover Physics Slice 1.0
+adca199 test(hover): add runtime pipeline integration
+```
+
+Siguiente milestone:
+
+```text
+Playable Vehicle Composition 1.0
 PROBLEMA Y DISEÑO PENDIENTES
 ```

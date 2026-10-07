@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 2.28 |
+| Versión | 2.29 |
 | Fecha inicial | 2026-08-14 |
 | Última revisión | 04/10/2026 |
 | Alcance | Núcleo lógico de Velocity |
@@ -63,6 +63,7 @@ Conceptos actuales:
 - VehicleControlCommand;
 - Input Runtime Slice;
 - Propulsion Runtime Slice;
+- Hover Physics Slice;
 - System Composition;
 - estado;
 - health;
@@ -139,6 +140,9 @@ core/input/
 core/propulsion/
 		Command y modelo longitudinal acotado.
 
+core/hover/
+		Spring-damper lift policy por punto.
+
 core/debug/
 		Observación y diagnóstico.
 
@@ -151,6 +155,9 @@ integration/godot/input/
 
 integration/godot/propulsion/
 		RuntimeUnit y Factory del actuator longitudinal.
+
+integration/godot/hover/
+		RuntimeUnit y Factory del Hover Point.
 
 profiles/
 		Estructura persistente futura.
@@ -257,6 +264,9 @@ SceneTree no define Core.
 | LongitudinalPropulsionModel | Convertir command a fuerza escalar acotada | Implementado y verificado |
 | PropulsionRuntimeUnit | Entregar fuerza longitudinal a sink BORROWED | Implementado y verificado |
 | PropulsionRuntimeFactory | Construir Handle concreto sin Host Objects | Implementado y verificado |
+| HoverSpringDamperModel | Calcular lift-only spring-damper acotado | Implementado y verificado |
+| HoverPointRuntimeUnit | Convertir DistanceMeasurement en lift por punto | Implementado y verificado |
+| HoverPointRuntimeFactory | Construir Handle Hover sin Host Objects | Implementado y verificado |
 | CompositionRuntimeSupervisor | Preservar Last Known Good y hot swap | Futuro |
 | Measurement | Dato de Sensor | Contrato pendiente |
 
@@ -1418,22 +1428,14 @@ DeviceBus y Runtime Safety
 Topic y Message Contracts
 Provider System
 Device Core
-DeviceProfile y DeviceConfiguration
-DeviceGraph 1.0
-SystemProfile 1.0
-DeviceCatalog 1.0
-DeviceGraphAssembler 1.0
-Runtime Construction Contract 1.0
-RuntimeFactoryRegistry 1.0
-CompositionPlan 1.0
-CompositionCompiler 1.0
-CompositionRuntime 1.0
+Profiles y Configuration
+DeviceGraph y System Composition
+Runtime Construction y CompositionRuntime
 Managed Runtime Adapter Boundary 1.0
 Distance Sensor Runtime Slice 1.0
 Input Runtime Slice 1.0
 Propulsion Runtime Slice 1.0
-Velocity Test Runner
-Velocity Test Dashboard 0.4.0
+Hover Physics Slice 1.0
 Velocity Tooling Dashboard Web 0.5.2
 Velocity Submit Tool 1.1.0
 ```
@@ -1441,106 +1443,103 @@ Velocity Submit Tool 1.1.0
 ## 37. Último milestone cerrado
 
 ```text
-Propulsion Runtime Slice 1.0
+Hover Physics Slice 1.0
 IMPLEMENTADO Y VERIFICADO
 ```
 
-ADR-015 1.1 está aceptado, implementado y verificado.
-
-Flujo concreto:
+ADR-016 1.1 está aceptado, implementado y verificado.
 
 ```text
-PropulsionCommand
-→ PropulsionRuntimeUnit
-→ LongitudinalPropulsionModel
-→ PropulsionForceSink
+DistanceMeasurement
+→ HoverPointRuntimeUnit
+→ HoverSpringDamperModel
+→ HoverForceSink
 ```
 
 Factory Key:
 
 ```text
-velocity.propulsion.longitudinal / 1 / Simulation
+velocity.hover.spring_damper_point / 1 / Simulation
 ```
 
 Dependencies:
 
 ```text
-propulsion_model / BORROWED
-propulsion_force_sink / BORROWED
+hover_model / BORROWED
+hover_force_sink / BORROWED
 ```
-
-La fuerza 1.0 es una resultante longitudinal escalar con transferencia lineal y sin dispersión radial.
 
 ## 38. Baseline del milestone
 
 ```text
-PropulsionCommandTest:                    18 checks
-LongitudinalPropulsionModelTest:          28 checks
-LongitudinalPropulsionProfileTest:        12 checks
-PropulsionRuntimeUnitTest:                35 checks
-PropulsionRuntimeFactoryTest:             25 checks
-PropulsionRuntimePipelineIntegrationTest: 25 checks
+HoverSpringDamperModelTest:               31 checks
+HoverStabilityPolicyTest:                 12 checks
+HoverPointProfileTest:                    12 checks
+HoverSampleIntervalPrecisionTest:          6 checks
+HoverPointRuntimeUnitTest:                42 checks
+HoverPointRuntimeFactoryTest:             25 checks
+HoverPointRuntimePipelineIntegrationTest: 23 checks
 
-Propulsion Suite:                 6 tests / 143 checks
+Hover Suite:                      7 tests / 151 checks
 Runtime Suite:                   20 tests / 475 checks
-Run All:                         91 tests / 2561 checks
+Run All:                         98 tests / 2712 checks
 Failures:                        0
 Timeout:                         0
 Engine Error:                    0
 Missing Metrics:                 0
-Plan ExitCode:                   0
 RESULT:                          PASS
 ```
 
-Refactor audit:
+Stability fixture:
 
 ```text
-PASS
-SIN CAMBIO OBLIGATORIO
+1200 fixed steps
+finite bounded state
+oscillation decreasing
+convergence to target
 ```
 
-Último commit del Slice:
+Refactor audit: PASS — sin cambio obligatorio.
+
+Último commit:
 
 ```text
-bc838d8 test(propulsion): add runtime pipeline integration
+adca199 test(hover): add runtime pipeline integration
 ```
 
 ## 39. Baseline global
 
 ```text
-Planned: 91
-Completed: 91
-Passed: 91
+Planned: 98
+Completed: 98
+Passed: 98
 Failed: 0
 Timeout: 0
 Engine Error: 0
 Not Run: 0
-Total Runs: 91
-Checks: 2561
+Checks: 2712
 Check Failures: 0
 Missing Metrics: 0
 Plan ExitCode: 0
 RESULT: PASS
 ```
 
-Suites relevantes:
+Suites:
 
 ```text
-Propulsion Suite:  6 tests / 143 checks PASS
-Runtime Suite:    20 tests / 475 checks PASS
-Input Suite:       6 tests / 101 checks PASS
+Hover:       7 / 151 PASS
+Propulsion:  6 / 143 PASS
+Runtime:    20 / 475 PASS
+Input:       6 / 101 PASS
 ```
 
 ## 40. Tooling
 
 ```text
-Velocity Test Dashboard:        0.4.0
 Velocity Tooling Dashboard Web: 0.5.2
 Velocity Submit Tool:           1.1.0
-Runner Metrics Protocol:        1
+Tooling tests:                  126 PASS
 ```
-
-Delivery rollback está implementado y verificado end-to-end en Windows.
 
 ## 41. Project State
 
@@ -1556,48 +1555,17 @@ docs/project_state/velocity_roadmap.json
 ```text
 VP-001
 VP-002
-ADR-001
-ADR-002
-ADR-003
-ADR-004
-ADR-005
-ADR-006
-ADR-007
-ADR-008
-ADR-009
-ADR-010
-ADR-011
-ADR-012
-ADR-013
-ADR-014
-ADR-015
+ADR-001 ... ADR-016
 ```
-
-ADR-013 a ADR-015 están implementados y verificados.
 
 ## 43. Regla de evolución
 
-Antes de cambiar código:
-
-> ¿Sigue siendo correcta la responsabilidad?
-
-Si sí, se evoluciona.
-
-Si no, se rediseña.
-
-No se parchea una responsabilidad equivocada.
-
-Las baselines aceptadas evolucionan mediante pruebas sucesoras.
+Las baselines aceptadas evolucionan mediante composición y pruebas sucesoras, no reescribiendo responsabilidades correctas.
 
 ## 44. Siguiente paso
 
-Producto:
-
 ```text
-Playable Vertical Slice 1.0
-Siguiente milestone: Hover Physics Slice 1.0
+Playable Vehicle Composition 1.0
 ```
 
-Antes de implementar Hover deben cerrarse problema, alternativas, ADR, diseño y aprobación.
-
-Playable Vehicle Composition añadirá posteriormente VehicleControlRouter y RigidBodyPropulsionForceSink alrededor de Propulsion Runtime 1.0; no reescribirá el actuator aceptado.
+Debe diseñar VehicleControlRouter, RigidBody3D host y sinks físicos de Propulsion/Hover antes de implementar.

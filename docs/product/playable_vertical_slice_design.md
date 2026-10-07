@@ -3,9 +3,9 @@
 | Campo | Valor |
 |---|---|
 | Estado | OBJETIVO ACTIVO |
-| Versión | 1.2 |
+| Versión | 1.3 |
 | Fecha | 03/10/2026 |
-| Última revisión | 04/10/2026 |
+| Última revisión | 07/10/2026 |
 | Alcance | Primera vuelta jugable completa |
 
 ## 1. Propósito
@@ -36,25 +36,15 @@ una vuelta completa
 
 ## 3. Experiencia objetivo
 
-El jugador puede:
-
-1. iniciar una sesión de conducción;
-2. acelerar;
-3. frenar o reducir impulso;
-4. girar;
-5. mantener hover estable;
-6. recorrer un circuito;
-7. atravesar checkpoints válidos;
-8. completar una vuelta;
-9. reiniciar de forma segura.
+El jugador puede iniciar una sesión, acelerar, frenar o reducir impulso, girar, mantener hover estable, recorrer un circuito, atravesar checkpoints, completar una vuelta y reiniciar de forma segura.
 
 ## 4. Milestones requeridos
 
 ```text
 Input Runtime Slice                 COMPLETED
 Propulsion Runtime Slice            COMPLETED
-Hover Physics Slice                 ACTIVE
-Playable Vehicle Composition        PLANNED
+Hover Physics Slice                 COMPLETED
+Playable Vehicle Composition        ACTIVE
 Simple Track Scene                  PLANNED
 Chase Camera                        PLANNED
 Checkpoint and Lap Loop             PLANNED
@@ -84,44 +74,80 @@ PropulsionCommand
 → PropulsionForceSink
 ```
 
-Contrato físico:
+```text
+Propulsion Suite: 6 tests / 143 checks PASS
+```
+
+## 7. Hover Physics Slice completado
 
 ```text
-resultante longitudinal escalar
-transferencia lineal
-sin dispersión radial
+DistanceSensorRuntimeUnit
+→ DistanceMeasurement
+→ HoverPointRuntimeUnit
+→ HoverSpringDamperModel
+→ HoverForceSink
+```
+
+Policy:
+
+```text
+equilibrium force
++ spring
+- damping
+bounded lift-only output
+temporal safety
+single-sample history
 ```
 
 Baseline:
 
 ```text
-Propulsion Suite: 6 tests / 143 checks
-Runtime Suite:   20 tests / 475 checks
-Run All:         91 tests / 2561 checks
+Hover Suite:   7 tests / 151 checks
+Runtime Suite: 20 tests / 475 checks
+Run All:       98 tests / 2712 checks
 RESULT: PASS
 ```
 
 Último commit del Slice:
 
 ```text
-bc838d8 test(propulsion): add runtime pipeline integration
+adca199 test(hover): add runtime pipeline integration
 ```
 
-Tradeoff preservado:
+Hover 1.0 demuestra estabilidad matemática 1D y pipeline Sensor-to-Hover. No aplica todavía fuerza a un `RigidBody3D` real.
 
-Propulsion 1.0 entrega un actuator seguro, no un `RigidBody3D` móvil. Playable Vehicle Composition añadirá el router y el sink físico alrededor de esta baseline.
-
-## 7. Siguiente milestone de producto
+## 8. Siguiente milestone de producto
 
 ```text
-Hover Physics Slice 1.0
+Playable Vehicle Composition 1.0
 ```
 
-Debe mantener altura antigravitatoria estable mediante fuerzas acotadas y una política spring-damper segura, reutilizando Distance Sensor Runtime sin mezclar todavía vehicle composition, cámara o pista final.
+Debe componer las baselines existentes alrededor de un cuerpo explícito:
 
-Su problema, alternativas, ADR y diseño deben cerrarse antes de implementar.
+```text
+Input Runtime
+→ VehicleControlRouter
+→ Propulsion Runtime
+→ RigidBodyPropulsionForceSink
 
-## 8. Fuera de alcance del Vertical Slice 1.0
+Distance Sensors
+→ Hover Points
+→ RigidBodyHoverForceSinks
+
+→ RigidBody3D host
+```
+
+Debe decidir antes de implementar:
+
+- ownership del cuerpo;
+- frame local y ejes;
+- puntos de aplicación;
+- número inicial de hover points;
+- routing de throttle/brake/steering;
+- lifecycle de la composición;
+- reset y spawn seguro.
+
+## 9. Fuera de alcance del Vertical Slice 1.0
 
 - arte final;
 - IA;
@@ -137,7 +163,7 @@ Su problema, alternativas, ADR y diseño deben cerrarse antes de implementar.
 - telemetría persistente;
 - optimización final.
 
-## 9. Regla de prioridad
+## 10. Regla de prioridad
 
 Cada milestone nuevo debe responder:
 
@@ -145,12 +171,13 @@ Cada milestone nuevo debe responder:
 
 Si no y tampoco desbloquea un requisito, se difiere.
 
-## 10. Estado actual
+## 11. Estado actual
 
 ```text
-Foundation técnica:          COMPLETA
-Input Runtime Slice 1.0:     COMPLETADO
-Propulsion Runtime Slice 1.0: COMPLETADO
-Hover Physics Slice 1.0:     YOU ARE HERE
-Target:                       PLAYABLE VERTICAL SLICE 1.0
+Foundation técnica:                COMPLETA
+Input Runtime Slice 1.0:           COMPLETADO
+Propulsion Runtime Slice 1.0:      COMPLETADO
+Hover Physics Slice 1.0:           COMPLETADO
+Playable Vehicle Composition 1.0:  YOU ARE HERE
+Target:                             PLAYABLE VERTICAL SLICE 1.0
 ```

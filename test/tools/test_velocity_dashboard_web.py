@@ -270,11 +270,11 @@ class RoadmapTests(unittest.TestCase):
     def test_versioned_roadmap_is_valid(self) -> None:
         roadmap = load_roadmap(self.configuration)
         self.assertEqual(roadmap["schema"], "velocity-roadmap/v1")
-        self.assertEqual(roadmap["version"], "1.2")
+        self.assertEqual(roadmap["version"], "1.3")
         self.assertEqual(roadmap["target"], "playable_vertical_slice")
         self.assertEqual(
             roadmap["current_milestone"],
-            "hover_physics_slice",
+            "vehicle_composition",
         )
         self.assertGreaterEqual(len(roadmap["milestones"]), 10)
         input_milestone = next(
@@ -293,6 +293,14 @@ class RoadmapTests(unittest.TestCase):
         self.assertEqual(propulsion_milestone["status"], "completed")
         self.assertEqual(propulsion_milestone["progress"], 100)
         self.assertEqual(propulsion_milestone["commit"], "bc838d8")
+        hover_milestone = next(
+            item
+            for item in roadmap["milestones"]
+            if item["id"] == "hover_physics_slice"
+        )
+        self.assertEqual(hover_milestone["status"], "completed")
+        self.assertEqual(hover_milestone["progress"], 100)
+        self.assertEqual(hover_milestone["commit"], "adca199")
 
     def test_current_milestone_is_active(self) -> None:
         roadmap = load_roadmap(self.configuration)

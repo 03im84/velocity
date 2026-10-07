@@ -2,9 +2,10 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACEPTADO |
-| Versión | 1.0 |
+| Estado | ACEPTADO — IMPLEMENTADO — VERIFICADO |
+| Versión | 1.1 |
 | Fecha | 04/10/2026 |
+| Fecha de verificación | 07/10/2026 |
 | Alcance | Hover Simulation por punto, spring-damper y seguridad temporal |
 | Decisión previa | Hover Physics Slice Alternative E — aprobada |
 
@@ -487,11 +488,46 @@ Costes:
 - no mueve una nave real por sí solo;
 - requiere sink físico posterior.
 
-## 24. Estado
+## 24. Baseline
 
 ```text
-ADR-016 1.0
+HoverSpringDamperModelTest:               31 checks
+HoverStabilityPolicyTest:                 12 checks
+HoverPointProfileTest:                    12 checks
+HoverSampleIntervalPrecisionTest:          6 checks
+HoverPointRuntimeUnitTest:                42 checks
+HoverPointRuntimeFactoryTest:             25 checks
+HoverPointRuntimePipelineIntegrationTest: 23 checks
+
+Hover Suite:                      7 tests / 151 checks
+Runtime Suite:                   20 tests / 475 checks
+Run All:                         98 tests / 2712 checks
+Failures:                        0
+Timeout:                         0
+Engine Error:                    0
+Missing Metrics:                 0
+Plan ExitCode:                   0
+RESULT:                          PASS
+```
+
+Commits:
+
+```text
+2d3e940 feat(hover): add hover spring damper model
+c74fff7 test(hover): add hover stability policy
+a29fab5 feat(hover): add spring damper hover profile
+7752657 fix(hover): tolerate sample interval precision
+fd5af35 feat(hover): add hover point runtime unit
+ee1e0d2 feat(hover): add hover point runtime factory
+adca199 test(hover): add runtime pipeline integration
+```
+
+## 25. Estado
+
+```text
+ADR-016 1.1
 ACEPTADO
-ALTERNATIVA E APROBADA
-IMPLEMENTACIÓN AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
+IMPLEMENTADO
+VERIFICADO
+BASELINE REGISTRADA
 ```

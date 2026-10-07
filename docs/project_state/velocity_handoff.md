@@ -3,7 +3,7 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.25 |
+| Versión | 1.26 |
 | Fecha de actualización | 04/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
@@ -244,11 +244,12 @@ ADR-012 — Managed Runtime Object Behaviors and Production Adapter Boundaries
 ADR-013 — Distance Sensor Simulation Runtime Slice and Configuration Fidelity
 ADR-014 — Input Intent Sampling and Runtime Publication
 ADR-015 — Propulsion Command Actuation and Force Sink Boundary
+ADR-016 — Per-Point Hover Spring-Damper and Temporal Safety
 ```
 
 Todos aceptados.
 
-ADR-010 a ADR-015 están implementados y verificados.
+ADR-010 a ADR-016 están implementados y verificados.
 
 ## 10. Arquitectura implementada
 
@@ -271,6 +272,7 @@ Managed Runtime Adapter Boundary 1.0
 Distance Sensor Runtime Slice 1.0
 Input Runtime Slice 1.0
 Propulsion Runtime Slice 1.0
+Hover Physics Slice 1.0
 Velocity Test Runner
 Velocity Test Dashboard 0.4.0
 Velocity Tooling Dashboard Web 0.5.2
@@ -606,27 +608,12 @@ Last Known Good y hot swap pertenecen a un `CompositionRuntimeSupervisor` futuro
 
 ## 20. Baseline CompositionRuntime
 
-Baseline histórica preservada:
-
 ```text
-CompositionRuntimeOperationResultTest:          17 checks
-CompositionRuntimeTest:                         62 checks
-CompositionRuntimeIntegrationTest:              57 checks
-FullCompositionRuntimePipelineIntegrationTest:  50 checks
-Total:                                  4 tests / 186 checks
-Composition Suite:                     16 tests / 702 checks
-RESULT: PASS
+4 tests / 186 checks PASS
+Composition Suite: 16 tests / 702 checks PASS
 ```
 
 ## 21. Input Runtime Slice 1.0
-
-```text
-Godot Input
-→ GodotInputIntentProvider
-→ InputRuntimeUnit
-→ VehicleControlCommand
-→ DeviceBus
-```
 
 ```text
 Input Suite: 6 tests / 101 checks PASS
@@ -639,113 +626,87 @@ PropulsionCommand
 → PropulsionRuntimeUnit
 → LongitudinalPropulsionModel
 → PropulsionForceSink
+
+Propulsion Suite: 6 tests / 143 checks PASS
 ```
 
-Contrato:
+## 23. Hover Physics Slice 1.0
 
 ```text
-Factory Key: velocity.propulsion.longitudinal / 1 / Simulation
-Dependencies: propulsion_model + propulsion_force_sink / BORROWED
-Capability: longitudinal_propulsion_force
-Publishes: none
-Subscribes: propulsion_command
+DistanceSensorRuntimeUnit
+→ DistanceMeasurement
+→ HoverPointRuntimeUnit
+→ HoverSpringDamperModel
+→ HoverForceSink
 ```
 
-Fuerza 1.0:
-
 ```text
-escalar firmada
-resultante longitudinal
-transferencia lineal
-sin dispersión radial
+Factory Key: velocity.hover.spring_damper_point / 1 / Simulation
+Dependencies: hover_model + hover_force_sink / BORROWED
+Capability: hover_lift_force
+Subscribes: distance_measurement
 ```
 
-## 23. Baseline global y refactor
+```text
+Hover Suite: 7 tests / 151 checks PASS
+Stability: 1200 fixed steps PASS
+```
+
+## 24. Baseline, documentos y Git
 
 ```text
-Planned: 91
-Completed: 91
-Passed: 91
-Failed: 0
+Run All: 98 tests / 2712 checks PASS
+Runtime Suite: 20 tests / 475 checks PASS
+Failures: 0
 Timeout: 0
 Engine Error: 0
-Not Run: 0
-Total Runs: 91
-Checks: 2561
-Check Failures: 0
 Missing Metrics: 0
-Plan ExitCode: 0
-RESULT: PASS
 ```
 
-Suites:
+Refactor audit Hover:
 
 ```text
-Propulsion Suite: 6 tests / 143 checks PASS
-Runtime Suite:   20 tests / 475 checks PASS
-Input Suite:      6 tests / 101 checks PASS
-```
-
-Refactor audit Propulsion:
-
-```text
-13 GDScript files
+12 GDScript files
 0 TODO/FIXME/HACK
-0 líneas iniciadas con punto
-sin RigidBody3D o Vector3 espacial en producción
+bounded one-sample history
+no RigidBody3D in Core/RuntimeUnit
 PASS — SIN CAMBIO OBLIGATORIO
 ```
 
-## 24. Documentos y Git
-
-Documentos vigentes:
+Documentos:
 
 ```text
-Core Architecture:                  2.28
-Engineering Standards:              1.9
-Project Decision VP-002:            2.0
-ADR-010:                            1.1
-ADR-011:                            1.1
-ADR-012:                            1.1
-ADR-013:                            1.1
+Core Architecture:                  2.29
 ADR-014:                            1.1
 ADR-015:                            1.1
-System Composition Pipeline Design: 1.18
-Runtime Construction Contract:      1.1
-RuntimeFactoryRegistry Design:      1.5
-CompositionPlan Design:             1.5
-CompositionCompiler Design:         1.4
-CompositionRuntime Design:          1.1
-Managed Runtime Adapter Design:      1.1
-Distance Sensor Runtime Design:     1.1
+ADR-016:                            1.1
+System Composition Pipeline Design: 1.19
 Input Runtime Slice Design:         1.1
 Propulsion Runtime Slice Design:    1.1
-Velocity Submit Tool Design:         1.4
-Velocity Tooling Dashboard Web:      1.4
-Product Roadmap:                    1.2
-Playable Vertical Slice Design:     1.2
-Project Handoff:                    1.25
-Resume Prompt:                      1.25
+Hover Physics Slice Design:         1.1
+Product Roadmap:                    1.3
+Playable Vertical Slice Design:     1.3
+Project Handoff:                    1.26
+Resume Prompt:                      1.26
 Collaboration Contract:             1.5
 ```
 
-Commits de Propulsion Runtime Slice:
+Commits Hover:
 
 ```text
-629b83c docs(propulsion): define propulsion runtime slice
-8d34b66 feat(propulsion): add propulsion command
-8502861 feat(propulsion): add longitudinal propulsion model
-62eaf8a feat(propulsion): add longitudinal propulsion profile
-7945181 feat(propulsion): add propulsion runtime unit
-7b9fa3f feat(propulsion): add propulsion runtime factory
-bc838d8 test(propulsion): add runtime pipeline integration
+aa29d80 docs(hover): define hover physics slice
+2d3e940 feat(hover): add hover spring damper model
+c74fff7 test(hover): add hover stability policy
+a29fab5 feat(hover): add spring damper hover profile
+7752657 fix(hover): tolerate sample interval precision
+fd5af35 feat(hover): add hover point runtime unit
+ee1e0d2 feat(hover): add hover point runtime factory
+adca199 test(hover): add runtime pipeline integration
 ```
-
-Estado confirmado antes de esta baseline documental:
 
 ```text
 ## main...origin/main
-HEAD bc838d8
+HEAD adca199
 ```
 
 ## 25. Tooling
@@ -773,6 +734,7 @@ Runtime
 Debug
 Input
 Propulsion
+Hover
 ```
 
 ```text
@@ -920,46 +882,31 @@ Estado sincronizado:
 Target: Playable Vertical Slice 1.0
 Completed: Input Runtime Slice 1.0
 Completed: Propulsion Runtime Slice 1.0
-Current product milestone: Hover Physics Slice 1.0
+Completed: Hover Physics Slice 1.0
+Current product milestone: Playable Vehicle Composition 1.0
 ```
-
-Roadmap:
 
 ```text
-docs/project_state/velocity_roadmap.json
-Version: 1.2
-Current milestone: hover_physics_slice
+Roadmap version: 1.3
+current_milestone: vehicle_composition
 ```
 
-Antes de Hover se requieren problema, alternativas, ADR, diseño y aprobación.
-
-Velocity Submit Tool Rollback 1.1 permanece implementado y verificado en `b219462`.
+Vehicle Composition requiere problema, alternativas, ADR, diseño y aprobación antes de implementar.
 
 ## 30. Trabajo futuro explícito
 
 ```text
-Hover Physics Slice
 Playable Vehicle Composition
 VehicleControlRouter
 RigidBodyPropulsionForceSink
+RigidBodyHoverForceSinks
+multi-point attitude/balancing
 Simple Track Scene
 Chase Camera
 Checkpoint and Lap Loop
 Minimal HUD
-CompositionRuntimeSupervisor
-Last Known Good manager
-Hot swap
 Hardware Runtime
-Measurement Identity
-Provenance
-Temporal Boundaries
-Persistence
-GraphEditor
-Calibration
-AdaptationPolicy
-RuntimeAllocation
 Telemetry
-Automatic recovery
 ```
 
 ## 31. Project State Package

@@ -2,13 +2,14 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACTIVO |
-| Versión | 1.0 |
+| Estado | ACTIVO — IMPLEMENTADO — VERIFICADO |
+| Versión | 1.1 |
 | Fecha | 04/10/2026 |
+| Fecha de baseline | 07/10/2026 |
 | ADR | ADR-016 — Per-Point Hover Spring-Damper and Temporal Safety |
 | Alternativa | E — Hover point independiente con derivative de distancia |
 | Alcance | DistanceMeasurement hasta lift force acotada por punto |
-| Implementación | AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL |
+| Implementación | COMPLETA Y VERIFICADA |
 
 ## 1. Propósito
 
@@ -541,11 +542,48 @@ Tooling: 126 tests PASS
 
 Conteos nuevos se fijan solo mediante Dashboard autoritativo.
 
-## 29. Estado
+## 29. Baseline aceptada
 
 ```text
-HOVER PHYSICS SLICE DESIGN 1.0
-ACTIVO
-ALTERNATIVA E APROBADA
-IMPLEMENTACIÓN AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
+HoverSpringDamperModelTest:               31 checks
+HoverStabilityPolicyTest:                 12 checks
+HoverPointProfileTest:                    12 checks
+HoverSampleIntervalPrecisionTest:          6 checks
+HoverPointRuntimeUnitTest:                42 checks
+HoverPointRuntimeFactoryTest:             25 checks
+HoverPointRuntimePipelineIntegrationTest: 23 checks
+                                               ---
+Hover Suite:                      7 tests / 151 checks
+Runtime Suite:                   20 tests / 475 checks
+Run All:                         98 tests / 2712 checks
+RESULT:                          PASS
+```
+
+Refactor audit:
+
+```text
+PASS
+SIN CAMBIO OBLIGATORIO
+```
+
+Commits:
+
+```text
+aa29d80 docs(hover): define hover physics slice
+2d3e940 feat(hover): add hover spring damper model
+c74fff7 test(hover): add hover stability policy
+a29fab5 feat(hover): add spring damper hover profile
+7752657 fix(hover): tolerate sample interval precision
+fd5af35 feat(hover): add hover point runtime unit
+ee1e0d2 feat(hover): add hover point runtime factory
+adca199 test(hover): add runtime pipeline integration
+```
+
+## 30. Estado
+
+```text
+HOVER PHYSICS SLICE 1.0
+IMPLEMENTADO
+VERIFICADO
+BASELINE ACEPTADA
 ```

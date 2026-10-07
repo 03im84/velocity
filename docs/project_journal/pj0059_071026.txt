@@ -1,0 +1,169 @@
+PJ0059 – Hover Physics Slice 1.0 Baseline
+
+Fecha: 07/10/2026
+
+Baseline inicial:
+
+aa29d80 docs(hover): define hover physics slice
+
+Arquitectura implementada:
+
+DistanceSensorRuntimeUnit
+→ DistanceMeasurement
+→ HoverPointRuntimeUnit
+→ HoverSpringDamperModel
+→ HoverForceSink
+
+Fórmula:
+
+height_error = target_height - distance
+
+distance_rate = distance_delta / time_delta
+
+lift = clamp(
+  equilibrium_force
+  + stiffness * height_error
+  - damping * distance_rate,
+  0,
+  max_lift_force
+)
+
+Profile:
+
+velocity.hover.spring_damper_point / 1
+role ACTUATOR
+capability hover_lift_force
+publishes none
+subscribes distance_measurement
+
+Factory Key:
+
+velocity.hover.spring_damper_point / 1 / Simulation
+
+Dependencies:
+
+hover_model / BORROWED
+hover_force_sink / BORROWED
+
+Componentes:
+
+HoverSpringDamperModel
+Builtin Spring-Damper Hover Point Profile
+HoverPointRuntimeUnit
+HoverPointRuntimeFactory
+Distance Sensor to Hover full pipeline integration
+
+Políticas temporales:
+
+- history acotada a un sample;
+- first sample rate cero;
+- timestamp monotónico;
+- max sample interval;
+- tolerance floating-point en boundary;
+- invalid measurement clears history;
+- temporal fault rebases current sample;
+- sink failure preserves valid sample;
+- next sample recovery.
+
+Stability policy:
+
+1000 kg mass point
+9.81 m/s² gravity
+120 Hz fixed timestep
+10 seconds
+1200 steps
+
+Resultados:
+
+- every state finite;
+- force always bounded;
+- no safe-floor crossing;
+- bounded overshoot;
+- decreasing extrema;
+- convergence to target;
+- final velocity near zero;
+- final lift equals equilibrium force.
+
+Pruebas:
+
+HoverSpringDamperModelTest:
+31 checks PASS
+
+HoverStabilityPolicyTest:
+12 checks PASS
+
+HoverPointProfileTest:
+12 checks PASS
+
+HoverSampleIntervalPrecisionTest:
+6 checks PASS
+
+HoverPointRuntimeUnitTest:
+42 checks PASS
+
+HoverPointRuntimeFactoryTest:
+25 checks PASS
+
+HoverPointRuntimePipelineIntegrationTest:
+23 checks PASS
+Repeat 5 PASS
+
+Hover Suite:
+
+7 tests
+151 checks
+0 failures
+0 timeout
+0 engine errors
+0 missing metrics
+RESULT: PASS
+
+Runtime Suite:
+
+20 tests
+475 checks
+0 failures
+RESULT: PASS
+
+Run All:
+
+98 tests
+2712 checks
+0 failures
+0 timeout
+0 engine errors
+0 missing metrics
+Plan ExitCode: 0
+RESULT: PASS
+
+Refactor audit:
+
+12 GDScript files revisados.
+0 TODO/FIXME/HACK.
+0 líneas iniciadas con punto.
+Temporal history bounded.
+No RigidBody3D en Core o RuntimeUnit.
+Sin cambio obligatorio.
+RESULT: PASS
+
+Commits:
+
+aa29d80 docs(hover): define hover physics slice
+2d3e940 feat(hover): add hover spring damper model
+c74fff7 test(hover): add hover stability policy
+a29fab5 feat(hover): add spring damper hover profile
+7752657 fix(hover): tolerate sample interval precision
+fd5af35 feat(hover): add hover point runtime unit
+ee1e0d2 feat(hover): add hover point runtime factory
+adca199 test(hover): add runtime pipeline integration
+
+Tradeoff preservado:
+
+Hover Point 1.0 no aplica fuerza a RigidBody3D ni coordina pitch/roll. Playable Vehicle Composition añadirá múltiples points, sinks físicos y balancing alrededor de esta baseline.
+
+Estado:
+
+ADR-016 1.1 IMPLEMENTADO Y VERIFICADO
+HOVER PHYSICS SLICE 1.0 CLOSED
+BASELINE 98 TESTS / 2712 CHECKS PASS
+BASELINE DOCUMENTAL PREPARADA

@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ALTERNATIVA E APROBADA |
+| Estado | ALTERNATIVA E IMPLEMENTADA Y VERIFICADA |
 | Fecha | 04/10/2026 |
 | Baseline | 9b677c5 — docs(propulsion): record propulsion runtime baseline |
 | Target | Playable Vertical Slice 1.0 |
@@ -636,3 +636,26 @@ Consecuencia:
 3. revisar fórmula, nombres y políticas temporales;
 4. preparar commit documental;
 5. solo después comenzar implementación.
+
+
+## 26. Resultado de implementación
+
+```text
+DistanceMeasurement
+→ HoverPointRuntimeUnit
+→ HoverSpringDamperModel
+→ HoverForceSink
+```
+
+```text
+Hover Suite: 7 tests / 151 checks PASS
+Runtime Suite: 20 tests / 475 checks PASS
+Run All: 98 tests / 2712 checks PASS
+Refactor audit: PASS
+```
+
+Último commit del Slice:
+
+```text
+adca199 test(hover): add runtime pipeline integration
+```
