@@ -561,15 +561,23 @@ El sample se acota a `[-1, 1]`; después se aplica bias, noise acotado,
 clamp no negativo y cuantización opcional al múltiplo más cercano. La
 configuración cero preserva exactamente raw distance.
 
-`ConditionedDistanceProvider` poseerá la fuente determinista/seedable y
-envuelve PhysicsDistanceProvider:
+`ConditionedDistanceProvider` posee la fuente determinista/seedable y
+envuelve un Distance Provider raw sin modificarlo:
 
 ```text
 sample(timestamp)
-→ noise/quantization
-→ BoundedLatencyBuffer
+→ release matured snapshots
+→ raw distance + validity
+→ noise/quantization for valid raw reading
+→ enqueue distance + validity snapshot
+→ release zero-delay snapshot
 → matured get_distance/is_valid
 ```
+
+`sample()` reporta aceptación/overflow; pending count y capacity son
+observables. Invalidity madura con el mismo delay y conserva Last Known
+Good distance. Zero-noise permite source nulo y no consume source state.
+`clear()` reinicia queue, timestamp epoch y current reading.
 
 Delayed sink adapters proporcionan actuator latency y se vacían mediante `flush(timestamp)` del coordinator.
 

@@ -192,31 +192,71 @@ Ante capacity:
 
 ## 9. ConditionedDistanceProvider
 
-Adapter scene-owned que preserva behavior actual:
+Adapter stateful, scene-owned por composición, que conserva el contrato
+existente de Distance Provider:
 
 ```text
 get_distance()
 is_valid()
 ```
 
-API adicional explícita para coordinator:
+`is_valid()` describe únicamente la lectura madura actual. La validez de
+dependencias se consulta por separado:
 
 ```text
-sample(timestamp)
+is_configuration_valid()
+```
+
+Dependencias explícitas:
+
+```text
+raw Distance Provider
+DistanceNoiseModel
+optional NoiseSource
+bounded dedicated BoundedLatencyBuffer
+```
+
+`NoiseSource` puede ser `null` solo cuando
+`max_abs_noise_meters == 0`. En ese modo no se consume estado de source.
+
+API para coordinator:
+
+```text
+sample(capture_timestamp) -> bool
 ```
 
 Pipeline:
 
 ```text
-PhysicsDistanceProvider
-→ sample raw distance
+release previously matured entries
+→ capture raw distance + raw validity
+→ obtain explicit noise sample only for valid raw readings
 → DistanceNoiseModel
-→ bounded latency buffer
-→ matured conditioned value
+→ enqueue distance + validity snapshot
+→ release entries mature at capture_timestamp
+→ expose latest matured reading
 → DistanceSensorRuntimeUnit.publish_measurement
 ```
 
+`sample()` devuelve `false` ante configuración/timestamp inválido,
+timestamp regresivo o overflow. El pending count y capacity son
+observables. La cola rechaza newest y no crece.
+
+Invalidity también atraviesa latency. Cuando una lectura inválida madura,
+`is_valid()` cambia a `false`, pero `get_distance()` conserva Last Known
+Good. Una lectura válida posterior reemplaza distance y restaura validity.
+
+Antes de encolar se liberan entries ya maduras, evitando rechazar una
+captura por capacity ocupada por señales que ya vencieron. Después de
+encolar se libera otra vez para que zero-delay madure en la misma llamada.
+El drain usa un budget máximo igual a capacity.
+
+`clear()` vacía la cola, reinicia la epoch monotónica y elimina current
+validity/Last Known Good.
+
 El coordinator llama `sample(timestamp)` antes de `publish_measurement()`.
+`DistanceSensorRuntimeUnit`, `DistanceSensorDevice` y los providers raw no
+se modifican.
 
 ## 10. Actuator latency
 

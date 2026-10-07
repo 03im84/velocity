@@ -1,0 +1,160 @@
+PJ0065 – Conditioned Distance Provider 1.0
+
+Fecha: 07/10/2026
+
+Baseline:
+
+b688b8b feat(environment): add distance noise model
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 0 – Environment and Realism Foundations
+
+Problema:
+
+DistanceSensorRuntimeUnit consume providers mediante get_distance() e
+is_valid(), pero Vehicle Composition necesita capturar un provider raw,
+aplicar deterministic distance conditioning y madurar distance/validity
+con latency acotada sin modificar el Slice existente.
+
+Requisitos aprobados:
+
+- preservar get_distance/is_valid;
+- sample(timestamp) explícito para coordinator;
+- source noise determinista y explícito;
+- BoundedLatencyBuffer con capacity fija;
+- timestamp monotónico;
+- overflow observable;
+- zero-noise/zero-delay preserva baseline;
+- Last Known Good;
+- sin DeviceBus, Measurement, RuntimeUnit o SceneTree ownership.
+
+Alternativas:
+
+1. Modificar PhysicsDistanceProvider.
+
+Rechazada. Mezcla physics sampling con signal conditioning y rompe el
+provider raw aceptado.
+
+2. Modificar DistanceSensorRuntimeUnit.
+
+Rechazada. Introduce environment concerns dentro de un Slice estable.
+
+3. Adapter compatible compuesto externamente.
+
+Seleccionada. ConditionedDistanceProvider implementa el contrato actual
+y añade sample(timestamp) para VehiclePhysicsCoordinator.
+
+Dependencias:
+
+- raw Distance Provider Object;
+- DistanceNoiseModel;
+- optional NoiseSource Object;
+- dedicated BoundedLatencyBuffer.
+
+Semántica:
+
+- is_configuration_valid valida dependencias;
+- is_valid describe únicamente current matured reading;
+- sample libera entries maduras antes de capturar;
+- raw invalid no consume NoiseSource;
+- valid raw usa un normalized sample cuando noise > 0;
+- distance + validity viajan juntas por latency;
+- sample devuelve false si enqueue es rechazado;
+- zero-delay madura en la misma llamada;
+- invalid matured reading conserva Last Known Good distance;
+- clear vacía queue, reinicia epoch y elimina current reading;
+- drain budget nunca excede max_entries.
+
+Ubicación:
+
+core/device/sensors/providers/conditioned_distance_provider.gd
+
+test/core/provider/conditioned_distance_provider_test.gd
+test/core/provider/ConditionedDistanceProviderTest.tscn
+
+Cobertura diseñada:
+
+- dependency validation;
+- optional source in zero-noise mode;
+- source required for active noise;
+- initial invalid state;
+- zero-delay baseline;
+- deterministic sequence noise;
+- sample clamping through DistanceNoiseModel;
+- bias and quantization composition;
+- source not consumed in zero-noise mode;
+- delayed FIFO maturity;
+- invalidity latency;
+- Last Known Good preservation;
+- invalid source handling;
+- bounded overflow rejection;
+- regressive timestamp rejection;
+- clear and new timestamp epoch;
+- dynamic provider return-type defense;
+- responsibility boundary.
+
+Expected isolated baseline:
+
+ConditionedDistanceProviderTest: 39 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Providers Suite: 5 tests / 87 checks
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+RESULT: PASS
+
+Windows candidate acceptance:
+
+ConditionedDistanceProviderTest: 1 test / 39 checks PASS
+Providers Suite: 5 tests / 87 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+
+Count correction:
+
+La estimación inicial de 71 checks contó llamadas físicas a `_expect`,
+pero tests Providers existentes ejecutan algunos helpers múltiples veces.
+Godot/VTD reportó la autoridad real de 87 checks. No se modificó ninguna
+prueba para alterar ese resultado.
+
+r1 cambia únicamente este journal y el package manifest/README. Los
+hashes de producción, test scene, test script y architecture docs se
+preservan exactamente respecto al candidate validado.
+
+Static review:
+
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- explicit provider/model/source/buffer dependencies: PASS;
+- bounded release loop: PASS;
+- expected isolated checks: 39;
+- Web VTD discovery: PASS;
+- discovered suite: Providers;
+- Providers scenes: 5;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: b688b8b;
+- replacements restored: 2;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+WINDOWS CANDIDATE PRODUCT TESTS PASS
+R1 DOCUMENTATION CORRECTION PENDING VERIFICATION
