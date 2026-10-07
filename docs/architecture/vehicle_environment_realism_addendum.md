@@ -119,7 +119,7 @@ Source filtering mantiene cada ProximityLiftPoint asociado a su sensor exacto.
 
 ## 7. Sensor noise
 
-`DistanceNoiseModel` inmutable:
+`DistanceNoiseModel` es un snapshot inmutable y sin estado RNG:
 
 ```text
 max_abs_noise_meters >= 0
@@ -127,22 +127,51 @@ quantization_step_meters >= 0
 bias_meters finite
 ```
 
-Noise source explícito y seedable:
+La fuente de noise permanece como dependencia explícita y seedable del
+futuro `ConditionedDistanceProvider`:
 
 ```text
 next_normalized_sample() -> float [-1,1]
 ```
 
-No se utiliza RNG global.
-
-Output conditioned:
+El model recibe el sample escalar, no guarda la fuente y no utiliza RNG
+global:
 
 ```text
-max(0, raw_distance + bias + bounded_noise)
-then optional quantization
+condition_distance_meters(
+    raw_distance_meters,
+    normalized_noise_sample
+)
 ```
 
-Tests usan sequence source determinista.
+Pipeline matemático:
+
+```text
+bounded_sample = clamp(normalized_noise_sample, -1, 1)
+bounded_noise = bounded_sample * max_abs_noise_meters
+conditioned = max(0, raw_distance + bias_meters + bounded_noise)
+```
+
+Si `quantization_step_meters > 0`, `conditioned` se redondea al múltiplo
+más cercano del step. La cuantización ocurre después del clamp no
+negativo y su resultado vuelve a validarse como finito y no negativo.
+
+Un raw distance negativo/no finito, un sample no finito o una
+configuración inválida falla neutral a `0.0`. Un sample finito fuera de
+`[-1, 1]` se acota antes de escalarlo, de modo que noise nunca supera
+`max_abs_noise_meters`.
+
+Modo baseline:
+
+```text
+max_abs_noise_meters = 0
+quantization_step_meters = 0
+bias_meters = 0
+→ output == raw_distance_meters
+```
+
+Tests usan una sequence source determinista externa y demuestran que dos
+fuentes con la misma secuencia producen exactamente los mismos outputs.
 
 ## 8. Latency
 

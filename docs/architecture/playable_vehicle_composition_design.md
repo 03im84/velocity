@@ -547,9 +547,22 @@ Un actuator por point. HoverPoint 1.0 permanece intacto.
 
 ## 36. Noise and bounded latency
 
-`DistanceNoiseModel` usa bias, quantization y noise source determinista/seedable.
+`DistanceNoiseModel` es un transform puro e inmutable configurado con
+bias, maximum absolute noise y quantization step. Recibe un normalized
+sample explícito por llamada; no posee ni consulta RNG global.
 
-`ConditionedDistanceProvider` envuelve PhysicsDistanceProvider:
+```text
+NoiseSource.next_normalized_sample()
+→ DistanceNoiseModel.condition_distance_meters(raw, sample)
+→ finite non-negative conditioned distance
+```
+
+El sample se acota a `[-1, 1]`; después se aplica bias, noise acotado,
+clamp no negativo y cuantización opcional al múltiplo más cercano. La
+configuración cero preserva exactamente raw distance.
+
+`ConditionedDistanceProvider` poseerá la fuente determinista/seedable y
+envuelve PhysicsDistanceProvider:
 
 ```text
 sample(timestamp)

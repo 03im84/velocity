@@ -1,0 +1,145 @@
+PJ0064 – Distance Noise Model 1.0
+
+Fecha: 07/10/2026
+
+Baseline:
+
+1347846 fix(tools): clean rejected package after rollback
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 0 – Environment and Realism Foundations
+
+Problema:
+
+Vehicle Composition necesita representar bias, noise acotado y
+quantization de distancia sin introducir RNG global, estado oculto ni
+acoplamiento con PhysicsDistanceProvider, Hover o SceneTree.
+
+Requisitos aprobados:
+
+- max_abs_noise_meters finito y no negativo;
+- quantization_step_meters finito y no negativo;
+- bias_meters finito;
+- output finito y no negativo;
+- noise deterministic bajo source explícito;
+- no RNG global;
+- zero-noise mode preserva baseline;
+- source seedable/sequence-driven pertenece al conditioning pipeline.
+
+Alternativas:
+
+1. RNG global dentro del model.
+
+Rechazada. Introduce estado implícito, orden global y tests frágiles.
+
+2. RandomNumberGenerator seedable poseído por DistanceNoiseModel.
+
+Viable, pero hace stateful al model y mezcla generación con
+transformación matemática.
+
+3. Normalized sample explícito por llamada.
+
+Seleccionada. DistanceNoiseModel permanece puro e inmutable. El futuro
+ConditionedDistanceProvider poseerá NoiseSource y entregará cada sample.
+
+Contrato:
+
+condition_distance_meters(raw_distance_meters, normalized_noise_sample)
+
+Pipeline:
+
+bounded_sample = clamp(sample, -1, 1)
+bounded_noise = bounded_sample * max_abs_noise_meters
+conditioned = max(0, raw + bias + bounded_noise)
+quantized = nearest multiple of step when step > 0
+
+Decisiones:
+
+- sample finito fuera de [-1, 1] se acota;
+- sample no finito falla neutral a 0.0;
+- raw negativo/no finito falla neutral a 0.0;
+- configuración inválida falla neutral a 0.0;
+- quantization se aplica después del clamp no negativo;
+- resultado quantized vuelve a validarse;
+- configuración 0/0/0 preserva raw distance exactamente;
+- no setter ni API de source/provider/latency/physics.
+
+Implementación:
+
+core/environment/distance_noise_model.gd
+
+test/core/environment/distance_noise_model_test.gd
+test/core/environment/DistanceNoiseModelTest.tscn
+
+Cobertura diseñada:
+
+- configuration validation;
+- getters e inmutabilidad pública;
+- positive/negative bounded noise;
+- out-of-range sample clamping;
+- bias;
+- nearest-step quantization;
+- operation ordering;
+- deterministic sequence source;
+- zero-configuration identity;
+- fail-neutral inputs;
+- output validation;
+- responsibility boundary.
+
+Expected isolated baseline:
+
+DistanceNoiseModelTest: 35 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Environment Suite: 5 tests / 121 checks
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+RESULT: PASS
+
+Workspace cleanup:
+
+Directive threshold reached during audit:
+
+Before: 104 MB / 2357 files
+After: 49 MB / 785 files
+
+Preserved:
+
+- active velocity-distance-noise clone and all uncommitted files;
+- vehicle-docs-review approved documentation.
+
+Removed only submitted clones, superseded Tooling package directories and
+submitted ZIPs reconstructible from Git. Active and preserved hashes were
+verified unchanged before/after cleanup.
+
+Static review:
+
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- no RNG ownership in production model: PASS;
+- scene resource path: PASS;
+- Web VTD discovery: PASS;
+- discovered suite: Environment;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 1347846;
+- replacements restored: 2;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING
