@@ -27,6 +27,7 @@ from velocity_dashboard_delivery import (
     DeliveryService,
     run_native_picker,
 )
+from velocity_dashboard_tooling import ToolingTestService
 from velocity_dashboard_service import (
     DashboardConfiguration,
     DashboardEvent,
@@ -41,7 +42,7 @@ from velocity_dashboard_service import (
 
 
 APP_NAME = "Velocity Tooling Dashboard"
-APP_VERSION = "0.5.3"
+APP_VERSION = "0.6.0"
 MAX_REQUEST_BYTES = 1024 * 1024
 COOKIE_NAME = "vtd_session"
 STATIC_ALLOWLIST = {
@@ -107,6 +108,10 @@ class VelocityWebApplication:
             self.broker,
             self.refresh_after_delivery_install,
         )
+        self.tooling = ToolingTestService(
+            self.configuration.project_root,
+            self.broker,
+        )
         self.server: ThreadingHTTPServer | None = None
         self.identity: ServerIdentity | None = None
         self.server_state_path = (
@@ -164,6 +169,7 @@ class VelocityWebApplication:
             "suites": suites,
             "execution": self.execution.snapshot(),
             "delivery": self.delivery.snapshot(),
+            "tooling": self.tooling.snapshot(),
             "settings": self.configuration.public_settings(),
             "roadmap": self.roadmap,
             "environment": {
@@ -186,6 +192,8 @@ class VelocityWebApplication:
     def start_plan(self, payload: Mapping[str, Any]) -> None:
         if self.delivery.is_busy():
             raise RuntimeError("Delivery operation is active.")
+        if self.tooling.is_running():
+            raise RuntimeError("Tooling tests are active.")
         mode = str(payload.get("mode", "selected"))
         repeat = int(
             payload.get(
@@ -231,7 +239,11 @@ class VelocityWebApplication:
         self,
         payload: Mapping[str, Any],
     ) -> dict[str, Any]:
-        if self.execution.is_running() or self.delivery.is_busy():
+        if (
+            self.execution.is_running()
+            or self.delivery.is_busy()
+            or self.tooling.is_running()
+        ):
             raise RuntimeError("Cannot change settings during an operation.")
         restart_required = self.configuration.update_settings(payload)
         self.broker.publish(
@@ -282,6 +294,10 @@ class VelocityWebApplication:
         if self.execution.is_running():
             raise RuntimeError(
                 "Stop the active test plan before shutdown."
+            )
+        if self.tooling.is_running():
+            raise RuntimeError(
+                "Stop tooling tests before shutdown."
             )
         if self.shutting_down:
             return int(
@@ -469,25 +485,37 @@ class VelocityRequestHandler(BaseHTTPRequestHandler):
         if path == "/api/run/stop":
             self.app.execution.request_stop()
             return {"execution": self.app.execution.snapshot()}
+        if path == "/api/tooling/run":
+            if self.app.execution.is_running():
+                raise RuntimeError("A Godot test plan is active.")
+            if self.app.delivery.is_busy():
+                raise RuntimeError("Delivery operation is active.")
+            self.app.tooling.start()
+            return {"tooling": self.app.tooling.snapshot()}
+        if path == "/api/tooling/stop":
+            self.app.tooling.request_stop()
+            return {"tooling": self.app.tooling.snapshot()}
         if path == "/api/delivery/select":
+            if self.app.execution.is_running() or self.app.tooling.is_running():
+                raise RuntimeError("A test operation is active.")
             selected = self.app.delivery.select_package()
             return {
                 "selected_package": selected,
                 "delivery": self.app.delivery.snapshot(),
             }
         if path == "/api/delivery/install":
-            if self.app.execution.is_running():
-                raise RuntimeError("A test plan is active.")
+            if self.app.execution.is_running() or self.app.tooling.is_running():
+                raise RuntimeError("A test operation is active.")
             self.app.delivery.start_install()
             return {"delivery": self.app.delivery.snapshot()}
         if path == "/api/delivery/prepare-submit":
-            if self.app.execution.is_running():
-                raise RuntimeError("A test plan is active.")
+            if self.app.execution.is_running() or self.app.tooling.is_running():
+                raise RuntimeError("A test operation is active.")
             self.app.delivery.start_submit()
             return {"delivery": self.app.delivery.snapshot()}
         if path == "/api/delivery/rollback":
-            if self.app.execution.is_running():
-                raise RuntimeError("A test plan is active.")
+            if self.app.execution.is_running() or self.app.tooling.is_running():
+                raise RuntimeError("A test operation is active.")
             self.app.delivery.start_rollback()
             return {"delivery": self.app.delivery.snapshot()}
         if path == "/api/delivery/answer":

@@ -8,11 +8,19 @@ from pathlib import Path
 
 
 TOOLS_DIRECTORY = Path(__file__).resolve().parent
+PROJECT_ROOT = TOOLS_DIRECTORY.parents[1]
+TESTING_TOOL_DIRECTORY = PROJECT_ROOT / "tools" / "testing"
 
 if str(TOOLS_DIRECTORY) not in sys.path:
     sys.path.insert(
         0,
         str(TOOLS_DIRECTORY),
+    )
+
+if str(TESTING_TOOL_DIRECTORY) not in sys.path:
+    sys.path.insert(
+        0,
+        str(TESTING_TOOL_DIRECTORY),
     )
 
 
@@ -24,6 +32,36 @@ from velocity_test_dashboard_logic import (  # noqa: E402
     ordered_suites,
     parse_runner_metrics,
 )
+from velocity_tooling_tests import (  # noqa: E402
+    TOOLING_TEST_FILES,
+    TOOLING_TEST_VERBOSITY,
+    get_tooling_test_module_names,
+)
+
+
+class ToolingRunnerContractTests(unittest.TestCase):
+    def test_canonical_test_files_are_exact(self) -> None:
+        self.assertEqual(
+            TOOLING_TEST_FILES,
+            (
+                "test_velocity_submit.py",
+                "test_velocity_dashboard_web.py",
+                "test_velocity_test_dashboard_logic.py",
+            ),
+        )
+
+    def test_module_names_are_path_independent(self) -> None:
+        self.assertEqual(
+            get_tooling_test_module_names(),
+            (
+                "test_velocity_submit",
+                "test_velocity_dashboard_web",
+                "test_velocity_test_dashboard_logic",
+            ),
+        )
+
+    def test_web_streaming_uses_per_test_lines(self) -> None:
+        self.assertEqual(TOOLING_TEST_VERBOSITY, 2)
 
 
 class PathAndSuiteTests(unittest.TestCase):

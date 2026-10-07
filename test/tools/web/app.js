@@ -7,6 +7,7 @@ const state = {
   suites: [],
   execution: {},
   delivery: {},
+  tooling: {},
   settings: {},
   environment: {},
   server: {},
@@ -168,6 +169,17 @@ function renderDelivery() {
   updateActionStates();
 }
 
+function renderTooling() {
+  const tooling = state.tooling || {};
+  $("#tooling-badge").textContent = tooling.status || "IDLE";
+  const exitCode = tooling.exit_code === null || tooling.exit_code === undefined
+    ? "—"
+    : String(tooling.exit_code);
+  const duration = Number(tooling.duration_seconds || 0).toFixed(3);
+  $("#tooling-summary").textContent = `status ${tooling.status || "IDLE"} · exit ${exitCode} · ${duration}s`;
+  updateActionStates();
+}
+
 function renderEnvironment() {
   $("#env-version").textContent = state.app.version || "—";
   $("#env-project").textContent = state.environment.project_root || "—";
@@ -298,7 +310,8 @@ function renderSettings() {
 function updateActionStates() {
   const testBusy = Boolean(state.execution && state.execution.running);
   const deliveryBusy = Boolean(state.delivery && state.delivery.busy);
-  const blocked = testBusy || deliveryBusy;
+  const toolingBusy = Boolean(state.tooling && state.tooling.running);
+  const blocked = testBusy || deliveryBusy || toolingBusy;
   $("#run-selected").disabled = blocked || !$("#test-select").value;
   $("#run-suite").disabled = blocked;
   $("#run-all").disabled = blocked;
@@ -306,11 +319,13 @@ function updateActionStates() {
   $("#resume-plan").disabled = blocked;
   $("#stop-plan").disabled = !testBusy;
   $("#refresh-tests").disabled = blocked;
+  $("#run-tooling").disabled = blocked;
+  $("#stop-tooling").disabled = !toolingBusy;
   $("#select-package").disabled = blocked;
   $("#install-package").disabled = blocked || !state.delivery.selected_package;
   $("#prepare-submit").disabled = blocked || state.delivery.receipt_state === "none";
   $("#rollback-delivery").disabled = blocked || state.delivery.receipt_state !== "installed";
-  $("#shutdown-button").disabled = deliveryBusy;
+  $("#shutdown-button").disabled = deliveryBusy || toolingBusy;
 }
 
 function appendOutput(selector, text) {
@@ -482,6 +497,14 @@ function connectEvents(afterEventId = 0) {
     state.roadmap = JSON.parse(event.data);
     renderRoadmap();
   });
+  source.addEventListener("tooling_output", (event) => {
+    const data = JSON.parse(event.data);
+    appendOutput("#tooling-output", data.text || "");
+  });
+  source.addEventListener("tooling_state", (event) => {
+    state.tooling = JSON.parse(event.data);
+    renderTooling();
+  });
   source.addEventListener("delivery_output", (event) => {
     const data = JSON.parse(event.data);
     appendOutput("#delivery-output", data.text || "");
@@ -577,6 +600,7 @@ function bindActions() {
   $("#theme-select").addEventListener("change", (event) => applyTheme(event.target.value));
   $("#settings-theme").addEventListener("change", (event) => applyTheme(event.target.value));
   $("#clear-test-output").addEventListener("click", () => clearTerminal("#test-output"));
+  $("#clear-tooling-output").addEventListener("click", () => clearTerminal("#tooling-output"));
   $("#clear-delivery-output").addEventListener("click", () => clearTerminal("#delivery-output"));
   $("#clear-history").addEventListener("click", () => {
     if (!window.confirm("¿Borrar el historial visual de esta sesión?")) return;
@@ -607,6 +631,11 @@ function bindActions() {
   $("#resume-plan").addEventListener("click", () => post("/api/run/resume"));
   $("#stop-plan").addEventListener("click", () => post("/api/run/stop"));
   $("#refresh-tests").addEventListener("click", () => post("/api/tests/refresh"));
+  $("#run-tooling").addEventListener("click", () => {
+    clearTerminal("#tooling-output");
+    post("/api/tooling/run");
+  });
+  $("#stop-tooling").addEventListener("click", () => post("/api/tooling/stop"));
 
   $("#select-package").addEventListener("click", async () => {
     const result = await post("/api/delivery/select");
@@ -661,6 +690,7 @@ async function bootstrap() {
     state.suites = data.suites;
     state.execution = data.execution;
     state.delivery = data.delivery;
+    state.tooling = data.tooling;
     state.settings = data.settings;
     state.environment = data.environment;
     state.server = data.server;
@@ -669,6 +699,7 @@ async function bootstrap() {
     renderTests();
     renderExecution();
     renderDelivery();
+    renderTooling();
     renderRoadmap();
     renderSettings();
     renderEnvironment();

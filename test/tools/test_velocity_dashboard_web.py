@@ -37,6 +37,7 @@ from velocity_dashboard_service import (  # noqa: E402
     validate_roadmap,
 )
 from velocity_dashboard_delivery import DeliveryService  # noqa: E402
+from velocity_dashboard_tooling import ToolingTestService  # noqa: E402
 from velocity_submit_contract import ExitCode  # noqa: E402
 from velocity_dashboard_web import (  # noqa: E402
     STATIC_ALLOWLIST,
@@ -512,6 +513,60 @@ class DeliveryBridgeTests(unittest.TestCase):
         )
 
 
+class ToolingBridgeTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.temporary = tempfile.TemporaryDirectory()
+        self.project = Path(self.temporary.name)
+        self.broker = EventBroker()
+
+    def tearDown(self) -> None:
+        self.temporary.cleanup()
+
+    def _runner(self, source: str) -> Path:
+        runner = self.project / "runner.py"
+        runner.write_text(source, encoding="utf-8")
+        return runner
+
+    def test_tooling_runner_streams_output_and_passes(self) -> None:
+        service = ToolingTestService(
+            self.project,
+            self.broker,
+            self._runner('print("tooling live output", flush=True)\n'),
+        )
+        cursor = self.broker.get_latest_event_id()
+        subscriber = self.broker.subscribe(cursor)
+
+        service.start()
+        self.assertTrue(service.wait(2.0))
+        snapshot = service.snapshot()
+        events = []
+        while not subscriber.empty():
+            events.append(subscriber.get_nowait())
+        self.broker.unsubscribe(subscriber)
+
+        self.assertEqual(snapshot["status"], "PASS")
+        self.assertEqual(snapshot["exit_code"], 0)
+        self.assertTrue(
+            any(
+                event.event_type == "tooling_output"
+                and "tooling live output" in event.data["text"]
+                for event in events
+            )
+        )
+
+    def test_tooling_runner_reports_failure_exit_code(self) -> None:
+        service = ToolingTestService(
+            self.project,
+            self.broker,
+            self._runner("import sys\nsys.exit(3)\n"),
+        )
+        service.start()
+        self.assertTrue(service.wait(2.0))
+        snapshot = service.snapshot()
+        self.assertEqual(snapshot["status"], "FAIL")
+        self.assertEqual(snapshot["exit_code"], 3)
+
+
 class StaticFrontendContractTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
@@ -528,9 +583,19 @@ class StaticFrontendContractTests(unittest.TestCase):
         cls.delivery_bridge = (
             TOOLS_DIRECTORY / "velocity_dashboard_delivery.py"
         ).read_text(encoding="utf-8")
+        cls.submit_tests = (
+            TOOLS_DIRECTORY / "test_velocity_submit.py"
+        ).read_text(encoding="utf-8")
 
     def test_required_tabs_exist(self) -> None:
-        for tab in ("tests", "delivery", "history", "roadmap", "settings"):
+        for tab in (
+            "tests",
+            "tooling",
+            "delivery",
+            "history",
+            "roadmap",
+            "settings",
+        ):
             self.assertIn(f'data-tab="{tab}"', self.html)
 
     def test_roadmap_gantt_contract_exists(self) -> None:
@@ -597,6 +662,15 @@ class StaticFrontendContractTests(unittest.TestCase):
             self.delivery_bridge,
         )
 
+    def test_tooling_runner_ui_contract(self) -> None:
+        self.assertIn('id="tooling-panel"', self.html)
+        self.assertIn('id="run-tooling"', self.html)
+        self.assertIn('id="stop-tooling"', self.html)
+        self.assertIn("/api/tooling/run", self.js)
+        self.assertIn("/api/tooling/stop", self.js)
+        self.assertIn('"tooling_output"', self.js)
+        self.assertIn('"tooling_state"', self.js)
+
     def test_delivery_layout_and_environment_version(self) -> None:
         self.assertIn('id="env-version"', self.html)
         self.assertIn("state.app = data.app", self.js)
@@ -632,6 +706,10 @@ class StaticFrontendContractTests(unittest.TestCase):
         self.assertIn(
             "hidden_subprocess_options",
             self.delivery_bridge,
+        )
+        self.assertIn(
+            "hidden_subprocess_options",
+            self.submit_tests,
         )
 
     def test_authoritative_final_summary_is_rendered(self) -> None:
@@ -703,7 +781,8 @@ class HttpSecurityTests(unittest.TestCase):
                 timeout=1.0,
             )
         )
-        self.assertEqual(data["app"]["version"], "0.5.3")
+        self.assertEqual(data["app"]["version"], "0.6.0")
+        self.assertEqual(data["tooling"]["status"], "IDLE")
         self.assertEqual(data["server"]["host"], "127.0.0.1")
         self.assertGreaterEqual(len(data["tests"]), 85)
         self.assertIsInstance(data["event_cursor"], int)

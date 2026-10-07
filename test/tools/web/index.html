@@ -13,6 +13,7 @@
       <div class="brand">VELOCITY</div>
       <nav class="tabs" aria-label="Navegación principal">
         <button class="tab active" data-tab="tests">tests</button>
+        <button class="tab" data-tab="tooling">tooling</button>
         <button class="tab" data-tab="delivery">delivery</button>
         <button class="tab" data-tab="history">history</button>
         <button class="tab" data-tab="roadmap">roadmap</button>
@@ -59,6 +60,22 @@
               <tbody></tbody>
             </table>
           </div>
+        </div>
+
+        <div id="tooling-panel" class="panel-view">
+          <div class="panel-title">
+            <span>TOOLING TEST TERMINAL</span>
+            <div class="panel-title-actions">
+              <button id="clear-tooling-output" class="small-button">limpiar terminal</button>
+              <span id="tooling-badge" class="badge">IDLE</span>
+            </div>
+          </div>
+          <div class="tooling-actions">
+            <button id="run-tooling">run tooling</button>
+            <button id="stop-tooling" class="warning">stop</button>
+          </div>
+          <pre id="tooling-output" class="terminal" tabindex="0"></pre>
+          <div id="tooling-summary" class="metric-line">sin ejecución</div>
         </div>
 
         <div id="delivery-panel" class="panel-view">

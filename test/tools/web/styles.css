@@ -255,6 +255,18 @@ select {
   grid-template-columns: repeat(4, max-content);
 }
 
+.tooling-actions {
+  display: grid;
+  grid-template-columns: repeat(2, max-content);
+  gap: 8px;
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+#tooling-summary {
+  padding: 8px 12px;
+}
+
 .terminal {
   min-height: 0;
   margin: 0;

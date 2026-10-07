@@ -43,6 +43,7 @@ from velocity_submit_contract import (  # noqa: E402
 
 from velocity_submit_git import (  # noqa: E402
     RepositoryController,
+    hidden_subprocess_options,
 )
 
 
@@ -64,6 +65,7 @@ def run_command(
         errors="replace",
         shell=False,
         check=False,
+        **hidden_subprocess_options(),
     )
 
     if check and process.returncode != 0:

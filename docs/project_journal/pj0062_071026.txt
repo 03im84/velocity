@@ -1,0 +1,124 @@
+PJ0062 – Canonical Tooling Test Runner and VTD Integration 0.6.0
+
+Fecha: 07/10/2026
+
+Baseline:
+
+6be4a6a fix(tools): route local commit push retry
+
+Problema:
+
+La baseline Tooling dependía de recordar y ejecutar manualmente:
+
+py -m unittest test/tools/test_velocity_submit.py test/tools/test_velocity_dashboard_web.py test/tools/test_velocity_test_dashboard_logic.py
+
+Web VTD no exponía esta regresión y el fallback CLI no tenía launcher canónico.
+
+Decisión:
+
+Una sola autoridad:
+
+tools/testing/velocity_tooling_tests.py
+
+Dos entradas:
+
+- Web VTD Tooling tab;
+- CLI BAT/PowerShell/Python.
+
+Módulos exactos:
+
+- test_velocity_submit.py;
+- test_velocity_dashboard_web.py;
+- test_velocity_test_dashboard_logic.py.
+
+Implementación:
+
+- canonical unittest command shell-free;
+- deterministic plan/summary;
+- exit code preserved;
+- ToolingTestService worker;
+- live output via SSE;
+- Run/Stop controls;
+- process-tree termination;
+- explicit pipe cleanup;
+- operation exclusion with Godot/Delivery/Settings/Shutdown;
+- CLI independent from Web server.
+
+Defecto detectado durante verificación:
+
+ResourceWarning por stdout pipe no cerrado.
+
+Corrección:
+
+process.stdout.close() en finally antes de finalizar worker.
+
+Baseline:
+
+Canonical Tooling Runner:
+132 tests PASS
+
+Repeat 5:
+PASS
+
+Static:
+Python compile PASS
+JavaScript parse PASS
+git diff check PASS
+Resource warnings 0
+
+Workspace policy:
+
+5.9 MB < 80 MB
+779 files < 8000
+cleanup no requerido
+
+Estado:
+
+WEB VTD 0.6.0 IMPLEMENTADO
+CANONICAL TOOLING RUNNER IMPLEMENTADO
+CLI FALLBACK IMPLEMENTADO
+LOCAL VERIFICATION PASS
+WINDOWS ACCEPTANCE PENDIENTE
+
+
+Windows candidate 1.0.0 failure:
+
+Python 3.10 converted unittest file paths into test.tools module names and failed with ModuleNotFoundError before running tests.
+
+r1 correction:
+
+- Tool version 1.0.1;
+- explicit test/tools sys.path;
+- filename-stem imports;
+- in-process TestLoader/TestSuite/TextTestRunner;
+- no path-to-module conversion;
+- expanded summary counts.
+
+r1 baseline:
+
+132 tests PASS
+Repeat 5 PASS
+Python compile PASS
+Windows revalidation pending
+
+
+Windows r1 UX findings:
+
+- unittest verbosity 1 produced dots without newline, so line-based SSE appeared stalled;
+- Git subprocesses in test fixtures opened transient console windows.
+
+r2 corrections:
+
+- Tool version 1.0.2;
+- verbosity 2 per-test lines;
+- hidden_subprocess_options in test fixture run_command;
+- regression assertions for verbosity and hidden children.
+
+r2 baseline:
+
+133 tests PASS
+Repeat 5 PASS
+Python compile PASS
+JavaScript parse PASS
+Resource warnings 0
+Windows revalidation pending

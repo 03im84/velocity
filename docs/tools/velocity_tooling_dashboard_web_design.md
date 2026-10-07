@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO — IMPLEMENTADO Y VERIFICADO |
-| Versión | 1.5 |
-| Producto objetivo | Velocity Tooling Dashboard 0.5.3 |
+| Versión | 1.6 |
+| Producto objetivo | Velocity Tooling Dashboard 0.6.0 |
 | Fecha | 04/10/2026 |
 | Backend | Python 3.10+ standard library |
 | Frontend | HTML, CSS y JavaScript vanilla |
@@ -952,4 +952,170 @@ Estado:
 WEB VTD 0.5.3
 LOCAL_COMMIT_ONLY ROUTING CORREGIDO
 VERIFICACIÓN LOCAL PASS
+```
+
+## 43. Canonical Tooling Test Runner 0.6.0
+
+Authority:
+
+```text
+tools/testing/velocity_tooling_tests.py
+```
+
+Canonical modules:
+
+```text
+test/tools/test_velocity_submit.py
+test/tools/test_velocity_dashboard_web.py
+test/tools/test_velocity_test_dashboard_logic.py
+```
+
+Entradas:
+
+```text
+Web VTD → Tooling tab → Run Tooling
+velocity_tooling_tests.bat
+velocity_tooling_tests.ps1
+python tools/testing/velocity_tooling_tests.py
+```
+
+Web y CLI ejecutan el mismo runner; JavaScript no duplica lógica unittest.
+
+`ToolingTestService`:
+
+- worker thread;
+- child process shell-free;
+- stdout/stderr live por SSE;
+- Run/Stop;
+- process-tree termination;
+- status/exit/duration observable;
+- pipe cleanup explícito;
+- mutual exclusion con Godot plans, Delivery, Settings y Shutdown.
+
+CLI permanece disponible si Web VTD no arranca, el puerto falla o frontend/SSE están indisponibles.
+
+Summary:
+
+```text
+VELOCITY TOOLING TEST SUMMARY
+Modules: 3
+DurationSeconds: N
+ExitCode: N
+RESULT: PASS|FAIL
+```
+
+Baseline:
+
+```text
+Canonical tooling tests: 132 PASS
+Canonical runner Repeat 5: PASS
+Python compile: PASS
+JavaScript parse: PASS
+Resource warnings: 0
+```
+
+Estado:
+
+```text
+WEB VTD 0.6.0
+CANONICAL TOOLING RUNNER IMPLEMENTADO
+CLI FALLBACK IMPLEMENTADO
+VERIFICACIÓN LOCAL PASS
+WINDOWS ACCEPTANCE PENDIENTE
+```
+
+## 44. Python 3.10 Path-Independent Loader — Runner 1.0.1
+
+Windows acceptance de candidate 1.0.0 falló antes de ejecutar tests:
+
+```text
+Python 3.10 unittest path arguments
+→ test/tools/file.py convertido a test.tools.file
+→ ModuleNotFoundError: No module named test.tools
+```
+
+Python 3.13 local aceptaba los mismos paths, ocultando la incompatibilidad.
+
+Corrección r1:
+
+```text
+insert explicit test/tools in sys.path
+import modules by filename stem
+load tests with unittest.TestLoader
+aggregate unittest.TestSuite
+run in-process with TextTestRunner
+```
+
+No existe conversión path-to-module dependiente de versión.
+
+Summary ampliado:
+
+```text
+TestsRun
+Failures
+Errors
+Skipped
+DurationSeconds
+ExitCode
+RESULT
+```
+
+Baseline r1:
+
+```text
+132 tests PASS
+Repeat 5 PASS
+Python compile PASS
+Resource warnings 0
+```
+
+Estado:
+
+```text
+CANONICAL TOOLING RUNNER 1.0.1
+PATH-INDEPENDENT LOADER IMPLEMENTADO
+WINDOWS REVALIDATION PENDIENTE
+```
+
+## 45. Windows Live Progress and Hidden Child Processes — Runner 1.0.2
+
+Windows r1 loaded modules correctly but exposed two UX defects:
+
+```text
+unittest verbosity 1
+→ progress emitted as dots without newline
+→ line-based SSE showed no live progress
+```
+
+and:
+
+```text
+test fixture Git subprocesses without hidden flags
+→ transient console windows flashed repeatedly
+```
+
+Corrections:
+
+- `TOOLING_TEST_VERBOSITY = 2` emits one line per test;
+- `test_velocity_submit.run_command()` uses `hidden_subprocess_options()`;
+- static regression requires hidden subprocess options;
+- runner summary preserves TestsRun/Failures/Errors/Skipped.
+
+Baseline r2:
+
+```text
+133 tests PASS
+Repeat 5 PASS
+Python compile PASS
+JavaScript parse PASS
+Resource warnings 0
+```
+
+Estado:
+
+```text
+CANONICAL TOOLING RUNNER 1.0.2
+WINDOWS LIVE PROGRESS IMPLEMENTED
+WINDOWS CHILD CONSOLES HIDDEN
+WINDOWS REVALIDATION PENDIENTE
 ```
