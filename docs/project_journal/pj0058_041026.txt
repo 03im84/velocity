@@ -1,0 +1,139 @@
+PJ0058 – Hover Physics Slice 1.0 Problem and Analysis
+
+Fecha: 04/10/2026
+
+Baseline:
+
+9b677c5 docs(propulsion): record propulsion runtime baseline
+
+Target:
+
+Playable Vertical Slice 1.0
+
+Dependency:
+
+Distance Sensor Runtime Slice 1.0
+
+Problema:
+
+Convertir DistanceMeasurement válido en una fuerza de lift estable, finita y acotada por hover point, sin acoplar todavía RuntimeUnit a RigidBody3D o a una topología completa de nave.
+
+Física seleccionada:
+
+height_error = target_height - distance
+
+distance_rate = distance_delta / time_delta
+
+raw_lift = equilibrium_force
++ stiffness * height_error
+- damping * distance_rate
+
+lift = clamp(raw_lift, 0, max_lift_force)
+
+Equilibrium force:
+
+Necesaria para sostener peso en target con rate cero. La distribución futura de peso se configura por point; no se calcula automáticamente en 1.0.
+
+Alternativas:
+
+A. RayCast + RigidBody monolítico.
+Rechazada: mezcla sensor, policy, body y lifecycle.
+
+B. Spring sin damping.
+Rechazada: oscilación persistente.
+
+C. Damping desde body velocity.
+Diferida: requiere body/frame antes de Vehicle Composition.
+
+D. Controller central multi-point.
+Diferida: adelanta pitch/roll y topología completa.
+
+E. Hover point independiente con derivative de distancia.
+Seleccionada.
+
+Decisión aprobada:
+
+Aprobar Alternativa E.
+
+Arquitectura propuesta:
+
+DistanceSensorRuntimeUnit
+→ DistanceMeasurement
+→ HoverPointRuntimeUnit
+→ HoverSpringDamperModel
+→ HoverForceSink
+
+Profile:
+
+velocity.hover.spring_damper_point / 1
+role ACTUATOR
+capability hover_lift_force
+publishes none
+subscribes distance_measurement
+
+Factory Key:
+
+velocity.hover.spring_damper_point / 1 / Simulation
+
+Dependencies:
+
+hover_model / BORROWED
+hover_force_sink / BORROWED
+
+Políticas temporales:
+
+- first sample usa rate cero;
+- timestamp debe avanzar;
+- sample gap debe estar acotado;
+- timing inválido no aplica fuerza y rebase temporal;
+- measurement inválido no aplica fuerza y limpia history;
+- sink failure conserva sample válido;
+- siguiente sample puede recuperar.
+
+Force policy:
+
+- finite;
+- lift-only;
+- minimum 0;
+- maximum explícito;
+- no stale force;
+- no unbounded history.
+
+Multi-point futuro:
+
+Cada sensor se conecta a un HoverPoint exacto mediante source filtering. Playable Vehicle Composition añadirá múltiples points, sinks físicos y balancing sin reescribir Point 1.0.
+
+Stability acceptance:
+
+Se exige simulación determinista 1D con masa, gravedad y fixed timestep para demostrar bounds, finitud, oscilación decreciente y convergencia antes de usar Godot Physics.
+
+Documentos preparados:
+
+- hover_physics_slice_problem_analysis.md;
+- ADR-016 — Per-Point Hover Spring-Damper and Temporal Safety.md;
+- hover_physics_slice_design.md.
+
+Pruebas previstas:
+
+- HoverSpringDamperModelTest;
+- HoverStabilityPolicyTest;
+- HoverPointProfileTest;
+- HoverPointRuntimeUnitTest;
+- HoverPointRuntimeFactoryTest;
+- HoverPointRuntimePipelineIntegrationTest.
+
+Baseline preservada:
+
+Propulsion Suite: 6 / 143 PASS
+Runtime Suite: 20 / 475 PASS
+Run All: 91 / 2561 PASS
+Tooling: 126 PASS
+
+Estado:
+
+PROBLEMA CERRADO
+ANÁLISIS COMPLETO
+ALTERNATIVA E APROBADA
+ADR-016 1.0 ACEPTADO
+HOVER PHYSICS SLICE DESIGN 1.0 ACTIVO
+IMPLEMENTACIÓN AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
