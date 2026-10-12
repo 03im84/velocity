@@ -1,0 +1,114 @@
+PJ0070 – Steering Command Contract 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+b2cb855 docs(vehicle): record stage 0 environment baseline
+
+Authoritative starting baseline:
+
+Run All: 107 tests / 2973 checks PASS
+Canonical Tooling: 136 tests PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 1 – Commands and pure models
+
+Problema:
+
+VehicleControlCommand ya contiene steering intent, pero no existe un
+snapshot especializado para enrutar yaw steering hacia un futuro
+SteeringRuntimeUnit sin reutilizar PropulsionCommand ni mezclar torque.
+
+Decisión:
+
+Añadir `SteeringCommand` read-only y su Topic canónico en la misma entrega.
+
+Contrato:
+
+normalized_yaw: finite float in [-1, 1]
+timestamp: finite float >= 0
+Topic: BusTopics.STEERING_COMMAND = &"steering_command"
+
+Responsabilidades:
+
+- preservar normalized yaw;
+- preservar timestamp;
+- validar finitud y bounds;
+- exponer getters read-only.
+
+No responsabilidades:
+
+- DeviceBus publication;
+- routing;
+- torque calculation;
+- physics;
+- sink ownership;
+- RigidBody;
+- mutation API.
+
+Implementación:
+
+core/steering/steering_command.gd
+core/bus/bus_topics.gd
+
+test/core/steering/steering_command_test.gd
+test/core/steering/SteeringCommandTest.tscn
+test/core/message_contract/bus_topics_contract_test.gd
+
+Cobertura diseñada:
+
+- valid command;
+- positive/negative/neutral boundaries;
+- positive/negative overflow;
+- NAN and infinities;
+- negative/non-finite timestamp;
+- canonical Topic type/value;
+- read-only API;
+- no Bus or physics responsibility.
+
+Expected isolated baseline:
+
+SteeringCommandTest: 18 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regressions:
+
+Steering Suite: 1 test / 18 checks PASS
+Message Contracts Suite: PASS
+
+Next:
+
+BrakeCommand + BusTopics.BRAKE_COMMAND
+
+Static review:
+
+- bracket balance command: PASS;
+- bracket balance command test: PASS;
+- bracket balance BusTopics: PASS;
+- bracket balance BusTopicsContractTest: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed Steering checks: 18;
+- Web VTD discovery: PASS;
+- Steering scenes: 1;
+- Message Contracts scenes: 3;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: b2cb855;
+- replacements restored: 3;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING

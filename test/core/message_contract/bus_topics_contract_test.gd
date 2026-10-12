@@ -63,6 +63,12 @@ func _test_topic_types() -> void:
 		"TC-U01: PROPULSION_COMMAND is StringName"
 	)
 
+	_expect(
+		typeof(BusTopics.STEERING_COMMAND)
+		== TYPE_STRING_NAME,
+		"TC-U01: STEERING_COMMAND is StringName"
+	)
+
 
 func _test_topic_values() -> void:
 
@@ -96,6 +102,12 @@ func _test_topic_values() -> void:
 		"TC-U02: PROPULSION_COMMAND has canonical value"
 	)
 
+	_expect(
+		BusTopics.STEERING_COMMAND
+		== &"steering_command",
+		"TC-U02: STEERING_COMMAND has canonical value"
+	)
+
 
 func _test_topics_are_not_empty() -> void:
 
@@ -122,6 +134,11 @@ func _test_topics_are_not_empty() -> void:
 	_expect(
 		BusTopics.PROPULSION_COMMAND != &"",
 		"TC-U03: PROPULSION_COMMAND is not empty"
+	)
+
+	_expect(
+		BusTopics.STEERING_COMMAND != &"",
+		"TC-U03: STEERING_COMMAND is not empty"
 	)
 
 

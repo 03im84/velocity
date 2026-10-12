@@ -7,7 +7,7 @@
 | Fecha | 08/10/2026 |
 | ADR | ADR-017 — Scene-Owned Vehicle Body and Staged Physical Composition |
 | Alcance | Routing, steering, active braking, body adapters y vehicle runtime root |
-| Implementación | STAGE 0 COMPLETADO; STAGE 1 AUTORIZADO |
+| Implementación | STAGE 0 COMPLETADO; STAGE 1 EN PROGRESO |
 
 ## 1. Propósito
 
@@ -30,20 +30,27 @@ Stage 8 — Full physical integration
 ## 3. Nuevos Topics
 
 ```gdscript
-BusTopics.STEERING_COMMAND = &"steering_command"
-BusTopics.BRAKE_COMMAND = &"brake_command"
+BusTopics.STEERING_COMMAND = &"steering_command"  # IMPLEMENTED
+BusTopics.BRAKE_COMMAND = &"brake_command"        # NEXT
 ```
 
-No se reutilizan Topics con semántica diferente.
+No se reutilizan Topics con semántica diferente. Cada Topic se publica con
+su Command contract correspondiente; no se adelanta Brake dentro de la
+entrega Steering.
 
 ## 4. SteeringCommand
 
 ```text
+Status: IMPLEMENTED
+Path: core/steering/steering_command.gd
+Topic: steering_command
 normalized_yaw: float [-1, 1]
 timestamp: float >= 0
 ```
 
-Snapshot read-only, finite y sin física.
+Snapshot read-only, finite y sin física. Rechaza yaw/timestamp no finitos,
+yaw fuera de bounds y timestamp negativo. No posee Bus, model, sink,
+RigidBody ni setters.
 
 ## 5. BrakeCommand
 
