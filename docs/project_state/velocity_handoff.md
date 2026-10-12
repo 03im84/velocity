@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.26 |
-| Fecha de actualización | 04/10/2026 |
+| Versión | 1.27 |
+| Fecha de actualización | 08/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
 | Repositorio | https://github.com/03im84/velocity |
@@ -250,6 +250,7 @@ ADR-016 — Per-Point Hover Spring-Damper and Temporal Safety
 Todos aceptados.
 
 ADR-010 a ADR-016 están implementados y verificados.
+ADR-017 está aprobado; su Stage 0 está implementado y verificado.
 
 ## 10. Arquitectura implementada
 
@@ -273,11 +274,15 @@ Distance Sensor Runtime Slice 1.0
 Input Runtime Slice 1.0
 Propulsion Runtime Slice 1.0
 Hover Physics Slice 1.0
+Vehicle Composition Stage 0 foundations
+Proximity Lift Point Runtime Unit/Factory
+Distance conditioning and bounded latency
 Velocity Test Runner
 Velocity Test Dashboard 0.4.0
-Velocity Tooling Dashboard Web 0.5.2
-Velocity Submit Tool 1.1.0
-Product Roadmap y Gantt 1.2
+Velocity Tooling Dashboard Web 0.6.0
+Canonical Tooling Runner 1.0.2
+Velocity Submit Tool 1.1.1
+Product Roadmap y Gantt 1.3
 ```
 
 ## 11. Pipeline completo verificado
@@ -655,11 +660,15 @@ Stability: 1200 fixed steps PASS
 ## 24. Baseline, documentos y Git
 
 ```text
-Run All: 98 tests / 2712 checks PASS
+Run All: 107 tests / 2973 checks PASS
 Runtime Suite: 20 tests / 475 checks PASS
+Environment Suite: 6 tests / 161 checks PASS
+Providers Suite: 5 tests / 87 checks PASS
+Proximity Lift Suite: 2 tests / 61 checks PASS
 Failures: 0
 Timeout: 0
 Engine Error: 0
+Check Failures: 0
 Missing Metrics: 0
 ```
 
@@ -684,10 +693,12 @@ System Composition Pipeline Design: 1.19
 Input Runtime Slice Design:         1.1
 Propulsion Runtime Slice Design:    1.1
 Hover Physics Slice Design:         1.1
+Playable Vehicle Composition Design: 1.1
+Environment/Realism Addendum:       Stage 0 verified
 Product Roadmap:                    1.3
 Playable Vertical Slice Design:     1.3
-Project Handoff:                    1.26
-Resume Prompt:                      1.26
+Project Handoff:                    1.27
+Resume Prompt:                      1.27
 Collaboration Contract:             1.5
 ```
 
@@ -704,18 +715,34 @@ ee1e0d2 feat(hover): add hover point runtime factory
 adca199 test(hover): add runtime pipeline integration
 ```
 
+Stage 0 Vehicle Composition commits:
+
+```text
+e7b0cba feat(environment): add simulation environment profile
+b4a4891 feat(environment): add quadratic axis drag model
+0ffedb6 feat(environment): add proximity lift model
+097b616 feat(environment): add bounded latency buffer
+b688b8b feat(environment): add distance noise model
+de4f016 feat(environment): add conditioned distance provider
+a14e265 feat(environment): add delayed scalar sink adapter
+2f1216a feat(proximity): add proximity lift point runtime unit
+ec2f921 feat(proximity): add proximity lift point runtime factory
+```
+
 ```text
 ## main...origin/main
-HEAD adca199
+HEAD ec2f921
 ```
 
 ## 25. Tooling
 
 ```text
 Velocity Test Dashboard:          0.4.0
-Velocity Tooling Dashboard Web:   0.5.2 verified
+Velocity Tooling Dashboard Web:   0.6.0 verified
+Canonical Tooling Runner:         1.0.2 verified
 Runner Metrics Protocol:          1
-Velocity Submit Tool:             1.1.0 verified
+Velocity Submit Tool:             1.1.1 verified
+Canonical Tooling:                136 tests PASS
 ```
 
 Suites automáticas:
@@ -735,6 +762,8 @@ Debug
 Input
 Propulsion
 Hover
+Environment
+Proximity Lift
 ```
 
 ```text
@@ -884,6 +913,8 @@ Completed: Input Runtime Slice 1.0
 Completed: Propulsion Runtime Slice 1.0
 Completed: Hover Physics Slice 1.0
 Current product milestone: Playable Vehicle Composition 1.0
+Vehicle Composition Stage 0: completed and globally verified
+Current implementation stage: Stage 1 — Commands and pure models
 ```
 
 ```text
@@ -891,16 +922,25 @@ Roadmap version: 1.3
 current_milestone: vehicle_composition
 ```
 
-Vehicle Composition requiere problema, alternativas, ADR, diseño y aprobación antes de implementar.
+ADR-017 y Playable Vehicle Composition Design 1.1 están aprobados. El
+siguiente trabajo es SteeringCommand, BrakeCommand, sus Topics y
+PropulsionIntentPolicy antes de avanzar a Steering/Brake models.
 
 ## 30. Trabajo futuro explícito
 
 ```text
-Playable Vehicle Composition
-VehicleControlRouter
-RigidBodyPropulsionForceSink
-RigidBodyHoverForceSinks
-multi-point attitude/balancing
+SteeringCommand + BrakeCommand + Topics
+PropulsionIntentPolicy
+YawSteeringModel
+LongitudinalBrakeModel
+VehicleControlRouter Unit/Factory
+Steering Unit/Factory
+Brake Unit/Factory
+VehicleMotionState + RigidBody motion source
+RigidBody physical force/torque sinks
+VehiclePhysicsCoordinator
+VehicleCompositionRoot + scene
+full physical integration
 Simple Track Scene
 Chase Camera
 Checkpoint and Lap Loop
@@ -947,7 +987,29 @@ Un asistente nuevo debe resumir:
 
 No debe escribir implementación en su primera respuesta.
 
-## 34. Regla final
+## 34. Vehicle Composition Stage 0 closure
+
+```text
+Status: COMPLETE
+Final implementation commit: ec2f921
+Run All: 107 tests / 2973 checks PASS
+Canonical Tooling: 136 tests PASS
+```
+
+Stage 0 incluye Environment Profile, axis drag, Proximity Lift model y
+Managed Runtime Unit/Factory, deterministic distance noise, bounded
+latency, conditioned distance provider y delayed scalar sink foundation.
+
+Next:
+
+```text
+SteeringCommand
+BrakeCommand
+BusTopics
+PropulsionIntentPolicy
+```
+
+## 35. Regla final
 
 El proyecto no depende del chat.
 

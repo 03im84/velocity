@@ -2,9 +2,9 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | REQUISITO APROBADO DURANTE REVIEW |
-| Fecha | 07/10/2026 |
-| Parent | ADR-017 / Playable Vehicle Composition Design 1.0 |
+| Estado | STAGE 0 IMPLEMENTADO Y VERIFICADO |
+| Fecha | 08/10/2026 |
+| Parent | ADR-017 / Playable Vehicle Composition Design 1.1 |
 
 ## 1. Propósito
 
@@ -390,3 +390,34 @@ Mass distribution no uniforme queda fuera de Initial Composition o se declara po
 `ProximityLiftModel` representa acoplamiento ficticio superficie-craft y puede funcionar en vacío.
 
 Un futuro `AerodynamicGroundEffectModel` dependerá de atmósfera, velocidad, geometría sustentadora, angle of attack y surface normal. No bloquea Vehicle Composition 1.0.
+
+## 14. Stage 0 implementation baseline
+
+```text
+SimulationEnvironmentProfile          COMPLETE
+QuadraticAxisDragModel                 COMPLETE
+ProximityLiftModel                     COMPLETE
+ProximityLiftPointRuntimeUnit          COMPLETE
+ProximityLiftPointRuntimeFactory       COMPLETE
+DistanceNoiseModel                     COMPLETE
+BoundedLatencyBuffer                   COMPLETE
+ConditionedDistanceProvider            COMPLETE
+DelayedScalarSinkAdapter               COMPLETE
+```
+
+Accepted verification:
+
+```text
+Environment Suite:     6 tests / 161 checks PASS
+Providers Suite:       5 tests / 87 checks PASS
+Proximity Lift Suite:  2 tests / 61 checks PASS
+Run All:             107 tests / 2973 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+```
+
+Stage 0 cierra foundations puras y adapters genéricos. Wrappers físicos,
+RigidBody sinks, Steering, Brake, Coordinator y Vehicle Root permanecen en
+stages posteriores.

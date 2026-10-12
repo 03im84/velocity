@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.26 |
-| Fecha | 04/10/2026 |
+| Versión | 1.27 |
+| Fecha | 08/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
 ## 1. Archivos a adjuntar
@@ -71,6 +71,9 @@ Estado arquitectónico esperado:
 - Input Runtime Slice 1.0 está implementado y verificado.
 - Propulsion Runtime Slice 1.0 está implementado y verificado.
 - Hover Physics Slice 1.0 está implementado y verificado.
+- Playable Vehicle Composition Stage 0 está implementado y verificado.
+- Environment, proximity lift y signal conditioning foundations están publicadas.
+- ADR-017 y Playable Vehicle Composition Design 1.1 están aceptados.
 - ADR-016 1.1 está aceptado, implementado y verificado.
 - ADR-015 1.1 está aceptado, implementado y verificado.
 - ADR-014 1.1 está aceptado, implementado y verificado.
@@ -78,28 +81,34 @@ Estado arquitectónico esperado:
 - Runtime Suite: 20 tests / 475 checks PASS.
 - Propulsion Suite: 6 tests / 143 checks PASS.
 - Hover Suite: 7 tests / 151 checks PASS.
-- Run All: 98 tests / 2712 checks PASS.
+- Environment Suite: 6 tests / 161 checks PASS.
+- Providers Suite: 5 tests / 87 checks PASS.
+- Proximity Lift Suite: 2 tests / 61 checks PASS.
+- Run All: 107 tests / 2973 checks PASS.
+- Canonical Tooling: 136 tests PASS.
 - 0 failures, 0 timeout, 0 engine errors y 0 missing metrics.
 - Último commit del Slice: 80c5118 test(input): add runtime pipeline integration.
 - Input baseline documental: 26002da docs(input): record input runtime baseline.
 - Web VTD Reload Safety: d36c7ee fix(tools): make web dashboard reload-safe.
 - Delivery Rollback 1.1: b219462 feat(tools): add delivery rollback command.
 - Hover finaliza en adca199 test(hover): add runtime pipeline integration.
-- main está sincronizada con origin/main en adca199.
+- Stage 0 finaliza en ec2f921 feat(proximity): add proximity lift point runtime factory.
+- main está sincronizada con origin/main en ec2f921.
 
 Target de producto:
 Playable Vertical Slice 1.0.
 
-Siguiente milestone de producto:
+Milestone de producto activo:
 Playable Vehicle Composition 1.0.
-Problema, alternativas, ADR y diseño todavía pendientes.
+Stage 0 está completado y globalmente verificado.
+Siguiente implementación: SteeringCommand, BrakeCommand, Topics y PropulsionIntentPolicy.
 
-Trabajo operativo separado:
-Velocity Submit Tool Rollback 1.1 está implementado y verificado.
-Windows self-rollback restauró d36c7ee con Git limpio y receipt ausente.
-Baseline final: 126 tooling tests PASS.
-Feature commit: b219462 feat(tools): add delivery rollback command.
-main quedó sincronizada con origin/main.
+Tooling vigente:
+Velocity Submit Tool 1.1.1 está implementado y verificado.
+Canonical Tooling Runner 1.0.2 y Web VTD 0.6.0 están verificados.
+Canonical Tooling: 136 tests PASS en Windows, skipped=1 esperado.
+Rollback elimina de forma segura el ZIP rechazado por path + SHA-256.
+Submit y Rollback dejan main/receipt/package en estados observables.
 El backup original sigue preservado fuera del repositorio en:
 C:\Users\fuent\Documents\VelocityRecovery-20261004-162750
 Rollback está cerrado y no debe mezclarse con Hover.
@@ -280,7 +289,11 @@ convergence PASS
 
 ```text
 Runtime Suite: 20 tests / 475 checks PASS
-Run All: 98 tests / 2712 checks PASS
+Environment Suite: 6 tests / 161 checks PASS
+Providers Suite: 5 tests / 87 checks PASS
+Proximity Lift Suite: 2 tests / 61 checks PASS
+Run All: 107 tests / 2973 checks PASS
+Canonical Tooling: 136 tests PASS
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -298,12 +311,14 @@ System Composition Pipeline Design: 1.19
 Input Runtime Slice Design:         1.1
 Propulsion Runtime Slice Design:    1.1
 Hover Physics Slice Design:         1.1
-Velocity Submit Tool Design:         1.4
+Playable Vehicle Composition Design: 1.1
+Environment/Realism Addendum:       Stage 0 verified
+Velocity Submit Tool Design:         1.5
 Velocity Tooling Dashboard Web:      1.4
 Product Roadmap:                    1.3
 Playable Vertical Slice Design:     1.3
-Project Handoff:                    1.26
-Resume Prompt:                      1.26
+Project Handoff:                    1.27
+Resume Prompt:                      1.27
 Collaboration Contract:             1.5
 ```
 
@@ -322,9 +337,23 @@ ee1e0d2 feat(hover): add hover point runtime factory
 adca199 test(hover): add runtime pipeline integration
 ```
 
+Stage 0 Vehicle Composition final:
+
+```text
+e7b0cba SimulationEnvironmentProfile
+b4a4891 QuadraticAxisDragModel
+0ffedb6 ProximityLiftModel
+097b616 BoundedLatencyBuffer
+b688b8b DistanceNoiseModel
+de4f016 ConditionedDistanceProvider
+a14e265 DelayedScalarSinkAdapter
+2f1216a ProximityLiftPointRuntimeUnit
+ec2f921 ProximityLiftPointRuntimeFactory
+```
+
 ```text
 ## main...origin/main
-HEAD adca199
+HEAD ec2f921
 ```
 
 ## 11. Dirección actual
@@ -335,6 +364,8 @@ Input Runtime: completed
 Propulsion Runtime: completed
 Hover Physics: completed
 Current: Playable Vehicle Composition 1.0
+Vehicle Composition Stage 0: completed
+Current implementation stage: Stage 1 — Commands and pure models
 ```
 
 ```text
@@ -342,7 +373,8 @@ roadmap version: 1.3
 current_milestone: vehicle_composition
 ```
 
-Vehicle Composition requiere arquitectura antes de código.
+ADR-017 y Playable Vehicle Composition Design 1.1 están aprobados. Seguir
+con SteeringCommand, BrakeCommand, Topics y PropulsionIntentPolicy.
 
 ## 12. Web VTD Reload Safety 0.5.1
 
@@ -365,13 +397,14 @@ successful Install
 → refresh tests and roadmap
 ```
 
-Baseline:
+Baseline vigente:
 
 ```text
-VTD Web: 43 tests PASS
-Submit Tool: 44 tests PASS
-Dashboard Logic: 17 tests PASS
-Total tooling: 104 tests PASS
+Web VTD: 0.6.0 verified
+Canonical Tooling Runner: 1.0.2 verified
+Velocity Submit Tool: 1.1.1 verified
+Canonical Tooling: 136 tests PASS
+Windows expected skip: 1
 ```
 
 ## 13. Velocity Submit Tool Rollback 1.1
@@ -445,9 +478,7 @@ Rollback 1.1 está cerrado. No mezclar futuros cambios de tooling con Vehicle Co
 ## 14. Fuera de alcance actual
 
 ```text
-Playable Vehicle Composition implementation antes de ADR
 Simple Track Scene
-Playable Vehicle Composition
 track
 camera
 HUD
@@ -457,6 +488,8 @@ Last Known Good manager
 hot swap
 Hardware Runtime
 telemetry persistente
+MotionCueingRuntimeUnit
+StewartPlatformKinematics
 ```
 
 ## 15. Protocolo de fallo
@@ -527,7 +560,26 @@ Los ZIP permanecen fuera del repositorio.
 14. Submit
 ```
 
-## 18. Regla final
+## 18. Vehicle Composition Stage 0 closure
+
+```text
+Status: COMPLETE
+Final implementation commit: ec2f921
+Run All: 107 tests / 2973 checks PASS
+Canonical Tooling: 136 tests PASS
+```
+
+Next exact work:
+
+```text
+SteeringCommand
+BrakeCommand
+BusTopics.STEERING_COMMAND
+BusTopics.BRAKE_COMMAND
+PropulsionIntentPolicy
+```
+
+## 19. Regla final
 
 Un nuevo chat no necesita imitar una voz exacta.
 

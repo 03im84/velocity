@@ -2,12 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACTIVO |
-| Versión | 1.0 |
-| Fecha | 07/10/2026 |
+| Estado | ACTIVO — STAGE 0 VERIFICADO |
+| Versión | 1.1 |
+| Fecha | 08/10/2026 |
 | ADR | ADR-017 — Scene-Owned Vehicle Body and Staged Physical Composition |
 | Alcance | Routing, steering, active braking, body adapters y vehicle runtime root |
-| Implementación | AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL |
+| Implementación | STAGE 0 COMPLETADO; STAGE 1 AUTORIZADO |
 
 ## 1. Propósito
 
@@ -808,11 +808,66 @@ Workspace: 56 MB < 80 MB
 ## 44. Estado
 
 ```text
-PLAYABLE VEHICLE COMPOSITION DESIGN 1.0
+PLAYABLE VEHICLE COMPOSITION DESIGN 1.1
 ACTIVO
 SCENE-OWNED BODY APROBADO
 STEERING Y ACTIVE BRAKING SEPARADOS
-ENVIRONMENT, AERODYNAMICS, PROXIMITY LIFT, LATENCY Y NOISE APROBADOS
+ENVIRONMENT, AERODYNAMICS, PROXIMITY LIFT, LATENCY Y NOISE VERIFICADOS
 VEHICLE MOTION STATE SEAM APROBADO
-IMPLEMENTACIÓN AUTORIZADA DESPUÉS DEL COMMIT DOCUMENTAL
+STAGE 0 COMPLETADO
+STAGE 1 — COMMANDS AND PURE MODELS — SIGUIENTE
+```
+
+## 45. Stage 0 accepted baseline
+
+Componentes publicados:
+
+```text
+SimulationEnvironmentProfile
+QuadraticAxisDragModel
+ProximityLiftModel
+ProximityLiftPointRuntimeUnit
+ProximityLiftPointRuntimeFactory
+DistanceNoiseModel
+BoundedLatencyBuffer
+ConditionedDistanceProvider
+DelayedScalarSinkAdapter
+```
+
+Suites relevantes:
+
+```text
+Environment:      6 tests / 161 checks PASS
+Providers:        5 tests / 87 checks PASS
+Proximity Lift:   2 tests / 61 checks PASS
+Canonical Tooling: 136 tests PASS
+```
+
+Baseline global autoritativa:
+
+```text
+Run All:          107 tests / 2973 checks PASS
+Failures:         0
+Timeout:          0
+Engine Error:     0
+Check Failures:   0
+Missing Metrics:  0
+Plan ExitCode:    0
+```
+
+Git:
+
+```text
+Stage 0 final implementation commit:
+ec2f921 feat(proximity): add proximity lift point runtime factory
+```
+
+Siguiente secuencia:
+
+```text
+SteeringCommand
+BrakeCommand
+BusTopics.STEERING_COMMAND
+BusTopics.BRAKE_COMMAND
+PropulsionIntentPolicy
 ```

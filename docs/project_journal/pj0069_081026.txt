@@ -1,0 +1,107 @@
+PJ0069 – Vehicle Composition Stage 0 Baseline
+
+Fecha: 08/10/2026
+
+Baseline commit before documentation:
+
+ec2f921 feat(proximity): add proximity lift point runtime factory
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+
+Stage status:
+
+Stage 0 – Environment, aerodynamics, proximity lift and signal conditioning
+COMPLETE
+
+Implemented components:
+
+- SimulationEnvironmentProfile;
+- QuadraticAxisDragModel;
+- ProximityLiftModel;
+- ProximityLiftPointRuntimeUnit;
+- ProximityLiftPointRuntimeFactory;
+- DistanceNoiseModel;
+- BoundedLatencyBuffer;
+- ConditionedDistanceProvider;
+- DelayedScalarSinkAdapter.
+
+Accepted relevant suites:
+
+Environment Suite: 6 tests / 161 checks PASS
+Providers Suite: 5 tests / 87 checks PASS
+Proximity Lift Suite: 2 tests / 61 checks PASS
+
+Authoritative global baseline:
+
+Run All: 107 tests / 2973 checks PASS
+Passed: 107
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Check Failures: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+RESULT: PASS
+
+Tooling baseline:
+
+Canonical Tooling Runner 1.0.2
+Web VTD 0.6.0
+Velocity Submit Tool 1.1.1
+Canonical Tooling: 136 tests PASS
+Windows expected skip: 1
+
+Stage 0 commits:
+
+e7b0cba feat(environment): add simulation environment profile
+b4a4891 feat(environment): add quadratic axis drag model
+0ffedb6 feat(environment): add proximity lift model
+097b616 feat(environment): add bounded latency buffer
+b688b8b feat(environment): add distance noise model
+de4f016 feat(environment): add conditioned distance provider
+a14e265 feat(environment): add delayed scalar sink adapter
+2f1216a feat(proximity): add proximity lift point runtime unit
+ec2f921 feat(proximity): add proximity lift point runtime factory
+
+Documents updated:
+
+- Playable Vehicle Composition Design 1.1;
+- Environment/Realism Addendum Stage 0 verified;
+- Project Handoff 1.27;
+- Resume Prompt 1.27.
+
+Roadmap decision:
+
+`vehicle_composition` permanece active. No se marca el milestone completo
+porque todavía faltan commands, Steering, Brake, routing, RigidBody
+adapters, Coordinator, Vehicle Root y full physical integration.
+
+Next exact work:
+
+1. SteeringCommand;
+2. BrakeCommand;
+3. BusTopics.STEERING_COMMAND;
+4. BusTopics.BRAKE_COMMAND;
+5. PropulsionIntentPolicy.
+
+Package verification:
+
+Manifest files: 5
+Replacements: 4
+Additions: 1
+UID sidecars: 0
+Package validation: PASS
+Install/Rollback E2E: PASS
+Baseline restored: ec2f921
+Verified temporary ZIP deleted: PASS
+
+Estado:
+
+STAGE 0 CODE COMPLETE
+STAGE 0 RELEVANT SUITES PASS
+STAGE 0 RUN ALL PASS
+PROJECT STATE UPDATED
+PACKAGE E2E PASS
+STAGE 1 AUTHORIZED
