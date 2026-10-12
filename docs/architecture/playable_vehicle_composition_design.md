@@ -226,6 +226,11 @@ Sin Host Objects; active release rechazado.
 
 ## 15. LongitudinalBrakeModel
 
+```text
+Status: IMPLEMENTED
+Path: core/braking/longitudinal_brake_model.gd
+```
+
 Parámetros:
 
 ```text
@@ -249,7 +254,10 @@ else:
     force = -sign(speed) * normalized_brake * max_force
 ```
 
-Output clamp `[-max_force, max_force]`.
+Brake input inválido y speed no finita fallan neutral. Exact deadzone
+boundary produce fuerza cero, evitando reverse acceleration cerca de
+reposo. Output clamp `[-max_force, max_force]`. El model no posee motion
+source, sink, timestep, Bus o física espacial.
 
 ## 16. LongitudinalMotionSource behavior
 

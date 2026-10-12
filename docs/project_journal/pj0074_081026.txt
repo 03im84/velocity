@@ -1,0 +1,127 @@
+PJ0074 – Longitudinal Brake Model 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+3053ebf feat(steering): add yaw steering model
+
+Authoritative global baseline remains:
+
+Run All: 110 tests / 3033 checks PASS
+
+Relevant accepted suites:
+
+Steering: 2 tests / 53 checks PASS
+Braking: 1 test / 18 checks PASS
+Vehicle Control: 1 test / 18 checks PASS
+Message Contracts: 3 tests / 52 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Commands and pure models
+
+Problema:
+
+BrakeCommand representa normalized brake, pero falta un model puro que
+convierta brake intent y signed longitudinal speed en fuerza opuesta al
+movimiento sin conocer body, motion source o sink.
+
+Decisión:
+
+Añadir LongitudinalBrakeModel inmutable con deadzone y fuerza escalar
+firmada/acotada.
+
+Parámetros:
+
+max_brake_force_newtons >= 0
+speed_deadzone_meters_per_second >= 0
+
+Formula:
+
+if abs(speed) <= deadzone:
+    force = 0
+else:
+    force = -sign(speed) * normalized_brake * max_force
+
+Safety:
+
+- invalid configuration fails neutral;
+- normalized brake fuera de [0, 1] fails neutral;
+- non-finite brake/speed fails neutral;
+- exact deadzone boundary produces zero force;
+- force siempre se opone al signed movement;
+- output permanece dentro de [-max_force, max_force];
+- zero-force model permanece neutral.
+
+No responsabilidades:
+
+- LongitudinalMotionSource;
+- BrakeForceSink;
+- BrakeCommand parsing;
+- timestep/crossing prevention;
+- DeviceBus;
+- Hover;
+- Vector3/RigidBody;
+- mutable configuration.
+
+Implementación:
+
+core/braking/longitudinal_brake_model.gd
+
+test/core/braking/longitudinal_brake_model_test.gd
+test/core/braking/LongitudinalBrakeModelTest.tscn
+
+Cobertura diseñada:
+
+- configuration validation;
+- full/partial signed brake force;
+- zero brake and zero-force model;
+- rest/exact deadzone boundaries;
+- just-outside-deadzone activation;
+- invalid input/model fail-neutral;
+- signed force bound validation;
+- responsibility boundary.
+
+Expected isolated baseline:
+
+LongitudinalBrakeModelTest: 30 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Braking Suite: 2 tests / 48 checks PASS
+
+Next:
+
+VehicleControlRouter RuntimeUnit/Factory
+Steering RuntimeUnit/Factory
+Brake RuntimeUnit/Factory
+
+Static review:
+
+- bracket balance model: PASS;
+- bracket balance model test: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed checks: 30;
+- Web VTD discovery: PASS;
+- Braking scenes: 2;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 3053ebf;
+- replacements restored: 1;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING
