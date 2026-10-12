@@ -99,9 +99,33 @@ finite
 0 <= force <= max_ground_effect_force
 ```
 
-Un `ProximityLiftPointRuntimeUnit` puede consumir el mismo DistanceMeasurement que HoverPoint y aplicar fuerza adicional mediante sink separado o compatible.
+`ProximityLiftPointRuntimeUnit` consume el mismo contrato
+`DistanceMeasurement` que HoverPoint, pero permanece distance-only y aplica
+fuerza adicional mediante sink separado:
 
-No se modifica HoverPoint 1.0.
+```text
+profile_id: velocity.proximity_lift.point
+capability: proximity_lift_force
+input:      in.distance_measurement
+sink:       apply_proximity_lift_force(force_newtons, timestamp) -> bool
+```
+
+Lifecycle y safety contract siguen Managed Runtime:
+
+```text
+CREATED → INITIALIZED → READY → RUNNING → SHUTDOWN
+```
+
+La Unit valida message/topic/payload/timestamps, exige measurement válida,
+calcula mediante `ProximityLiftModel`, revalida finitud/bounds y solo
+entonces llama al sink. Sink `false` o non-boolean produce
+`PLATFORM_SAFETY_ERROR` observable y fuerza exitosa permanece disponible
+como last actuation result.
+
+No deriva distance rate, no guarda sample history, no posee DeviceBus, no
+conoce RigidBody3D y no modifica HoverPoint 1.0. Source filtering permanece
+en Managed Runtime binder; una misma medición puede alimentar Hover y
+Proximity Lift mediante connections explícitas separadas.
 
 ## 6. Track implications
 

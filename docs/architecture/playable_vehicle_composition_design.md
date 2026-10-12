@@ -545,6 +545,24 @@ force = max_force * pow(proximity, exponent)
 
 Un actuator por point. HoverPoint 1.0 permanece intacto.
 
+Runtime contract:
+
+```text
+profile:    velocity.proximity_lift.point v1
+capability: proximity_lift_force
+subscribes: distance_measurement
+sink:       apply_proximity_lift_force(force, timestamp)
+```
+
+`ProximityLiftPointRuntimeUnit` replica el lifecycle Managed Runtime ya
+aceptado, pero no replica spring/damper ni historial de Hover. Valida
+`DistanceMeasurement`, calcula exclusivamente la curve distance-only y
+entrega bounded force a un sink BORROWED. Source filtering pertenece al
+binder y permite wiring explícito sensor→Hover y sensor→Proximity Lift.
+
+La Factory se implementa en el incremento siguiente con model y sink
+BORROWED, build construct-only, cero Host Objects y release seguro.
+
 ## 36. Noise and bounded latency
 
 `DistanceNoiseModel` es un transform puro e inmutable configurado con

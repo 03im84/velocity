@@ -1,0 +1,174 @@
+PJ0067 – Proximity Lift Point Runtime Unit 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+a14e265 feat(environment): add delayed scalar sink adapter
+
+Authoritative starting regression:
+
+Run All: 105 tests / 2912 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 0 – Environment and Realism Foundations
+
+Problema:
+
+ProximityLiftModel calcula una fuerza distance-only, pero todavía no existe
+Managed Runtime Unit que consuma DistanceMeasurement y entregue esa fuerza
+a un actuator por point sin modificar HoverPoint 1.0.
+
+Decisión:
+
+Añadir `ProximityLiftPointRuntimeUnit` como actuator independiente con el
+mismo lifecycle Managed Runtime de Propulsion/Hover y un sink específico.
+
+Contrato:
+
+profile_id: velocity.proximity_lift.point
+profile_version: 1
+activation_context: SIMULATION
+capability: proximity_lift_force
+input_port: in.distance_measurement
+subscribes: distance_measurement
+sink: apply_proximity_lift_force(force_newtons, timestamp) -> bool
+
+Responsabilidades:
+
+- validar Configuration exacta;
+- preservar model y sink BORROWED;
+- implementar CREATED/INITIALIZED/READY/RUNNING/SHUTDOWN;
+- exponer únicamente endpoint distance_measurement;
+- validar BusMessage, Topic, DistanceMeasurement y timestamps;
+- calcular force mediante ProximityLiftModel;
+- revalidar finitud y model bounds;
+- exigir resultado booleano del sink;
+- exponer last force y ValidationReport por intento.
+
+No responsabilidades:
+
+- distance derivative;
+- spring/damper;
+- sample history;
+- source filtering;
+- DeviceBus publishing;
+- RigidBody3D;
+- global balancing;
+- HoverPoint modification.
+
+Source filtering permanece en Managed Runtime binder. Un sensor puede
+alimentar HoverPoint y ProximityLiftPoint mediante connections explícitas.
+
+Implementación:
+
+integration/godot/proximity_lift/proximity_lift_point_runtime_unit.gd
+
+test/core/proximity_lift/proximity_lift_test_force_sink.gd
+test/core/proximity_lift/proximity_lift_point_runtime_unit_test.gd
+test/core/proximity_lift/ProximityLiftPointRuntimeUnitTest.tscn
+
+Cobertura diseñada:
+
+- exact Unit validation;
+- Configuration identity/capability;
+- invalid model/sink;
+- lifecycle and exact endpoint;
+- maximum/mid/boundary/distant force outputs;
+- invalid message/topic/timestamp/payload/measurement;
+- envelope/payload timestamp agreement;
+- rejected messages never reach sink;
+- sink false/non-boolean results;
+- recovery after sink failure;
+- idempotent shutdown;
+- no post-shutdown actuation;
+- BORROWED dependency preservation.
+
+Expected isolated baseline:
+
+ProximityLiftPointRuntimeUnitTest: 36 checks
+Failures: 0
+RESULT: PASS
+
+Expected suite baseline:
+
+Proximity Lift Suite: 1 test / 36 checks
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+RESULT: PASS
+
+Static review:
+
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- exact Managed Runtime constants: PASS;
+- separate proximity sink contract: PASS;
+- designed assertions: 36;
+- Web VTD discovery: PASS;
+- discovered suite: Proximity Lift;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: a14e265;
+- replacements restored: 2;
+- additions removed: 5;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Windows candidate 1.0 failure:
+
+ProximityLiftPointRuntimeUnitTest: STOPPED
+TestsRun: 0
+Checks: 0
+Missing Metrics: 1
+
+First authoritative error:
+
+integration/godot/proximity_lift/proximity_lift_point_runtime_unit.gd:423
+Parse Error: Expected closing ")" after call arguments.
+
+Root cause:
+
+El cierre final de `_add_error()` cerraba `ValidationIssue.new(...)` pero
+omitía el segundo `)` requerido por `report.add_issue(...)`. Todos los
+errores de resolución de clase en el test fueron cascada del primer parser
+error.
+
+r1 correction:
+
+- añade exclusivamente el cierre faltante;
+- no modifica lifecycle, behavior, tests ni contratos;
+- añade bracket-balance static audit sobre Unit y test antes de empaquetar.
+
+r1 static revalidation:
+
+- bracket balance Unit: PASS;
+- bracket balance test: PASS;
+- bracket balance sink: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- Canonical Tooling: 136 tests PASS;
+- r1 package validation: PASS;
+- r1 package Install/Rollback E2E: PASS;
+- baseline restored: a14e265;
+- replacements restored: 2;
+- additions removed: 5;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+R1 PARSER CORRECTION APPLIED
+STATIC REVALIDATION PASS
+GODOT 4.7.1 WINDOWS REVALIDATION PENDING
