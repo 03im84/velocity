@@ -68,6 +68,11 @@ reverse thrust.
 
 ## 6. PropulsionIntentPolicy
 
+```text
+Status: IMPLEMENTED
+Path: core/vehicle_control/propulsion_intent_policy.gd
+```
+
 Clase pura/stateless:
 
 ```gdscript
@@ -83,9 +88,10 @@ Fórmula:
 clamp(throttle, -1, 1) * (1 - clamp(brake, 0, 1))
 ```
 
-Invalid input falla neutral.
-
-No publica ni conoce DeviceBus.
+Inputs finitos fuera de bounds se acotan. Cualquier input no finito falla
+neutral a `0.0`. Full brake elimina forward y reverse thrust. La policy no
+crea Commands, no enruta, no publica y no conoce DeviceBus, model, sink o
+física.
 
 ## 7. VehicleControlRouter Profile
 

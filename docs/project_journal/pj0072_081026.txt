@@ -1,0 +1,117 @@
+PJ0072 – Propulsion Intent Policy 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+205de93 feat(braking): add brake command contract
+
+Accepted relevant baselines:
+
+Steering Suite: 1 test / 18 checks PASS
+Braking Suite: 1 test / 18 checks PASS
+Message Contracts Suite: 3 tests / 52 checks PASS
+Global Run All remains: 107 tests / 2973 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 1 – Commands and pure models
+
+Problema:
+
+VehicleControlCommand contiene throttle y brake. El futuro Router debe
+producir PropulsionCommand sin ocultar la interacción longitudinal dentro
+del RuntimeUnit, Propulsion model o root scene.
+
+Decisión:
+
+Añadir una policy pura/stateless que combine throttle y brake sin conocer
+Commands, Bus o física.
+
+Contrato:
+
+calculate_normalized_thrust(throttle, brake) -> float
+
+Formula:
+
+bounded_throttle = clamp(throttle, -1, 1)
+bounded_brake = clamp(brake, 0, 1)
+normalized_thrust = bounded_throttle * (1 - bounded_brake)
+
+Safety:
+
+- finite out-of-range inputs clamp;
+- non-finite throttle fails neutral to 0.0;
+- non-finite brake fails neutral to 0.0;
+- output is revalidated and clamped to [-1, 1];
+- full brake suppresses forward and reverse throttle.
+
+No responsabilidades:
+
+- VehicleControlCommand validation;
+- specialized Command construction;
+- DeviceBus publication;
+- routing lifecycle;
+- force calculation;
+- sink or RigidBody ownership;
+- mutable state.
+
+Implementación:
+
+core/vehicle_control/propulsion_intent_policy.gd
+
+test/core/vehicle_control/propulsion_intent_policy_test.gd
+test/core/vehicle_control/PropulsionIntentPolicyTest.tscn
+
+Cobertura diseñada:
+
+- neutral/forward/reverse baseline;
+- partial brake attenuation in both directions;
+- full brake suppression;
+- throttle clamping;
+- brake clamping;
+- NAN/infinity fail-neutral;
+- output validation;
+- responsibility boundary.
+
+Expected isolated baseline:
+
+PropulsionIntentPolicyTest: 18 checks
+Failures: 0
+RESULT: PASS
+
+Expected suite baseline:
+
+Vehicle Control Suite: 1 test / 18 checks PASS
+
+Next:
+
+YawSteeringModel
+LongitudinalBrakeModel
+
+Static review:
+
+- bracket balance policy: PASS;
+- bracket balance policy test: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed checks: 18;
+- Web VTD discovery: PASS;
+- Vehicle Control scenes: 1;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 205de93;
+- replacements restored: 1;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING
