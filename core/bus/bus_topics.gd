@@ -37,6 +37,10 @@ const STEERING_COMMAND: StringName = (
 	&"steering_command"
 )
 
+const BRAKE_COMMAND: StringName = (
+	&"brake_command"
+)
+
 const VEHICLE_CONTROL_COMMAND: StringName = (
 	&"vehicle_control_command"
 )

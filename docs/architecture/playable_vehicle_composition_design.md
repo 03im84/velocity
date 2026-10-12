@@ -31,12 +31,11 @@ Stage 8 — Full physical integration
 
 ```gdscript
 BusTopics.STEERING_COMMAND = &"steering_command"  # IMPLEMENTED
-BusTopics.BRAKE_COMMAND = &"brake_command"        # NEXT
+BusTopics.BRAKE_COMMAND = &"brake_command"        # IMPLEMENTED
 ```
 
-No se reutilizan Topics con semántica diferente. Cada Topic se publica con
-su Command contract correspondiente; no se adelanta Brake dentro de la
-entrega Steering.
+No se reutilizan Topics con semántica diferente. Cada Topic fue publicado
+con su Command contract correspondiente.
 
 ## 4. SteeringCommand
 
@@ -55,11 +54,17 @@ RigidBody ni setters.
 ## 5. BrakeCommand
 
 ```text
+Status: IMPLEMENTED
+Path: core/braking/brake_command.gd
+Topic: brake_command
 normalized_brake: float [0, 1]
 timestamp: float >= 0
 ```
 
-Snapshot read-only, finite y sin body.
+Snapshot read-only, finite y sin body. Rechaza brake/timestamp no finitos,
+brake fuera de bounds y timestamp negativo. No posee Bus, model, sink,
+RigidBody ni setters. Brake no acepta valores negativos ni representa
+reverse thrust.
 
 ## 6. PropulsionIntentPolicy
 

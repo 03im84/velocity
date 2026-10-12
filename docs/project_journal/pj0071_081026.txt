@@ -1,0 +1,117 @@
+PJ0071 – Brake Command Contract 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+8aeb208 feat(steering): add steering command contract
+
+Accepted relevant baselines:
+
+Steering Suite: 1 test / 18 checks PASS
+Message Contracts Suite: 3 tests / 49 checks PASS
+Global Run All remains: 107 tests / 2973 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 1 – Commands and pure models
+
+Problema:
+
+VehicleControlCommand contiene brake intent, pero no existe un snapshot
+especializado para enrutar active braking hacia un futuro BrakeRuntimeUnit
+sin reutilizar PropulsionCommand ni representar reverse thrust.
+
+Decisión:
+
+Añadir `BrakeCommand` read-only y su Topic canónico en la misma entrega.
+
+Contrato:
+
+normalized_brake: finite float in [0, 1]
+timestamp: finite float >= 0
+Topic: BusTopics.BRAKE_COMMAND = &"brake_command"
+
+Responsabilidades:
+
+- preservar normalized brake;
+- preservar timestamp;
+- validar finitud y bounds;
+- exponer getters read-only.
+
+No responsabilidades:
+
+- DeviceBus publication;
+- routing;
+- brake force calculation;
+- deadzone;
+- velocity reading;
+- physics;
+- sink ownership;
+- RigidBody;
+- mutation API.
+
+Implementación:
+
+core/braking/brake_command.gd
+core/bus/bus_topics.gd
+
+test/core/braking/brake_command_test.gd
+test/core/braking/BrakeCommandTest.tscn
+test/core/message_contract/bus_topics_contract_test.gd
+
+Cobertura diseñada:
+
+- valid command;
+- zero/full/partial boundaries;
+- positive overflow and negative input;
+- NAN and infinities;
+- negative/non-finite timestamp;
+- canonical Topic type/value;
+- read-only API;
+- no Bus or physics responsibility.
+
+Expected isolated baseline:
+
+BrakeCommandTest: 18 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regressions:
+
+Braking Suite: 1 test / 18 checks PASS
+Message Contracts Suite: PASS
+
+Next:
+
+PropulsionIntentPolicy
+
+Static review:
+
+- bracket balance command: PASS;
+- bracket balance command test: PASS;
+- bracket balance BusTopics: PASS;
+- bracket balance BusTopicsContractTest: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed Braking checks: 18;
+- Web VTD discovery: PASS;
+- Braking scenes: 1;
+- Message Contracts scenes: 3;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 8aeb208;
+- replacements restored: 3;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING

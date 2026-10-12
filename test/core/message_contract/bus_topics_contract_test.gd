@@ -69,6 +69,12 @@ func _test_topic_types() -> void:
 		"TC-U01: STEERING_COMMAND is StringName"
 	)
 
+	_expect(
+		typeof(BusTopics.BRAKE_COMMAND)
+		== TYPE_STRING_NAME,
+		"TC-U01: BRAKE_COMMAND is StringName"
+	)
+
 
 func _test_topic_values() -> void:
 
@@ -108,6 +114,12 @@ func _test_topic_values() -> void:
 		"TC-U02: STEERING_COMMAND has canonical value"
 	)
 
+	_expect(
+		BusTopics.BRAKE_COMMAND
+		== &"brake_command",
+		"TC-U02: BRAKE_COMMAND has canonical value"
+	)
+
 
 func _test_topics_are_not_empty() -> void:
 
@@ -139,6 +151,11 @@ func _test_topics_are_not_empty() -> void:
 	_expect(
 		BusTopics.STEERING_COMMAND != &"",
 		"TC-U03: STEERING_COMMAND is not empty"
+	)
+
+	_expect(
+		BusTopics.BRAKE_COMMAND != &"",
+		"TC-U03: BRAKE_COMMAND is not empty"
 	)
 
 
