@@ -1,0 +1,133 @@
+PJ0073 – Yaw Steering Model 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+47ee340 feat(vehicle): add propulsion intent policy
+
+Authoritative starting baseline:
+
+Run All: 110 tests / 3033 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+
+Relevant accepted suites:
+
+Steering: 1 test / 18 checks PASS
+Braking: 1 test / 18 checks PASS
+Vehicle Control: 1 test / 18 checks PASS
+Message Contracts: 3 tests / 52 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Commands and pure models
+
+Problema:
+
+SteeringCommand representa yaw intent, pero falta un model puro que combine
+command torque con damping y yaw-rate limiting sin conocer RigidBody,
+motion source o torque sink.
+
+Decisión:
+
+Añadir YawSteeringModel inmutable con torque escalar acotado.
+
+Parámetros:
+
+max_yaw_torque_newton_meters >= 0
+yaw_damping_newton_meter_seconds >= 0
+max_abs_yaw_rate_radians_per_second > 0
+
+Formula:
+
+command_torque = normalized_yaw * max_yaw_torque
+damping_torque = -yaw_rate * yaw_damping
+raw_torque = command_torque + damping_torque
+output = clamp(raw_torque, -max_yaw_torque, max_yaw_torque)
+
+Yaw-rate policy:
+
+Si abs(yaw_rate) >= max_abs_yaw_rate y normalized_yaw intenta aumentar el
+rate actual, command_torque se suprime. Damping permanece activo. Un command
+opuesto al rate permanece activo para recuperar control.
+
+Safety:
+
+- invalid configuration fails neutral;
+- normalized yaw fuera de [-1, 1] fails neutral;
+- non-finite normalized yaw/rate fails neutral;
+- non-finite raw torque fails neutral;
+- output siempre queda dentro de torque limits.
+
+No responsabilidades:
+
+- YawMotionSource;
+- SteeringTorqueSink;
+- DeviceBus;
+- SteeringCommand parsing;
+- Vector3/RigidBody;
+- mutable configuration.
+
+Implementación:
+
+core/steering/yaw_steering_model.gd
+
+test/core/steering/yaw_steering_model_test.gd
+test/core/steering/YawSteeringModelTest.tscn
+
+Cobertura diseñada:
+
+- configuration validation;
+- command torque mapping;
+- signed opposing damping;
+- command+damping composition;
+- exact/beyond yaw-rate limit suppression;
+- opposing-command preservation;
+- positive/negative/damping-only output clamps;
+- invalid input/model fail-neutral;
+- torque bound validation;
+- responsibility boundary.
+
+Expected isolated baseline:
+
+YawSteeringModelTest: 35 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Steering Suite: 2 tests / 53 checks PASS
+
+Next:
+
+LongitudinalBrakeModel
+
+Static review:
+
+- bracket balance model: PASS;
+- bracket balance model test: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed checks: 35;
+- Web VTD discovery: PASS;
+- Steering scenes: 2;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 47ee340;
+- replacements restored: 1;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING

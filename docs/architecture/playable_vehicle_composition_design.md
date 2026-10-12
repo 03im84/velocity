@@ -146,6 +146,11 @@ Construct-only, sin Host Objects, policy BORROWED, release `CREATED/SHUTDOWN` e 
 
 ## 10. YawSteeringModel
 
+```text
+Status: IMPLEMENTED
+Path: core/steering/yaw_steering_model.gd
+```
+
 Parámetros:
 
 ```text
@@ -163,10 +168,14 @@ yaw_rate
 
 Policy:
 
-- invalid input fail-neutral;
+- invalid model/input fail-neutral;
+- normalized yaw fuera de `[-1, 1]` falla neutral;
 - damping siempre se opone a yaw rate;
-- command que aumenta un yaw rate ya en límite se suprime;
-- output clamp `[-max_torque, max_torque]`.
+- command que aumenta un yaw rate ya en/sobre límite se suprime;
+- opposing command permanece activo para recuperar control;
+- damping permanece activo durante suppression;
+- output clamp `[-max_torque, max_torque]`;
+- model no posee motion source, sink, Bus o física espacial.
 
 ## 11. YawMotionSource behavior
 
