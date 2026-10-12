@@ -560,8 +560,17 @@ aceptado, pero no replica spring/damper ni historial de Hover. Valida
 entrega bounded force a un sink BORROWED. Source filtering pertenece al
 binder y permite wiring explícito sensor→Hover y sensor→Proximity Lift.
 
-La Factory se implementa en el incremento siguiente con model y sink
-BORROWED, build construct-only, cero Host Objects y release seguro.
+`ProximityLiftPointRuntimeFactory` implementa build construct-only con:
+
+```text
+MODEL_DEPENDENCY_ID = proximity_lift_model
+SINK_DEPENDENCY_ID  = proximity_lift_force_sink
+```
+
+Ambas dependencias son BORROWED. El Handle contiene la Unit como Primary,
+cero Host Objects y los bindings exactos. Factory no ejecuta lifecycle ni
+actuation. Release acepta únicamente Unit en `CREATED` o `SHUTDOWN`,
+preserva dependencias BORROWED y es idempotente.
 
 ## 36. Noise and bounded latency
 

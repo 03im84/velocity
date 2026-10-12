@@ -127,6 +127,19 @@ conoce RigidBody3D y no modifica HoverPoint 1.0. Source filtering permanece
 en Managed Runtime binder; una misma medición puede alimentar Hover y
 Proximity Lift mediante connections explícitas separadas.
 
+`ProximityLiftPointRuntimeFactory` conserva el patrón construct-only:
+
+```text
+proximity_lift_model       BORROWED
+proximity_lift_force_sink  BORROWED
+Primary                    ProximityLiftPointRuntimeUnit
+Host Objects               0
+```
+
+Factory valida Request/Key/Configuration y binding shape, pero no ejecuta
+lifecycle ni actuation. Release rechaza units activas, acepta `CREATED` o
+`SHUTDOWN`, preserva dependencias BORROWED y es idempotente.
+
 ## 6. Track implications
 
 Proximity Lift aproximado hace físicamente relevantes:

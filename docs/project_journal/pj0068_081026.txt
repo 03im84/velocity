@@ -1,0 +1,131 @@
+PJ0068 – Proximity Lift Point Runtime Factory 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+2f1216a feat(proximity): add proximity lift point runtime unit
+
+Accepted component baseline:
+
+ProximityLiftPointRuntimeUnitTest: 1 test / 36 checks PASS
+Proximity Lift Suite: 1 test / 36 checks PASS
+
+Authoritative global baseline remains:
+
+Run All: 105 tests / 2912 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 0 – Environment and Realism Foundations
+
+Problema:
+
+La Unit está aceptada, pero CompositionRuntime necesita construirla por el
+mismo RuntimeFactory contract utilizado por Propulsion y Hover, sin crear
+model/sink internamente ni introducir Host Objects.
+
+Decisión:
+
+Añadir `ProximityLiftPointRuntimeFactory` especializada y construct-only.
+
+Contrato:
+
+profile_id: velocity.proximity_lift.point
+profile_version: 1
+activation_context: SIMULATION
+model dependency: proximity_lift_model
+sink dependency: proximity_lift_force_sink
+
+Ambas dependencias deben ser BORROWED.
+
+Build:
+
+- valida RuntimeConstructionRequest;
+- valida exact RuntimeFactoryKey;
+- valida exact DeviceConfiguration;
+- exige ProximityLiftModel válido;
+- exige sink con apply_proximity_lift_force;
+- construye ProximityLiftPointRuntimeUnit;
+- construye RuntimeDeviceHandle sin Host Objects;
+- conserva bindings exactos;
+- no ejecuta initialize/ready/start ni actuation.
+
+Release:
+
+- null/invalid/wrong-key Handle se rechaza;
+- Primary debe ser ProximityLiftPointRuntimeUnit;
+- Host Objects deben permanecer vacíos;
+- Unit activa se rechaza;
+- CREATED o SHUTDOWN se acepta;
+- repeated release es idempotent;
+- BORROWED model/sink permanecen vivos.
+
+Implementación:
+
+integration/godot/proximity_lift/proximity_lift_point_runtime_factory.gd
+
+test/core/proximity_lift/proximity_lift_point_runtime_factory_test_helpers.gd
+test/core/proximity_lift/proximity_lift_point_runtime_factory_test.gd
+test/core/proximity_lift/ProximityLiftPointRuntimeFactoryTest.tscn
+
+Cobertura diseñada:
+
+- null/invalid Request;
+- key mismatch;
+- unsupported Configuration;
+- missing/transferred/wrong/invalid model;
+- missing/transferred/incomplete sink;
+- successful exact build;
+- valid Handle shape;
+- exact Primary;
+- zero Host Objects;
+- exact BORROWED bindings;
+- build executes no lifecycle/actuation;
+- null/repeated/active/shutdown release;
+- Primary mismatch;
+- Host Object mismatch.
+
+Expected isolated baseline:
+
+ProximityLiftPointRuntimeFactoryTest: 25 checks
+Failures: 0
+RESULT: PASS
+
+Expected suite baseline:
+
+Proximity Lift Suite: 2 tests / 61 checks
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+RESULT: PASS
+
+Static review:
+
+- bracket balance Factory: PASS;
+- bracket balance helpers: PASS;
+- bracket balance test: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- no Hover naming/path leakage: PASS;
+- designed assertions: 25;
+- Web VTD discovery: PASS;
+- Proximity Lift scenes: 2;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 2f1216a;
+- replacements restored: 2;
+- additions removed: 5;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING
