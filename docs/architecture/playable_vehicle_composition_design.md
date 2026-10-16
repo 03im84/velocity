@@ -141,10 +141,16 @@ no conoce sinks, motion sources o RigidBody3D.
 ## 9. Router Factory
 
 ```text
-velocity.vehicle_control.router / 1 / Simulation
+Status: IMPLEMENTED
+Path: integration/godot/vehicle_control/vehicle_control_router_runtime_factory.gd
+Factory Key: velocity.vehicle_control.router / 1 / Simulation
+Dependency: propulsion_intent_policy / BORROWED
 ```
 
-Construct-only, sin Host Objects, policy BORROWED, release `CREATED/SHUTDOWN` e idempotente.
+Construct-only, sin Host Objects. El Handle conserva policy binding exacto
+y Unit en `CREATED`; build no ejecuta lifecycle ni routing. Release acepta
+`CREATED/SHUTDOWN`, rechaza Unit activa, preserva policy BORROWED y es
+idempotente.
 
 ## 10. YawSteeringModel
 

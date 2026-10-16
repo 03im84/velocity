@@ -1,0 +1,123 @@
+PJ0076 – Vehicle Control Router Runtime Factory 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+434637f feat(vehicle): add control router runtime unit
+
+Accepted component baseline:
+
+VehicleControlRouterRuntimeUnitTest: 1 test / 39 checks PASS
+Vehicle Control Suite: 2 tests / 57 checks PASS
+
+Authoritative global baseline remains:
+
+Run All: 112 tests / 3098 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+VehicleControlRouter Runtime
+
+Problema:
+
+Router Unit está aceptada, pero CompositionRuntime necesita construirla por
+RuntimeFactory contract sin crear o poseer PropulsionIntentPolicy y sin
+introducir Host Objects.
+
+Decisión:
+
+Añadir VehicleControlRouterRuntimeFactory especializada y construct-only.
+
+Contrato:
+
+profile_id: velocity.vehicle_control.router
+profile_version: 1
+activation_context: SIMULATION
+dependency: propulsion_intent_policy / BORROWED
+Primary: VehicleControlRouterRuntimeUnit
+Host Objects: 0
+
+Build:
+
+- valida Request, FactoryKey y exact Configuration;
+- exige policy binding presente y BORROWED;
+- exige PropulsionIntentPolicy type exacto;
+- construye Unit y RuntimeDeviceHandle;
+- conserva binding exacto;
+- no ejecuta lifecycle, routing o publication.
+
+Release:
+
+- null/invalid/wrong-key Handle se rechaza;
+- Primary debe ser VehicleControlRouterRuntimeUnit;
+- Host Objects deben estar vacíos;
+- active Unit se rechaza;
+- CREATED o SHUTDOWN se acepta;
+- repeated release es idempotent;
+- BORROWED policy permanece viva.
+
+Implementación:
+
+integration/godot/vehicle_control/vehicle_control_router_runtime_factory.gd
+
+test/core/vehicle_control/vehicle_control_router_runtime_factory_test_helpers.gd
+test/core/vehicle_control/vehicle_control_router_runtime_factory_test.gd
+test/core/vehicle_control/VehicleControlRouterRuntimeFactoryTest.tscn
+
+Cobertura diseñada:
+
+- null/invalid Request;
+- Factory Key mismatch;
+- unsupported Configuration;
+- missing/transferred/wrong policy;
+- successful exact build;
+- valid Handle/Primary/zero Hosts;
+- exact BORROWED binding;
+- no lifecycle/routing during build;
+- null/repeated/active/shutdown release;
+- Primary mismatch;
+- Host Object mismatch.
+
+Expected isolated baseline:
+
+VehicleControlRouterRuntimeFactoryTest: 21 checks
+Failures: 0
+RESULT: PASS
+
+Expected suite baseline:
+
+Vehicle Control Suite: 3 tests / 78 checks PASS
+
+Next:
+
+SteeringRuntimeUnit/Factory
+BrakeRuntimeUnit/Factory
+
+Static review:
+
+- bracket balance Factory: PASS;
+- bracket balance helpers: PASS;
+- bracket balance test: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed checks: 21;
+- Web VTD discovery: PASS;
+- Vehicle Control scenes: 3;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 434637f;
+- replacements restored: 1;
+- additions removed: 5;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING
