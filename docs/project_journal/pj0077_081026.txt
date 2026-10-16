@@ -1,0 +1,119 @@
+PJ0077 – Steering Runtime Unit 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+238bf7d feat(vehicle): add control router runtime factory
+
+Authoritative starting baseline:
+
+Run All: 114 tests / 3158 checks PASS
+
+Relevant accepted baseline:
+
+Steering Suite: 2 tests / 53 checks PASS
+Vehicle Control Suite: 3 tests / 78 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Steering Runtime
+
+Problema:
+
+SteeringCommand y YawSteeringModel están aceptados, pero falta el Managed
+Runtime actuator que lea yaw rate, calcule torque y lo entregue a un sink
+sin exponer RigidBody3D.
+
+Decisión:
+
+Añadir SteeringRuntimeUnit con model, YawMotionSource y SteeringTorqueSink
+BORROWED.
+
+Contrato:
+
+profile_id: velocity.steering.yaw
+profile_version: 1
+activation_context: SIMULATION
+capability: bounded_yaw_torque
+input: in.steering_command
+subscribes: steering_command
+publishes: none
+
+Dependencies:
+
+- YawSteeringModel;
+- behavior get_yaw_rate_radians_per_second();
+- behavior apply_yaw_torque(torque, timestamp) -> bool.
+
+Actuation:
+
+- validate BusMessage, Topic, timestamp and SteeringCommand;
+- require envelope/payload timestamp agreement;
+- read numeric finite yaw rate;
+- calculate through YawSteeringModel;
+- revalidate finite bounded torque;
+- require boolean sink acceptance;
+- expose last yaw rate, torque and ValidationReport.
+
+Safety:
+
+- malformed input never reads motion source;
+- invalid motion never reaches sink;
+- sink false/non-boolean fails observable;
+- failed attempt remains fail-neutral;
+- later valid input recovers;
+- post-shutdown input never reaches sink;
+- dependencies remain BORROWED.
+
+Implementación:
+
+integration/godot/steering/steering_runtime_unit.gd
+
+test/core/steering/steering_test_motion_source.gd
+test/core/steering/steering_test_torque_sink.gd
+test/core/steering/steering_runtime_unit_test.gd
+test/core/steering/SteeringRuntimeUnitTest.tscn
+
+Expected isolated baseline:
+
+SteeringRuntimeUnitTest: 39 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Steering Suite: 3 tests / 92 checks PASS
+
+Next:
+
+SteeringRuntimeFactory
+
+Static review:
+
+- bracket balance Unit: PASS;
+- bracket balance Unit test: PASS;
+- bracket balance motion source: PASS;
+- bracket balance torque sink: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed checks: 39;
+- Web VTD discovery: PASS;
+- Steering scenes: 3;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 238bf7d;
+- replacements restored: 1;
+- additions removed: 6;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING

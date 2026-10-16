@@ -207,6 +207,8 @@ Dependency `BORROWED`.
 ## 13. Steering Profile y Runtime
 
 ```text
+Status: RUNTIME UNIT IMPLEMENTED
+Path: integration/godot/steering/steering_runtime_unit.gd
 profile_id: velocity.steering.yaw
 role: ACTUATOR
 capability: bounded_yaw_torque
@@ -222,7 +224,10 @@ yaw_motion_source / BORROWED
 steering_torque_sink / BORROWED
 ```
 
-Runtime valida, obtiene yaw rate, calcula torque, revalida bounds, invoca sink y conserva report.
+Runtime valida message/Command/timestamps, obtiene yaw rate dinámico,
+calcula torque, revalida finitud/bounds, invoca sink booleano y conserva
+rate/torque/report observables. Datos no numéricos/no finitos y sink
+rejection fallan sin aplicar torque. No conoce RigidBody3D ni routing.
 
 ## 14. Steering Factory
 
