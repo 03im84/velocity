@@ -116,25 +116,27 @@ propulsion_intent_policy / BORROWED
 
 ## 8. VehicleControlRouterRuntimeUnit
 
-Endpoint:
-
 ```text
-in.vehicle_control_command
+Status: IMPLEMENTED
+Path: integration/godot/vehicle_control/vehicle_control_router_runtime_unit.gd
+Endpoint: in.vehicle_control_command
 ```
 
 Durante `RUNNING`:
 
 1. valida BusMessage y VehicleControlCommand;
-2. calcula effective thrust mediante policy;
+2. calcula effective thrust mediante policy BORROWED;
 3. crea PropulsionCommand;
 4. crea SteeringCommand;
 5. crea BrakeCommand;
-6. publica los tres con mismo timestamp y source router;
-7. conserva routing report observable.
+6. preconstruye los tres BusMessages con mismo timestamp/source router;
+7. publica en orden Propulsion → Steering → Brake;
+8. conserva Commands y ValidationReport observables.
 
-Publicación usa DeviceBus owned por CompositionRuntime.
-
-No aplica fuerza o torque.
+Publicación usa DeviceBus owned por CompositionRuntime. Si una publicación
+es rechazada, detiene las posteriores y reporta fallo; no intenta compensar
+mensajes que DeviceBus ya despachó. El Router no aplica fuerza o torque y
+no conoce sinks, motion sources o RigidBody3D.
 
 ## 9. Router Factory
 

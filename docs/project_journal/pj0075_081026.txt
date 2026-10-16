@@ -1,0 +1,138 @@
+PJ0075 – Vehicle Control Router Runtime Unit 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+c0c719e feat(braking): add longitudinal brake model
+
+Authoritative starting baseline:
+
+Run All: 112 tests / 3098 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+
+Relevant accepted suites:
+
+Steering: 2 tests / 53 checks PASS
+Braking: 2 tests / 48 checks PASS
+Vehicle Control: 1 test / 18 checks PASS
+Message Contracts: 3 tests / 52 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+VehicleControlRouter Runtime
+
+Problema:
+
+Input publica VehicleControlCommand, mientras Propulsion, Steering y Brake
+consumen Commands especializados. Falta el Managed Runtime controller que
+valide, traduzca y publique esos tres contratos sin aplicar física.
+
+Decisión:
+
+Añadir VehicleControlRouterRuntimeUnit con PropulsionIntentPolicy BORROWED
+y DeviceBus recibido durante runtime_initialize.
+
+Contrato:
+
+profile_id: velocity.vehicle_control.router
+profile_version: 1
+activation_context: SIMULATION
+capability: vehicle_control_routing
+input: in.vehicle_control_command
+publishes: propulsion_command, steering_command, brake_command
+subscribes: vehicle_control_command
+
+Routing:
+
+- validate BusMessage/Topic/timestamp/payload;
+- validate VehicleControlCommand and timestamp agreement;
+- calculate normalized thrust through policy;
+- create PropulsionCommand, SteeringCommand and BrakeCommand;
+- prebuild three BusMessages with Router source and shared timestamp;
+- publish Propulsion, then Steering, then Brake;
+- preserve last successful Commands and ValidationReport.
+
+Publication failure:
+
+DeviceBus publications are sequential dispatch cycles. On rejection, Router
+stops later publications and reports PLATFORM_SAFETY_ERROR. It does not
+pretend atomic rollback for messages already dispatched. Partial publication
+never populates last-success Commands.
+
+No responsabilidades:
+
+- force or torque calculation;
+- motion sources;
+- sinks;
+- RigidBody;
+- physical coordination;
+- policy ownership.
+
+Implementación:
+
+integration/godot/vehicle_control/vehicle_control_router_runtime_unit.gd
+
+test/core/vehicle_control/vehicle_control_router_runtime_unit_test.gd
+test/core/vehicle_control/VehicleControlRouterRuntimeUnitTest.tscn
+
+Cobertura diseñada:
+
+- exact Unit/Configuration/policy validation;
+- lifecycle and exact endpoint;
+- three specialized publications;
+- exact order/source/timestamps/payload types;
+- throttle/brake policy mapping;
+- independent steering/brake mapping;
+- full-brake reverse suppression;
+- message/topic/timestamp/payload rejection;
+- no output for invalid input;
+- ordered publication stop on failure;
+- partial publication not reported as success;
+- idempotent shutdown;
+- no post-shutdown publication;
+- BORROWED policy preservation.
+
+Expected isolated baseline:
+
+VehicleControlRouterRuntimeUnitTest: 39 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Vehicle Control Suite: 2 tests / 57 checks PASS
+
+Next:
+
+VehicleControlRouterRuntimeFactory
+
+Static review:
+
+- bracket balance Unit: PASS;
+- bracket balance Unit test: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed checks: 39;
+- Web VTD discovery: PASS;
+- Vehicle Control scenes: 2;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: c0c719e;
+- replacements restored: 1;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING
