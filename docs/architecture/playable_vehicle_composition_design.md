@@ -232,10 +232,18 @@ rejection fallan sin aplicar torque. No conoce RigidBody3D ni routing.
 ## 14. Steering Factory
 
 ```text
-velocity.steering.yaw / 1 / Simulation
+Status: IMPLEMENTED
+Path: integration/godot/steering/steering_runtime_factory.gd
+Factory Key: velocity.steering.yaw / 1 / Simulation
+Dependencies:
+- steering_model / BORROWED
+- yaw_motion_source / BORROWED
+- steering_torque_sink / BORROWED
 ```
 
-Sin Host Objects; active release rechazado.
+Construct-only, sin Host Objects. Build conserva dependencias exactas y no
+ejecuta lifecycle/actuation. Release acepta `CREATED/SHUTDOWN`, rechaza Unit
+activa, preserva BORROWED dependencies y es idempotente.
 
 ## 15. LongitudinalBrakeModel
 
