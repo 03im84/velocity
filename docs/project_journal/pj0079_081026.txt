@@ -1,0 +1,127 @@
+PJ0079 – Brake Runtime Unit 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+6039f3d feat(steering): add steering runtime factory
+
+Authoritative starting baseline:
+
+Run All: 116 tests / 3225 checks PASS
+
+Relevant accepted baseline:
+
+Braking Suite: 2 tests / 48 checks PASS
+Steering Suite: 4 tests / 120 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Brake Runtime
+
+Problema:
+
+BrakeCommand y LongitudinalBrakeModel están aceptados, pero falta Managed
+Runtime actuator que lea signed longitudinal speed y entregue bounded
+opposing force sin exponer RigidBody3D.
+
+Decisión:
+
+Añadir BrakeRuntimeUnit con model, LongitudinalMotionSource y BrakeForceSink
+BORROWED.
+
+Contrato:
+
+profile_id: velocity.brake.longitudinal
+profile_version: 1
+activation_context: SIMULATION
+capability: active_longitudinal_braking
+input: in.brake_command
+subscribes: brake_command
+publishes: none
+
+Dependencies:
+
+- LongitudinalBrakeModel;
+- behavior get_longitudinal_speed_meters_per_second();
+- behavior apply_brake_force(force, timestamp) -> bool.
+
+Actuation valida message/Command/timestamp, lee numeric finite speed, calcula
+force, revalida bounds y exige boolean sink acceptance. Expone last speed,
+force y ValidationReport.
+
+Safety:
+
+- invalid input never reads motion;
+- invalid motion never reaches sink;
+- model deadzone applies explicit zero near rest;
+- sink false/non-boolean fails observable;
+- later valid input recovers;
+- post-shutdown input never applies force;
+- dependencies remain BORROWED;
+- no Hover, timestep, body or spatial axis ownership.
+
+Implementación:
+
+integration/godot/braking/brake_runtime_unit.gd
+
+test/core/braking/braking_test_motion_source.gd
+test/core/braking/braking_test_force_sink.gd
+test/core/braking/brake_runtime_unit_test.gd
+test/core/braking/BrakeRuntimeUnitTest.tscn
+
+Expected isolated baseline:
+
+BrakeRuntimeUnitTest: 39 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Braking Suite: 3 tests / 87 checks PASS
+
+Next:
+
+BrakeRuntimeFactory
+
+Static review:
+
+- bracket balance Unit/test/source/sink: PASS;
+- semantic leakage gate: PASS;
+- git diff check: PASS;
+- designed checks: 39;
+- Web VTD discovery: 3 Braking scenes;
+- Canonical Tooling: 136 tests PASS;
+
+Windows candidate 1.0 result:
+
+BrakeRuntimeUnitTest: 39 checks / 1 failure
+Engine Error: 1
+
+Single failure:
+
+Test expected `brake_runtime_brake_rate_invalid` for a non-finite signed
+longitudinal speed. Production correctly emitted the semantic contract
+`brake_runtime_longitudinal_speed_invalid`.
+
+Root cause:
+
+Automatic Steering→Brake test transformation changed `yaw_rate` to the
+nonexistent concept `brake_rate`. The actual dependency is
+LongitudinalMotionSource and the measured scalar is longitudinal speed.
+
+r1 correction:
+
+- test expectation corrected to longitudinal_speed_invalid;
+- production unchanged;
+- all other 38 candidate checks already PASS;
+- semantic leakage gate extended to reject brake_rate naming.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+PRODUCTION BEHAVIOR ACCEPTED
+R1 TEST CONTRACT CORRECTED
+STATIC REVALIDATION PENDING
+GODOT 4.7.1 WINDOWS REVALIDATION PENDING

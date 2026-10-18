@@ -302,6 +302,8 @@ Dependency `BORROWED`.
 ## 18. Brake Profile y Runtime
 
 ```text
+Status: RUNTIME UNIT IMPLEMENTED
+Path: integration/godot/braking/brake_runtime_unit.gd
 profile_id: velocity.brake.longitudinal
 role: ACTUATOR
 capability: active_longitudinal_braking
@@ -317,7 +319,11 @@ longitudinal_motion_source / BORROWED
 brake_force_sink / BORROWED
 ```
 
-Runtime nunca aplica force que acelere alejándose de reposo.
+Runtime valida message/Command/timestamps, lee signed speed dinámico,
+calcula bounded opposing force, exige sink booleano y conserva speed/force/
+report observables. Invalid motion y sink rejection fallan sin actuation.
+Deadzone del model evita aplicar fuerza cerca de reposo. Runtime no conoce
+RigidBody3D, timestep ni Hover.
 
 ## 19. Brake Factory
 
