@@ -1,0 +1,78 @@
+PJ0080 – Brake Runtime Factory 1.0
+
+Fecha: 08/10/2026
+
+Baseline:
+
+d181e40 feat(braking): add brake runtime unit
+
+Accepted component baseline:
+
+BrakeRuntimeUnitTest: 1 test / 39 checks PASS
+Braking Suite: 3 tests / 87 checks PASS
+
+Authoritative global baseline remains:
+
+Run All: 116 tests / 3225 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Brake Runtime
+
+Problema:
+
+BrakeRuntimeUnit está aceptada, pero CompositionRuntime necesita construirla
+desde model, longitudinal motion source y force sink BORROWED sin Host
+Objects ni lifecycle durante build.
+
+Decisión:
+
+Añadir BrakeRuntimeFactory especializada y construct-only.
+
+Contrato:
+
+profile_id: velocity.brake.longitudinal
+profile_version: 1
+activation_context: SIMULATION
+brake_model / BORROWED
+longitudinal_motion_source / BORROWED
+brake_force_sink / BORROWED
+Primary: BrakeRuntimeUnit
+Host Objects: 0
+
+Build valida Request/Key/Configuration, model type/validity, source behavior
+y sink behavior. Conserva bindings exactos y no ejecuta actuation.
+
+Release rechaza null/invalid/wrong-key/shape/active Handles, acepta CREATED
+o SHUTDOWN, preserva dependencies BORROWED y es idempotente.
+
+Expected isolated baseline:
+
+BrakeRuntimeFactoryTest: 28 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Braking Suite: 4 tests / 115 checks PASS
+
+Next:
+
+RigidBodyVehicleMotionSource
+Physical force/torque sinks
+
+Static review:
+
+- bracket balance Factory/helpers/test: PASS;
+- semantic leakage gate: PASS;
+- designed checks: 28;
+- Web VTD discovery: 4 Braking scenes;
+- Canonical Tooling: 136 tests PASS;
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING

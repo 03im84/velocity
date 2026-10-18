@@ -328,10 +328,18 @@ RigidBody3D, timestep ni Hover.
 ## 19. Brake Factory
 
 ```text
-velocity.brake.longitudinal / 1 / Simulation
+Status: IMPLEMENTED
+Path: integration/godot/braking/brake_runtime_factory.gd
+Factory Key: velocity.brake.longitudinal / 1 / Simulation
+Dependencies:
+- brake_model / BORROWED
+- longitudinal_motion_source / BORROWED
+- brake_force_sink / BORROWED
 ```
 
-Construct-only, sin Hosts, release seguro/idempotente.
+Construct-only, sin Host Objects. Build conserva dependencias exactas y no
+ejecuta lifecycle/actuation. Release acepta `CREATED/SHUTDOWN`, rechaza Unit
+activa, preserva BORROWED dependencies y es idempotente.
 
 ## 20. RigidBodyVehicleMotionSource
 
