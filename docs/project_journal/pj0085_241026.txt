@@ -1,0 +1,117 @@
+PJ0085 – RigidBody Brake Force Sink 1.0
+
+Fecha: 24/10/2026
+
+Base de la entrega:
+
+853c606 docs(vehicle): record rigid body sink baseline
+
+Baseline autoritativa anterior al cambio:
+
+122 tests / 3359 checks PASS
+Base de código aceptado: ef491df
+Base documental: 853c606
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 5 – RigidBody adapters
+
+Problema:
+
+`BrakeRuntimeUnit` calcula una fuerza longitudinal firmada a partir del
+`BrakeCommand` y de la velocidad observada, pero no existía el adapter Godot
+que aplicara esa fuerza al body scene-owned. Pasar `Vector3` o `RigidBody3D`
+al Runtime mezclaría la política escalar con convenciones espaciales y física.
+
+Decisión:
+
+Añadir `RigidBodyBrakeForceSink`, adapter scene-owned `RefCounted` con un
+`RigidBody3D` explícito BORROWED. Convierte la fuerza escalar firmada al eje
+forward world y la aplica centralmente. `LongitudinalBrakeModel` sigue siendo
+la única autoridad de política de frenado y de los límites configurados.
+
+Contrato:
+
+```text
+apply_brake_force(force_newtons, timestamp) -> bool
+```
+
+- body válido, dentro de SceneTree y no frozen durante actuation;
+- basis finita, positiva/no reflejada y no degenerada;
+- fuerza signed finita; fuerza cero aceptada como actuation neutral;
+- timestamp finito y >= 0;
+- `body_basis = orthonormalized(body.global_basis)`;
+- `world_forward = -body_basis.z.normalized()`;
+- `body.apply_central_force(world_forward * force_newtons)`;
+- fuerza negativa frena movimiento forward; positiva frena movimiento reverse;
+- timestamp validado, sin scheduling o estado retenido;
+- sin getter/setter del body, torque, Bus, counters, queues o processing.
+
+Implementación:
+
+```text
+integration/godot/braking/rigid_body_brake_force_sink.gd
+test/core/braking/rigid_body_brake_force_sink_test.gd
+test/core/braking/RigidBodyBrakeForceSinkTest.tscn
+```
+
+Aceptación autoritativa Windows/Godot 4.7.1:
+
+```text
+RigidBodyBrakeForceSinkTest: 1 test / 16 checks PASS
+Braking Suite: 5 tests / 131 checks PASS
+Run All: 123 tests / 3375 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Check Failures: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+```
+
+Estos resultados fueron entregados por el usuario después de instalar el
+candidato. Los archivos de producción y test del paquete r1 son byte a byte
+idénticos a los que ejecutaron Selected, Braking Suite y Run All; las únicas
+correcciones de r1 son documentación y fin de archivo.
+
+Incidente de Prepare Submit:
+
+```text
+VELOCITY SUBMIT RESULT: WORKTREE_ERROR
+git diff --check failed:
+docs/architecture/playable_vehicle_composition_design.md:1077:
+new blank line at EOF
+```
+
+Clasificación: error de formato documental, no fallo de producto ni de test.
+El Submit Tool bloqueó la operación antes de commit/push. Corrección aplicada
+en r1: archivo de diseño completo terminado con una sola newline final. No se
+modificaron ni debilitaron producción o pruebas.
+
+Paquete r1: `rigid-body-brake-force-sink-1-0-r1`.
+Para mantener intacto el receipt/hash de la primera instalación, primero se
+debe usar Rollback sobre `rigid-body-brake-force-sink-1-0`, comprobar que
+`main` volvió limpia a `853c606`, y después instalar el ZIP r1. Los resultados
+autoritativos anteriores aplican a los mismos hashes de código y test; después
+de reinstalar, se recomienda revalidarlos antes de Prepare Submit.
+
+Verificación de tooling y empaquetado:
+
+```text
+Canonical Tooling: 136 tests PASS
+Package validation r1: PASS
+Install r1 E2E en clone temporal exacto de main / 853c606: PASS (5 archivos)
+Hashes instalados: PASS
+git diff --check: PASS
+Rollback r1 E2E: PASS
+Replacements restaurados: 1
+Additions eliminadas: 4
+UID sidecars: 0 (Godot no se ejecutó en el clone)
+HEAD 853c606 y working tree limpio restaurados: PASS
+ZIP temporal eliminado; ZIP r1 original preservado: PASS
+```
+
+El commit/push de la implementación queda pendiente de que el usuario haga
+Rollback de la primera receipt, instale r1, ejecute la verificación declarada
+y complete Prepare Submit con manifiesto y staged paths coincidentes.

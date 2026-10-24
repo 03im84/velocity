@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO — STAGE 5 EN PROGRESO |
-| Versión | 1.2 |
-| Fecha | 23/10/2026 |
+| Versión | 1.3 |
+| Fecha | 24/10/2026 |
 | ADR | ADR-017 — Scene-Owned Vehicle Body and Staged Physical Composition |
 | Alcance | Routing, steering, active braking, body adapters y vehicle runtime root |
 | Implementación | STAGES 0–4 COMPLETADOS; STAGE 5 EN PROGRESO |
@@ -462,14 +462,40 @@ valid neutral actuation. The adapter has no force or body mutation API.
 
 ## 23. RigidBodyBrakeForceSink
 
-Recibe force escalar firmado desde BrakeRuntime:
-
 ```text
-world_forward = -body.global_basis.z.normalized()
-body.apply_central_force(world_forward * force_newtons)
+Status: IMPLEMENTED AND WINDOWS-VERIFIED
+Path: integration/godot/braking/rigid_body_brake_force_sink.gd
 ```
 
-Model garantiza oposición a signed longitudinal speed.
+Scene-owned `RefCounted` adapter con un único `RigidBody3D` explícito y
+BORROWED. `BrakeRuntimeUnit` conserva la frontera escalar:
+
+```gdscript
+apply_brake_force(force_newtons, timestamp) -> bool
+```
+
+Aplicación espacial:
+
+```text
+body_basis = orthonormalized(body.global_basis)
+world_forward = -body_basis.z.normalized()
+world_force = world_forward * signed_force_newtons
+body.apply_central_force(world_force)
+```
+
+La fuerza positiva apunta a craft-forward (local -Z); la negativa apunta a
+reverse. `LongitudinalBrakeModel` produce la fuerza firmada opuesta a la
+velocidad longitudinal, incluyendo desaceleración en reverse; el sink solo
+traduce el escalar al eje espacial y no vuelve a decidir la política.
+La fuerza se aplica en el centro de masa para no introducir torque.
+
+Admite `0.0` como actuation neutral. Rechaza body null/freed/out-of-tree,
+body frozen, basis no finita/reflejada/degenerada, fuerza no finita y
+timestamp no finito o negativo. El model conserva los límites configurados;
+el sink valida finitud y eje, no duplica ese límite. El timestamp se valida
+por el contrato común, pero no programa física ni se retiene como estado.
+No expone getters/setters del body, API de torque, Bus, counters, queues ni
+processing.
 
 ## 24. RigidBodyHoverForceSink
 
@@ -836,11 +862,13 @@ RigidBodyBrakeForceSinkTest
 RigidBodyHoverForceSinkTest
 ```
 
-Incremento actual:
+Estado de Stage 5:
 
 ```text
-VehicleMotionState + RigidBodyVehicleMotionSource
-Vehicle Suite: 2 tests / 40 checks expected
+Aceptados y verificados: VehicleMotionState + RigidBodyVehicleMotionSource,
+RigidBodyPropulsionForceSink y RigidBodySteeringTorqueSink r1.
+Candidato actual: RigidBodyBrakeForceSink, 1 test / 16 checks diseñados.
+Verificación Windows de este candidato: pendiente.
 ```
 
 ### Stage 6
@@ -937,10 +965,13 @@ Root coordina; specialized components calculan/aplican.
 21. baseline
 ```
 
-## 43. Baseline de partida
+## 43. Baseline de partida histórica — Stage 0
+
+La siguiente tabla conserva el baseline original de Stage 0. No representa
+el baseline global vigente de Stage 5.
 
 ```text
-HEAD: 6079a2d
+HEAD histórico: 6079a2d
 Input Suite: 6 / 101 PASS
 Propulsion Suite: 6 / 143 PASS
 Hover Suite: 7 / 151 PASS
@@ -953,17 +984,14 @@ Workspace: 56 MB < 80 MB
 ## 44. Estado
 
 ```text
-PLAYABLE VEHICLE COMPOSITION DESIGN 1.1
-ACTIVO
-SCENE-OWNED BODY APROBADO
-STEERING Y ACTIVE BRAKING SEPARADOS
-ENVIRONMENT, AERODYNAMICS, PROXIMITY LIFT, LATENCY Y NOISE VERIFICADOS
-VEHICLE MOTION STATE SEAM APROBADO
-STAGE 0 COMPLETADO
-STAGE 1 — COMMANDS AND PURE MODELS — SIGUIENTE
+PLAYABLE VEHICLE COMPOSITION DESIGN 1.3
+ACTIVO — PLAYABLE VEHICLE COMPOSITION 1.0
+STAGES 0–4 COMPLETADOS
+STAGE 5 EN PROGRESO
+RigidBodyBrakeForceSink: IMPLEMENTED AND WINDOWS-VERIFIED
 ```
 
-## 45. Stage 0 accepted baseline
+## 45. Stage 0 accepted baseline (historical)
 
 Componentes publicados:
 
@@ -1016,3 +1044,38 @@ BusTopics.STEERING_COMMAND
 BusTopics.BRAKE_COMMAND
 PropulsionIntentPolicy
 ```
+
+## 46. Stage 5 — latest global baseline and brake sink acceptance
+
+La baseline anterior a la implementación era:
+
+```text
+Run All: 122 tests / 3359 checks PASS
+Base de código: ef491df
+Base documental de esta entrega: 853c606
+```
+
+Aceptación física autoritativa de Stage 5 en Windows/Godot 4.7.1:
+
+```text
+RigidBodyPropulsionForceSinkTest: 13 checks PASS
+Propulsion Suite: 7 tests / 156 checks PASS
+RigidBodySteeringTorqueSinkTest r1: 14 checks PASS
+Steering Suite: 5 tests / 134 checks PASS
+RigidBodyBrakeForceSinkTest: 16 checks PASS
+Braking Suite: 5 tests / 131 checks PASS
+Run All: 123 tests / 3375 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Check Failures: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+```
+
+El Run All 123/3375 se ejecutó sobre el worktree instalado basado en
+`853c606`; el sink y sus tests son los bytes incluidos en esta entrega.
+`RigidBodyBrakeForceSink` queda implementado y verificado. El commit de la
+entrega aún debe completarse mediante Prepare Submit después de corregir el
+error de formato del primer intento. No se han cambiado las pruebas ni la
+producción para acomodar ese error.
