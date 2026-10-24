@@ -1,0 +1,162 @@
+PJ0081 – Vehicle Motion State and RigidBody Motion Source 1.0
+
+Fecha: 23/10/2026
+
+Baseline:
+
+90eae49 feat(braking): add brake runtime factory
+
+Authoritative starting Run All baseline:
+
+118 tests / 3292 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 5 – RigidBody adapters
+
+Problema:
+
+SteeringRuntimeUnit and BrakeRuntimeUnit consume signed scalar motion
+behaviors but no scene-owned adapter exposes those measurements from the
+RigidBody3D without giving the body to Runtime. ADR-017 also requires a
+read-only VehicleMotionState seam for telemetry, replay, camera and future
+Motion Platform work.
+
+Decisión:
+
+Deliver `VehicleMotionState` and `RigidBodyVehicleMotionSource` together.
+The former is a pure RefCounted snapshot in Core; the latter is a scene-owned
+Godot adapter holding one explicit RigidBody3D reference as BORROWED.
+
+VehicleMotionState vector semantics:
+
+local_linear_velocity: Vector3(surge, sway, heave) m/s
+local_linear_acceleration: Vector3(surge, sway, heave) m/s^2
+local_angular_velocity: Vector3(roll, pitch, yaw) rad/s
+orientation: Vector3(roll, pitch, yaw) rad
+timestamp_seconds >= 0
+has_acceleration_sample: bool
+
+Coordinate mapping:
+
+forward = local -Z → positive surge
+right = local +X → positive sway
+up = local +Y → positive heave/yaw axis
+roll = angular/orientation about craft forward (-Z)
+pitch = angular/orientation about craft right (+X)
+yaw = angular/orientation about craft up (+Y)
+
+Orientation reads Godot global_rotation Euler YXZ and maps:
+
+roll = -global_rotation.z
+pitch = global_rotation.x
+yaw = global_rotation.y
+
+RigidBodyVehicleMotionSource behaviors:
+
+get_longitudinal_speed_meters_per_second()
+    = world linear velocity dot normalized body forward
+
+get_yaw_rate_radians_per_second()
+    = world angular velocity dot normalized body up
+
+Both return NAN on invalid body/basis/kinematics, allowing existing Brake
+and Steering RuntimeUnits to reject non-finite behavior outputs fail-neutral.
+The source never exposes the body or applies force/torque.
+
+Acceleration semantics:
+
+- constant memory: one previous world linear velocity and timestamp;
+- first capture returns zero acceleration and has_acceleration_sample=false;
+- later capture requires a strictly increasing finite timestamp;
+- acceleration is derived in world space from velocity delta / delta time;
+- world acceleration is then projected into the current orthonormal body
+  basis, so craft rotation is not misreported as linear acceleration;
+- repeated/regressive timestamp, invalid body/basis, or non-finite result
+  returns null and preserves previous sample history;
+- clear_history() drops that single sample and starts a fresh epoch.
+
+Alternatives considered:
+
+1. Give RigidBody3D directly to Steering/Brake RuntimeUnits.
+   Rejected: leaks Godot body/ownership through Runtime and bypasses adapter
+   boundaries.
+2. Derive acceleration by differencing local velocities.
+   Rejected: changing body orientation injects frame-rotation terms into the
+   measured acceleration.
+3. Keep previous world velocity and project finite difference to current
+   local basis.
+   Selected: one-sample bounded history and explicit physical semantics.
+
+Implementation:
+
+core/vehicle/vehicle_motion_state.gd
+integration/godot/vehicle/rigid_body_vehicle_motion_source.gd
+
+test/core/vehicle/vehicle_motion_state_test.gd
+test/core/vehicle/VehicleMotionStateTest.tscn
+test/core/vehicle/rigid_body_vehicle_motion_source_test.gd
+test/core/vehicle/RigidBodyVehicleMotionSourceTest.tscn
+
+Designed coverage:
+
+VehicleMotionStateTest: 15 checks
+RigidBodyVehicleMotionSourceTest: 25 checks
+Vehicle Suite: 2 tests / 40 checks expected
+
+Acceptance:
+
+- finite State snapshot;
+- semantic vector component preservation;
+- first-sample acceleration absence;
+- invalid snapshot values rejected;
+- invalid/missing/freed body rejected;
+- forward/reverse speed sign;
+- rotated forward and body-up yaw rate;
+- local surge/sway/heave and RPY mappings;
+- world-velocity finite-difference acceleration;
+- strict monotonic timestamp policy;
+- rejected timestamps preserve baseline;
+- clear_history starts a new epoch;
+- adapter exposes no body mutation/force/torque/Bus API.
+
+Static review:
+
+- bracket balance all four GDScript files: PASS;
+- executable responsibility audit: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- Web VTD discovery: PASS;
+- Vehicle suite: 2 scenes;
+- Canonical Tooling: 136 tests PASS;
+- Failures: 0;
+- Errors: 0.
+
+Static review:
+
+- bracket balance all four GDScript files: PASS;
+- executable responsibility audit: PASS;
+- no line starts with dot: PASS;
+- git diff check: PASS;
+- Web VTD discovery: Vehicle suite, 2 scenes;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 90eae49;
+- replacements restored: 1;
+- additions removed: 7;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING

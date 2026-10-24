@@ -2,12 +2,12 @@
 
 | Campo | Valor |
 |---|---|
-| Estado | ACTIVO — STAGE 0 VERIFICADO |
-| Versión | 1.1 |
-| Fecha | 08/10/2026 |
+| Estado | ACTIVO — STAGE 5 EN PROGRESO |
+| Versión | 1.2 |
+| Fecha | 23/10/2026 |
 | ADR | ADR-017 — Scene-Owned Vehicle Body and Staged Physical Composition |
 | Alcance | Routing, steering, active braking, body adapters y vehicle runtime root |
-| Implementación | STAGE 0 COMPLETADO; STAGE 1 EN PROGRESO |
+| Implementación | STAGES 0–4 COMPLETADOS; STAGE 5 EN PROGRESO |
 
 ## 1. Propósito
 
@@ -341,38 +341,77 @@ Construct-only, sin Host Objects. Build conserva dependencias exactas y no
 ejecuta lifecycle/actuation. Release acepta `CREATED/SHUTDOWN`, rechaza Unit
 activa, preserva BORROWED dependencies y es idempotente.
 
-## 20. RigidBodyVehicleMotionSource
-
-Adapter scene-owned `RefCounted` con body explícito.
+## 20. RigidBodyVehicleMotionSource and VehicleMotionState
 
 ```text
-longitudinal speed = linear_velocity dot world_forward
-yaw rate = angular_velocity dot world_up
+Status: IMPLEMENTED — WINDOWS VERIFICATION PENDING
+State: core/vehicle/vehicle_motion_state.gd
+Source: integration/godot/vehicle/rigid_body_vehicle_motion_source.gd
 ```
 
-Valida body y vectors finite.
+`RigidBodyVehicleMotionSource` es adapter scene-owned `RefCounted` con
+`RigidBody3D` explícito y BORROWED. Nunca muta ni expone el body.
 
-No modifica el body.
-
-También produce:
+Scalar behaviors para RuntimeUnits:
 
 ```text
-VehicleMotionState
+get_longitudinal_speed_meters_per_second()
+    = body.linear_velocity dot normalized_world_forward
+
+get_yaw_rate_radians_per_second()
+    = body.angular_velocity dot normalized_body_up
 ```
 
-Snapshot read-only:
+`VehicleMotionState` es snapshot Core read-only con cuatro vectores y
+ timestamp:
 
 ```text
-local surge/sway/heave velocity
-local surge/sway/heave acceleration
-roll/pitch/yaw angular velocity
-roll/pitch/yaw orientation
-timestamp >= 0
+local_linear_velocity:       Vector3(surge, sway, heave) m/s
+local_linear_acceleration:   Vector3(surge, sway, heave) m/s²
+local_angular_velocity:      Vector3(roll, pitch, yaw) rad/s
+orientation:                 Vector3(roll, pitch, yaw) rad
+timestamp_seconds >= 0
+has_acceleration_sample: bool
 ```
 
-Acceleration se deriva con timestamp monotónico y history de un sample, sin colas no acotadas.
+Component mapping:
 
-Vehicle Composition no publica todavía hardware commands. El snapshot es un seam observable para telemetry, replay, camera y un futuro Motion Platform Runtime Slice.
+```text
+body forward = local -Z  → positive surge
+body right   = local +X  → positive sway
+body up      = local +Y  → positive heave
+roll axis    = body forward (-Z)
+pitch axis   = body right (+X)
+yaw axis     = body up (+Y)
+```
+
+World linear velocity and angular velocity are projected through the
+orthonormalized body basis. Longitudinal speed uses world-forward dot;
+yaw rate uses world-angular-velocity dot body-up. Euler orientation maps
+Godot `global_rotation` as `roll=-rotation.z`, `pitch=rotation.x`,
+`yaw=rotation.y`.
+
+Acceleration uses exactly one previous world-linear-velocity sample:
+
+```text
+world_acceleration = (current_world_velocity - previous_world_velocity) / dt
+local_acceleration = inverse_current_body_basis * world_acceleration
+```
+
+First sample returns zero acceleration with `has_acceleration_sample=false`.
+Later sample timestamps must increase strictly. Equal/regressive timestamps,
+invalid body/basis, non-finite kinematics, or non-finite derived state return
+no snapshot and do not advance temporal history. `clear_history()` resets the
+bounded sample and starts a new timestamp epoch.
+
+Source validates body, basis determinant and all kinematic vectors before
+exposing scalar reads. Invalid scalar reads return `NAN`, allowing Steering
+and Brake RuntimeUnits to fail neutral. Memory is constant: one previous
+velocity and timestamp, no queues or scheduling.
+
+Vehicle Composition no publica todavía hardware commands. Snapshot queda
+como seam observable para telemetry, replay, camera y un futuro Motion
+Platform Runtime Slice.
 
 ## 21. RigidBodyPropulsionForceSink
 
@@ -766,6 +805,13 @@ RigidBodyPropulsionForceSinkTest
 RigidBodySteeringTorqueSinkTest
 RigidBodyBrakeForceSinkTest
 RigidBodyHoverForceSinkTest
+```
+
+Incremento actual:
+
+```text
+VehicleMotionState + RigidBodyVehicleMotionSource
+Vehicle Suite: 2 tests / 40 checks expected
 ```
 
 ### Stage 6
