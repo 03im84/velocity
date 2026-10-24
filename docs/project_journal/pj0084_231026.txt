@@ -1,0 +1,65 @@
+PJ0084 – RigidBody Physical Sink Baseline 1.0
+
+Fecha: 23/10/2026
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 5 – RigidBody adapters
+
+Starting global baseline:
+
+Run All: 120 tests / 3332 checks PASS
+
+RigidBody sinks implementados y aceptados:
+
+RigidBodyPropulsionForceSink
+Commit: a2c71c4 feat(propulsion): add rigid body force sink
+Test: 1 test / 13 checks PASS
+Propulsion Suite: 7 tests / 156 checks PASS
+
+RigidBodySteeringTorqueSink
+Commit: ef491df feat(steering): add rigid body torque sink
+Revision: r1
+Test: 1 test / 14 checks PASS
+Steering Suite: 5 tests / 134 checks PASS
+
+Candidato Steering sink 1.0:
+
+Dos verificaciones físicas fallaron porque varias instancias de prueba con
+BoxShape compartían world origin. El torque positivo/negativo sobre body-up
+sí pasó. r1 mantiene byte por byte el sink y la escena; separa fixtures de
+prueba cinco metros para evitar contactos cruzados. No se modificaron tests
+para debilitar el comportamiento probado.
+
+Nueva baseline global autoritativa:
+
+Run All: 122 tests / 3359 checks PASS
+Passed: 122
+Failed: 0
+Timeout: 0
+Engine Error: 0
+Not Run: 0
+Check Failures: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+RESULT: PASS
+
+Delta:
+
+Starting: 120 tests / 3332 checks
+Propulsion sink: +1 test / +13 checks
+Steering torque sink r1: +1 test / +14 checks
+Final: 122 tests / 3359 checks
+
+Stage 5 permanece en progreso. Aún faltan:
+
+- RigidBodyBrakeForceSink;
+- RigidBodyHoverForceSink;
+- RigidBodyAerodynamicController;
+- VehiclePhysicsCoordinator;
+- VehicleCompositionRoot y scene;
+- integración física completa.
+
+Project Handoff/Resume registran esta baseline. El milestone
+`vehicle_composition` permanece activo.

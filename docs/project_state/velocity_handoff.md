@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.27 |
-| Fecha de actualización | 08/10/2026 |
+| Versión | 1.28 |
+| Fecha de actualización | 23/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
 | Repositorio | https://github.com/03im84/velocity |
@@ -660,11 +660,15 @@ Stability: 1200 fixed steps PASS
 ## 24. Baseline, documentos y Git
 
 ```text
-Run All: 107 tests / 2973 checks PASS
+Run All: 122 tests / 3359 checks PASS
 Runtime Suite: 20 tests / 475 checks PASS
 Environment Suite: 6 tests / 161 checks PASS
 Providers Suite: 5 tests / 87 checks PASS
 Proximity Lift Suite: 2 tests / 61 checks PASS
+Propulsion Suite: 7 tests / 156 checks PASS
+Steering Suite: 5 tests / 134 checks PASS
+Braking Suite: 4 tests / 115 checks PASS
+Vehicle Suite: 2 tests / 40 checks PASS
 Failures: 0
 Timeout: 0
 Engine Error: 0
@@ -693,12 +697,12 @@ System Composition Pipeline Design: 1.19
 Input Runtime Slice Design:         1.1
 Propulsion Runtime Slice Design:    1.1
 Hover Physics Slice Design:         1.1
-Playable Vehicle Composition Design: 1.1
+Playable Vehicle Composition Design: 1.3
 Environment/Realism Addendum:       Stage 0 verified
 Product Roadmap:                    1.3
 Playable Vertical Slice Design:     1.3
-Project Handoff:                    1.27
-Resume Prompt:                      1.27
+Project Handoff:                    1.28
+Resume Prompt:                      1.28
 Collaboration Contract:             1.5
 ```
 
@@ -729,9 +733,28 @@ a14e265 feat(environment): add delayed scalar sink adapter
 ec2f921 feat(proximity): add proximity lift point runtime factory
 ```
 
+Stage 1 and Runtime Vehicle Composition commits:
+
+```text
+8aeb208 feat(steering): add steering command contract
+205de93 feat(braking): add brake command contract
+47ee340 feat(vehicle): add propulsion intent policy
+3053ebf feat(steering): add yaw steering model
+c0c719e feat(braking): add longitudinal brake model
+434637f feat(vehicle): add control router runtime unit
+238bf7d feat(vehicle): add control router runtime factory
+13d1cca feat(steering): add steering runtime unit
+6039f3d feat(steering): add steering runtime factory
+d181e40 feat(braking): add brake runtime unit
+90eae49 feat(braking): add brake runtime factory
+145dd03 feat(vehicle): add rigid body motion source
+a2c71c4 feat(propulsion): add rigid body force sink
+ef491df feat(steering): add rigid body torque sink
+```
+
 ```text
 ## main...origin/main
-HEAD ec2f921
+HEAD ef491df
 ```
 
 ## 25. Tooling
@@ -764,6 +787,9 @@ Propulsion
 Hover
 Environment
 Proximity Lift
+Steering
+Braking
+Vehicle
 ```
 
 ```text
@@ -913,8 +939,10 @@ Completed: Input Runtime Slice 1.0
 Completed: Propulsion Runtime Slice 1.0
 Completed: Hover Physics Slice 1.0
 Current product milestone: Playable Vehicle Composition 1.0
-Vehicle Composition Stage 0: completed and globally verified
-Current implementation stage: Stage 1 — Commands and pure models
+Vehicle Composition Stages 0–4: implemented and verified
+Stage 5 RigidBody adapters: in progress
+Current global baseline: 122 tests / 3359 checks PASS
+Current code HEAD: ef491df
 ```
 
 ```text
@@ -922,32 +950,55 @@ Roadmap version: 1.3
 current_milestone: vehicle_composition
 ```
 
-ADR-017 y Playable Vehicle Composition Design 1.1 están aprobados. El
-siguiente trabajo es SteeringCommand, BrakeCommand, sus Topics y
-PropulsionIntentPolicy antes de avanzar a Steering/Brake models.
+ADR-017 and Playable Vehicle Composition Design 1.3 remain active. Motion
+source, propulsion force sink and steering torque sink are implemented and
+verified. Next Stage 5 work: `RigidBodyBrakeForceSink`, then per-point
+`RigidBodyHoverForceSink`, followed by the physics coordinator and scene root.
 
 ## 30. Trabajo futuro explícito
 
+Implementación completada:
+
 ```text
-SteeringCommand + BrakeCommand + Topics
+Steering/Brake Commands and Topics
 PropulsionIntentPolicy
-YawSteeringModel
-LongitudinalBrakeModel
+YawSteeringModel + LongitudinalBrakeModel
 VehicleControlRouter Unit/Factory
-Steering Unit/Factory
-Brake Unit/Factory
-VehicleMotionState + RigidBody motion source
-RigidBody physical force/torque sinks
+Steering Runtime Unit/Factory
+Brake Runtime Unit/Factory
+VehicleMotionState + RigidBodyVehicleMotionSource
+RigidBodyPropulsionForceSink
+RigidBodySteeringTorqueSink
+```
+
+Siguiente Stage 5:
+
+```text
+RigidBodyBrakeForceSink
+RigidBodyHoverForceSink
+RigidBodyAerodynamicController
+```
+
+Después:
+
+```text
 VehiclePhysicsCoordinator
 VehicleCompositionRoot + scene
 full physical integration
+relevant Suites and Run All
+refactor audit and milestone closure
+```
+
+Más adelante, para Playable Vertical Slice:
+
+```text
 Simple Track Scene
 Chase Camera
 Checkpoint and Lap Loop
 Minimal HUD
-Hardware Runtime
-Telemetry
 ```
+
+Hardware Runtime y Telemetry persistente siguen diferidos.
 
 ## 31. Project State Package
 

@@ -135,10 +135,25 @@ Static review:
 - designed assertions: 14;
 - Canonical Tooling: 136 tests PASS.
 
+Windows r1 acceptance:
+
+RigidBodySteeringTorqueSinkTest: 1 test / 14 checks PASS
+Steering Suite: 5 tests / 134 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+
+Published commit:
+
+ef491df feat(steering): add rigid body torque sink
+
+La baseline global posterior a ambos physical sinks está registrada en
+PJ0084 – RigidBody Physical Sink Baseline 1.0.
+
 Estado:
 
-DOCUMENTATION CONSOLIDATED
-PRODUCTION BEHAVIOR ACCEPTED
-R1 ISOLATED PHYSICS FIXTURE APPLIED
-STATIC REVALIDATION PASS
-GODOT 4.7.1 WINDOWS REVALIDATION PENDING
+R1 IMPLEMENTED
+PHYSICS TEST FIXTURE ISOLATED
+WINDOWS PRODUCT TESTS PASS
+COMMIT PUBLISHED

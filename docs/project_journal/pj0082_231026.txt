@@ -111,9 +111,24 @@ Static review:
 - Failures: 0;
 - Errors: 0.
 
+Windows acceptance:
+
+RigidBodyPropulsionForceSinkTest: 1 test / 13 checks PASS
+Propulsion Suite: 7 tests / 156 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+
+La baseline global posterior a ambos physical sinks está registrada en
+PJ0084 – RigidBody Physical Sink Baseline 1.0.
+
+Published commit:
+
+a2c71c4 feat(propulsion): add rigid body force sink
+
 Estado:
 
-DOCUMENTATION CONSOLIDATED
-IMPLEMENTATION COMPLETE
-STATIC REVIEW PASS
-GODOT 4.7.1 WINDOWS VERIFICATION PENDING
+IMPLEMENTED
+PACKAGE SUBMITTED
+WINDOWS PRODUCT TESTS PASS

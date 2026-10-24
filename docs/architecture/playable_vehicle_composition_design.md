@@ -344,7 +344,7 @@ activa, preserva BORROWED dependencies y es idempotente.
 ## 20. RigidBodyVehicleMotionSource and VehicleMotionState
 
 ```text
-Status: IMPLEMENTED — WINDOWS VERIFICATION PENDING
+Status: IMPLEMENTED AND WINDOWS-VERIFIED
 State: core/vehicle/vehicle_motion_state.gd
 Source: integration/godot/vehicle/rigid_body_vehicle_motion_source.gd
 ```
@@ -416,7 +416,7 @@ Platform Runtime Slice.
 ## 21. RigidBodyPropulsionForceSink
 
 ```text
-Status: IMPLEMENTED — WINDOWS VERIFICATION PENDING
+Status: IMPLEMENTED AND WINDOWS-VERIFIED
 Path: integration/godot/propulsion/rigid_body_propulsion_force_sink.gd
 ```
 
@@ -443,7 +443,7 @@ is not used for physics scheduling or retained as hidden state.
 ## 22. RigidBodySteeringTorqueSink
 
 ```text
-Status: IMPLEMENTED — WINDOWS VERIFICATION PENDING
+Status: IMPLEMENTED AND WINDOWS-VERIFIED — R1
 Path: integration/godot/steering/rigid_body_steering_torque_sink.gd
 ```
 
