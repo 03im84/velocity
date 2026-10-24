@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.28 |
-| Fecha | 23/10/2026 |
+| Versión | 1.29 |
+| Fecha | 24/10/2026 |
 | Propósito | Reanudar Velocity sin perder arquitectura, metodología, baselines o colaboración |
 
 ## 1. Archivos a adjuntar
@@ -74,7 +74,7 @@ Estado arquitectónico esperado:
 - Playable Vehicle Composition Stages 0–4 están implementados y verificados.
 - Stage 5 RigidBody adapters está en progreso.
 - VehicleMotionState y RigidBodyVehicleMotionSource están publicados.
-- RigidBodyPropulsionForceSink y RigidBodySteeringTorqueSink r1 están publicados y verificados.
+- RigidBodyPropulsionForceSink, RigidBodySteeringTorqueSink r1 y RigidBodyBrakeForceSink están publicados y verificados.
 - ADR-017 y Playable Vehicle Composition Design 1.3 están aceptados y actualizados.
 - ADR-016 1.1 está aceptado, implementado y verificado.
 - ADR-015 1.1 está aceptado, implementado y verificado.
@@ -88,7 +88,9 @@ Estado arquitectónico esperado:
 - Proximity Lift Suite: 2 tests / 61 checks PASS.
 - Propulsion Suite: 7 tests / 156 checks PASS.
 - Steering Suite: 5 tests / 134 checks PASS.
-- Run All: 122 tests / 3359 checks PASS.
+- Braking Suite: 5 tests / 131 checks PASS.
+- RigidBodyBrakeForceSinkTest: 1 test / 16 checks PASS.
+- Run All: 123 tests / 3375 checks PASS.
 - Canonical Tooling: 136 tests PASS.
 - 0 failures, 0 timeout, 0 engine errors y 0 missing metrics.
 - Último commit del Slice: 80c5118 test(input): add runtime pipeline integration.
@@ -97,15 +99,17 @@ Estado arquitectónico esperado:
 - Delivery Rollback 1.1: b219462 feat(tools): add delivery rollback command.
 - Hover finaliza en adca199 test(hover): add runtime pipeline integration.
 - Stage 0 finaliza en ec2f921 feat(proximity): add proximity lift point runtime factory.
-- main está sincronizada con origin/main en ec2f921.
+- RigidBodyBrakeForceSink: 3112d05 feat(braking): add rigid body force sink.
+- Antes de este update documental, main estaba sincronizada con origin/main en 3112d05.
 
 Target de producto:
 Playable Vertical Slice 1.0.
 
 Milestone de producto activo:
 Playable Vehicle Composition 1.0.
-Stage 0 está completado y globalmente verificado.
-Siguiente implementación: SteeringCommand, BrakeCommand, Topics y PropulsionIntentPolicy.
+Stages 0–4 están completados y verificados; Stage 5 está en progreso.
+RigidBodyBrakeForceSink está implementado y verificado.
+Siguiente implementación: RigidBodyHoverForceSink y RigidBodyAerodynamicController.
 
 Tooling vigente:
 Velocity Submit Tool 1.1.1 está implementado y verificado.
@@ -298,7 +302,9 @@ Providers Suite: 5 tests / 87 checks PASS
 Proximity Lift Suite: 2 tests / 61 checks PASS
 Propulsion Suite: 7 tests / 156 checks PASS
 Steering Suite: 5 tests / 134 checks PASS
-Run All: 122 tests / 3359 checks PASS
+Braking Suite: 5 tests / 131 checks PASS
+RigidBodyBrakeForceSinkTest: 1 test / 16 checks PASS
+Run All: 123 tests / 3375 checks PASS
 Canonical Tooling: 136 tests PASS
 Failures: 0
 Timeout: 0
@@ -323,8 +329,8 @@ Velocity Submit Tool Design:         1.5
 Velocity Tooling Dashboard Web:      1.4
 Product Roadmap:                    1.3
 Playable Vertical Slice Design:     1.3
-Project Handoff:                    1.28
-Resume Prompt:                      1.28
+Project Handoff:                    1.29
+Resume Prompt:                      1.29
 Collaboration Contract:             1.5
 ```
 
@@ -374,11 +380,13 @@ d181e40 BrakeRuntimeUnit
 145dd03 RigidBodyVehicleMotionSource
 a2c71c4 RigidBodyPropulsionForceSink
 ef491df RigidBodySteeringTorqueSink r1
+3112d05 RigidBodyBrakeForceSink
 ```
 
 ```text
-## main...origin/main
-HEAD ef491df
+Latest implementation/base commit for this state update:
+3112d05 feat(braking): add rigid body force sink
+Before the documentation delivery, main was clean and synchronized with origin/main.
 ```
 
 ## 11. Dirección actual
@@ -391,8 +399,8 @@ Hover Physics: completed
 Current product milestone: Playable Vehicle Composition 1.0
 Stages 0–4: implemented and globally verified
 Stage 5: RigidBody physical adapters in progress
-Current global baseline: 122 tests / 3359 checks PASS
-Current code HEAD: ef491df
+Current global baseline: 123 tests / 3375 checks PASS
+Current code HEAD: 3112d05
 ```
 
 ```text
@@ -401,8 +409,9 @@ current_milestone: vehicle_composition
 ```
 
 ADR-017 and Playable Vehicle Composition Design 1.3 remain active. Motion
-source, propulsion sink and steering torque sink are verified. Next exact
-work is `RigidBodyBrakeForceSink`, followed by `RigidBodyHoverForceSink`.
+source, propulsion sink, steering torque sink and brake force sink are
+verified. Next exact work is `RigidBodyHoverForceSink` and
+`RigidBodyAerodynamicController`.
 
 ## 12. Web VTD Reload Safety 0.5.1
 

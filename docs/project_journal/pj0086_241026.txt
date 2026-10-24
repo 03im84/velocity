@@ -1,0 +1,92 @@
+PJ0086 – RigidBody Brake Force Sink Baseline 1.0
+
+Fecha: 24/10/2026
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 5 – RigidBody adapters
+
+Base documental anterior:
+
+853c606 docs(vehicle): record rigid body sink baseline
+
+Commit de implementación publicado:
+
+3112d05 feat(braking): add rigid body force sink
+
+Estado Git informado por Velocity Submit:
+
+```text
+Remote: synchronized
+Status: ## main...origin/main
+Package cleanup: original ZIP deleted
+```
+
+Aceptación autoritativa Windows/Godot 4.7.1 informada por el usuario:
+
+```text
+RigidBodyBrakeForceSinkTest: 1 test / 16 checks PASS
+Braking Suite: 5 tests / 131 checks PASS
+Run All: 123 tests / 3375 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Check Failures: 0
+Missing Metrics: 0
+Plan ExitCode: 0
+```
+
+Los resultados se ejecutaron sobre el sink y los tests que se publicaron en
+`3112d05`. El paquete correctivo r1 cambió únicamente documentación y el fin
+de archivo; los hashes de producción y test fueron idénticos a los
+verificados. Run All 123/3375 es la baseline global vigente y supersede
+122/3359.
+
+Incidente documental resuelto:
+
+El primer Prepare Submit fue bloqueado antes de commit/push por
+`git diff --check` al detectar una línea en blanco extra al final de
+`docs/architecture/playable_vehicle_composition_design.md`. Se produjo el
+paquete r1 con el archivo completo corregido. No se modificaron ni debilitaron
+producción o pruebas. El usuario instaló r1 y Velocity Submit confirmó
+`3112d05`, Remote synchronized y working tree limpio.
+
+Verificaciones de tooling/entrega:
+
+```text
+Canonical Tooling: 136 tests PASS
+Package validation r1: PASS
+Install→Rollback E2E en clone temporal de main / 853c606: PASS
+Hashes instalados: PASS
+git diff --check: PASS
+Rollback E2E: baseline 853c606 restaurada y working tree limpio
+```
+
+Estado del milestone:
+
+```text
+Stages 0–4: completados y verificados
+Stage 5: en progreso
+Verificados: RigidBodyVehicleMotionSource,
+RigidBodyPropulsionForceSink,
+RigidBodySteeringTorqueSink r1,
+RigidBodyBrakeForceSink
+Baseline Run All: 123 tests / 3375 checks PASS
+```
+
+Siguiente Stage 5:
+
+```text
+RigidBodyHoverForceSink
+RigidBodyAerodynamicController
+VehiclePhysicsCoordinator
+VehicleCompositionRoot + scene
+full physical integration
+relevant Suites and Run All
+refactor audit and milestone closure
+```
+
+El milestone `vehicle_composition` permanece activo. No declarar Playable
+Vehicle Composition 1.0 completado hasta integrar y verificar los sinks de
+Hover/Aerodynamics, coordinator, root/scene y la aceptación física completa.

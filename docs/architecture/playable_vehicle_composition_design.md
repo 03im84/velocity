@@ -1074,8 +1074,13 @@ Plan ExitCode: 0
 ```
 
 El Run All 123/3375 se ejecutó sobre el worktree instalado basado en
-`853c606`; el sink y sus tests son los bytes incluidos en esta entrega.
-`RigidBodyBrakeForceSink` queda implementado y verificado. El commit de la
-entrega aún debe completarse mediante Prepare Submit después de corregir el
-error de formato del primer intento. No se han cambiado las pruebas ni la
-producción para acomodar ese error.
+`853c606`; el sink y sus tests son los mismos bytes publicados en el commit
+`3112d05`. `RigidBodyBrakeForceSink` queda implementado y verificado.
+El primer Prepare Submit se detuvo correctamente por un blank line al final
+del diseño; el paquete r1 corrigió solo documentación y `git diff --check`
+pasó. La implementación se publicó sin cambios en producción ni pruebas:
+
+```text
+3112d05 feat(braking): add rigid body force sink
+Estado reportado al publicar: ## main...origin/main (clean)
+```

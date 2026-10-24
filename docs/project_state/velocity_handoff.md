@@ -3,8 +3,8 @@
 | Campo | Valor |
 |---|---|
 | Estado | ACTIVO |
-| Versión | 1.28 |
-| Fecha de actualización | 23/10/2026 |
+| Versión | 1.29 |
+| Fecha de actualización | 24/10/2026 |
 | Zona horaria | GMT-5, sin DST |
 | Engine | Godot Engine 4.7.1 stable |
 | Repositorio | https://github.com/03im84/velocity |
@@ -660,14 +660,15 @@ Stability: 1200 fixed steps PASS
 ## 24. Baseline, documentos y Git
 
 ```text
-Run All: 122 tests / 3359 checks PASS
+Run All: 123 tests / 3375 checks PASS
 Runtime Suite: 20 tests / 475 checks PASS
 Environment Suite: 6 tests / 161 checks PASS
 Providers Suite: 5 tests / 87 checks PASS
 Proximity Lift Suite: 2 tests / 61 checks PASS
 Propulsion Suite: 7 tests / 156 checks PASS
 Steering Suite: 5 tests / 134 checks PASS
-Braking Suite: 4 tests / 115 checks PASS
+Braking Suite: 5 tests / 131 checks PASS
+RigidBodyBrakeForceSinkTest: 1 test / 16 checks PASS
 Vehicle Suite: 2 tests / 40 checks PASS
 Failures: 0
 Timeout: 0
@@ -701,8 +702,8 @@ Playable Vehicle Composition Design: 1.3
 Environment/Realism Addendum:       Stage 0 verified
 Product Roadmap:                    1.3
 Playable Vertical Slice Design:     1.3
-Project Handoff:                    1.28
-Resume Prompt:                      1.28
+Project Handoff:                    1.29
+Resume Prompt:                      1.29
 Collaboration Contract:             1.5
 ```
 
@@ -750,11 +751,13 @@ d181e40 feat(braking): add brake runtime unit
 145dd03 feat(vehicle): add rigid body motion source
 a2c71c4 feat(propulsion): add rigid body force sink
 ef491df feat(steering): add rigid body torque sink
+3112d05 feat(braking): add rigid body force sink
 ```
 
 ```text
-## main...origin/main
-HEAD ef491df
+Último commit de implementación/base de este update:
+3112d05 feat(braking): add rigid body force sink
+Estado de main antes del paquete documental: ## main...origin/main (clean)
 ```
 
 ## 25. Tooling
@@ -941,8 +944,8 @@ Completed: Hover Physics Slice 1.0
 Current product milestone: Playable Vehicle Composition 1.0
 Vehicle Composition Stages 0–4: implemented and verified
 Stage 5 RigidBody adapters: in progress
-Current global baseline: 122 tests / 3359 checks PASS
-Current code HEAD: ef491df
+Current global baseline: 123 tests / 3375 checks PASS
+Current code HEAD: 3112d05
 ```
 
 ```text
@@ -951,9 +954,10 @@ current_milestone: vehicle_composition
 ```
 
 ADR-017 and Playable Vehicle Composition Design 1.3 remain active. Motion
-source, propulsion force sink and steering torque sink are implemented and
-verified. Next Stage 5 work: `RigidBodyBrakeForceSink`, then per-point
-`RigidBodyHoverForceSink`, followed by the physics coordinator and scene root.
+source, propulsion force sink, steering torque sink and brake force sink are
+implemented and verified. Next Stage 5 work: per-point
+`RigidBodyHoverForceSink` and `RigidBodyAerodynamicController`, followed by
+the physics coordinator and scene root.
 
 ## 30. Trabajo futuro explícito
 
@@ -969,12 +973,12 @@ Brake Runtime Unit/Factory
 VehicleMotionState + RigidBodyVehicleMotionSource
 RigidBodyPropulsionForceSink
 RigidBodySteeringTorqueSink
+RigidBodyBrakeForceSink
 ```
 
 Siguiente Stage 5:
 
 ```text
-RigidBodyBrakeForceSink
 RigidBodyHoverForceSink
 RigidBodyAerodynamicController
 ```
