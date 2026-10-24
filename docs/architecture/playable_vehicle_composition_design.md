@@ -443,10 +443,22 @@ is not used for physics scheduling or retained as hidden state.
 ## 22. RigidBodySteeringTorqueSink
 
 ```text
-world_up = body.global_basis.y.normalized()
-torque_vector = world_up * torque_newton_meters
-body.apply_torque(torque_vector)
+Status: IMPLEMENTED — WINDOWS VERIFICATION PENDING
+Path: integration/godot/steering/rigid_body_steering_torque_sink.gd
 ```
+
+Scene-owned `RefCounted` adapter with one explicit RigidBody3D BORROWED.
+
+```text
+body_up = orthonormalized(body.global_basis).y.normalized()
+world_torque = body_up * signed_yaw_torque_newton_meters
+body.apply_torque(world_torque)
+```
+
+Positive/negative scalar torque follows positive/negative craft-body up. The
+adapter rejects null/freed/out-of-tree body, frozen body, invalid/reflected
+basis, non-finite torque and negative/non-finite timestamp. Zero torque is a
+valid neutral actuation. The adapter has no force or body mutation API.
 
 ## 23. RigidBodyBrakeForceSink
 

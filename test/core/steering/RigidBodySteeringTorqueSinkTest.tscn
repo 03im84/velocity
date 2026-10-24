@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://test/core/steering/rigid_body_steering_torque_sink_test.gd" id="1_rst"]
+
+[node name="RigidBodySteeringTorqueSinkTest" type="Node"]
+script = ExtResource("1_rst")

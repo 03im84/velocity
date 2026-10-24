@@ -1,0 +1,144 @@
+PJ0083 – RigidBody Steering Torque Sink 1.0
+
+Fecha: 23/10/2026
+
+Baseline:
+
+145dd03 feat(vehicle): add rigid body motion source
+
+Authoritative starting Run All baseline:
+
+120 tests / 3332 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+
+Relevant existing Steering baseline:
+
+Steering Suite: 4 tests / 120 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 5 – RigidBody adapters
+
+Problema:
+
+SteeringRuntimeUnit produce signed scalar yaw torque, pero falta el adapter
+Godot que aplique ese torque alrededor del craft body-up axis sin dar el
+RigidBody3D al Runtime.
+
+Decisión:
+
+Añadir `RigidBodySteeringTorqueSink`, scene-owned RefCounted con un body
+explícito BORROWED, que aplica torque signed sobre body local +Y expresado en
+world coordinates.
+
+Contrato:
+
+apply_yaw_torque(torque_newton_meters, timestamp) -> bool
+
+- body válido y dentro de SceneTree;
+- body no frozen (activation gate hasta ACTIVE);
+- basis finita, positiva/no reflejada y no degenerada;
+- torque finito y signed;
+- timestamp finito y >=0;
+- body_up = normalized orthonormalized(global_basis).y;
+- world_torque = body_up * signed torque;
+- body.apply_torque(world_torque);
+- zero torque aceptado como actuation neutral explícita;
+- no state, queues, timers, Bus o source discovery;
+- no body getter/setter;
+- no aplica fuerzas lineales.
+
+Alternativas:
+
+1. Aplicar torque vector desde SteeringRuntimeUnit.
+   Rechazada: filtra coordenadas y RigidBody a Runtime.
+2. Aplicar torque desde VehicleCompositionRoot.
+   Rechazada: Root acumularía actuator responsibility.
+3. Sink especializado scene-owned alrededor de body-up.
+   Seleccionada: preserva scalar boundary y separa torque de fuerzas.
+
+Implementación:
+
+integration/godot/steering/rigid_body_steering_torque_sink.gd
+
+test/core/steering/rigid_body_steering_torque_sink_test.gd
+test/core/steering/RigidBodySteeringTorqueSinkTest.tscn
+
+Cobertura diseñada:
+
+RigidBodySteeringTorqueSinkTest: 14 checks
+
+- invalid/null/frozen/freed body;
+- non-finite torque/timestamp rejection;
+- positive torque causes positive angular rate about rotated body-up;
+- negative torque causes negative body-up angular rate;
+- pure torque adds no linear velocity;
+- zero torque accepted;
+- no exposed Body, force or Bus API.
+
+Static review:
+
+- bracket balance sink/test: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed assertions: 14;
+- Web VTD discovery: PASS;
+- Steering scenes: 5;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: a2c71c4;
+- replacements restored: 1;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Windows candidate 1.0 result:
+
+RigidBodySteeringTorqueSinkTest: 14 checks / 2 failures
+Engine Error: 1
+
+Production assertions passed:
+
+- positive torque accelerates about rotated body-up;
+- negative torque produces negative body-up yaw rate.
+
+Two fixture assertions failed after physics integration:
+
+- no right-axis angular velocity;
+- no linear velocity from pure torque.
+
+Root cause:
+
+The test helper created multiple active BoxShape RigidBody3D fixtures at the
+same world origin and left earlier bodies in the physics world. They collided
+with the current body during awaited physics frames, contaminating measured
+angular and linear velocity. This is test-fixture interference, not a sink
+behavior defect.
+
+r1 correction:
+
+- test-only change spaces fixture bodies 5 meters apart;
+- production sink remains byte-identical;
+- both actuation-direction assertions remain unchanged.
+
+Static review:
+
+- bracket balance sink/test: PASS;
+- git diff check: PASS;
+- no line starts with dot: PASS;
+- designed assertions: 14;
+- Canonical Tooling: 136 tests PASS.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+PRODUCTION BEHAVIOR ACCEPTED
+R1 ISOLATED PHYSICS FIXTURE APPLIED
+STATIC REVALIDATION PASS
+GODOT 4.7.1 WINDOWS REVALIDATION PENDING
