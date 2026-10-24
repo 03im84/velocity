@@ -1,0 +1,119 @@
+PJ0082 – RigidBody Propulsion Force Sink 1.0
+
+Fecha: 23/10/2026
+
+Baseline:
+
+145dd03 feat(vehicle): add rigid body motion source
+
+Authoritative starting Run All baseline:
+
+120 tests / 3332 checks PASS
+Failures: 0
+Timeout: 0
+Engine Error: 0
+Missing Metrics: 0
+
+Relevant existing Propulsion baseline:
+
+Propulsion Suite: 6 tests / 143 checks PASS
+
+Milestone:
+
+Playable Vehicle Composition 1.0
+Stage 5 – RigidBody adapters
+
+Problema:
+
+PropulsionRuntimeUnit ya produce una signed longitudinal force escalar por
+sink BORROWED, pero no existe el adapter Godot que aplique esa fuerza a un
+RigidBody3D scene-owned siguiendo la forward convention aprobada.
+
+Decisión:
+
+Añadir `RigidBodyPropulsionForceSink`, un adapter scene-owned RefCounted que
+retiene un body explícito sin poseerlo y aplica fuerza central sobre local -Z.
+
+Contrato:
+
+apply_propulsion_force(force_newtons, timestamp) -> bool
+
+- body válido y dentro de SceneTree;
+- body no frozen (actuation gate hasta ACTIVE);
+- basis finita, positiva/no reflejada y no degenerada;
+- force finita y signed;
+- timestamp finito y >=0;
+- forward = -orthonormalized(global_basis).z;
+- force aplicada en center of mass mediante apply_central_force;
+- force positiva = forward; negativa = reverse;
+- force cero se acepta como actuation neutral explícita;
+- no stores, timers, threads, Node processing, sink counters o Bus;
+- no expone body getter/setter;
+- fuerza máxima configurada permanece responsabilidad del Model.
+
+La admisión por `body.freeze == false` actúa como fail-closed safety seam
+para que ningún output físico se aplique antes de que VehicleCompositionRoot
+libere el body en ACTIVE.
+
+Alternativas:
+
+1. Aplicar Vector3 desde PropulsionRuntimeUnit.
+   Rechazada: Core/Runtime Unit dejarían de ser independientes del body y la
+   convención espacial se duplicaría.
+2. Aplicar fuerza central dentro de VehicleCompositionRoot.
+   Rechazada: root acumularía fórmula/actuator responsibility.
+3. Sink especializado scene-owned.
+   Seleccionada: conserva scalar boundary, ownership explícito y un solo
+   propósito físico.
+
+Implementación:
+
+integration/godot/propulsion/rigid_body_propulsion_force_sink.gd
+
+test/core/propulsion/rigid_body_propulsion_force_sink_test.gd
+test/core/propulsion/RigidBodyPropulsionForceSinkTest.tscn
+
+Cobertura diseñada:
+
+- invalid/null/frozen/freed body;
+- force/timestamp finiteness and domain;
+- forward force physically accelerates along body local -Z;
+- reverse force on rotated craft follows its forward axis;
+- central force adds no lateral velocity;
+- neutral zero-force accepted;
+- no body mutation or torque API.
+
+Expected isolated baseline:
+
+RigidBodyPropulsionForceSinkTest: 13 checks
+Failures: 0
+RESULT: PASS
+
+Expected relevant regression:
+
+Propulsion Suite: 7 tests / 156 checks
+
+Static review:
+
+- bracket balance sink/test: PASS;
+- executable responsibility audit: PASS;
+- no line starts with dot: PASS;
+- git diff check: PASS;
+- designed assertions: 13;
+- Web VTD discovery: Propulsion suite, 7 scenes;
+- Canonical Tooling: 136 tests PASS;
+- package validation: PASS;
+- package Install/Rollback E2E: PASS;
+- baseline restored: 145dd03;
+- replacements restored: 1;
+- additions removed: 4;
+- verified temporary ZIP deleted: PASS;
+- Failures: 0;
+- Errors: 0.
+
+Estado:
+
+DOCUMENTATION CONSOLIDATED
+IMPLEMENTATION COMPLETE
+STATIC REVIEW PASS
+GODOT 4.7.1 WINDOWS VERIFICATION PENDING

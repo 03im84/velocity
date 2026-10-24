@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://test/core/propulsion/rigid_body_propulsion_force_sink_test.gd" id="1_rps"]
+
+[node name="RigidBodyPropulsionForceSinkTest" type="Node"]
+script = ExtResource("1_rps")

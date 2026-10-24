@@ -416,12 +416,29 @@ Platform Runtime Slice.
 ## 21. RigidBodyPropulsionForceSink
 
 ```text
-world_forward = -body.global_basis.z.normalized()
-force_vector = world_forward * force_newtons
-body.apply_central_force(force_vector)
+Status: IMPLEMENTED — WINDOWS VERIFICATION PENDING
+Path: integration/godot/propulsion/rigid_body_propulsion_force_sink.gd
 ```
 
-Valida timestamp, force, body y basis.
+Scene-owned `RefCounted` adapter with one explicit `RigidBody3D` BORROWED.
+Behavior:
+
+```text
+apply_propulsion_force(force_newtons, timestamp) -> bool
+world_forward = -orthonormalized(body.global_basis).z
+world_force = world_forward * signed_force_newtons
+body.apply_central_force(world_force)
+```
+
+Positive force drives craft-forward (local -Z); negative force supports
+reverse propulsion. Force applies centrally at center of mass, not at an
+arbitrary point. Adapter accepts zero as an explicit neutral actuation.
+
+Rejects null/freed/out-of-tree body, frozen body, invalid/reflected basis,
+non-finite force, and negative/non-finite timestamp. Runtime model owns the
+configured force limits; the adapter independently enforces finite input and
+axis validity. The timestamp is validated for the common sink contract but
+is not used for physics scheduling or retained as hidden state.
 
 ## 22. RigidBodySteeringTorqueSink
 
